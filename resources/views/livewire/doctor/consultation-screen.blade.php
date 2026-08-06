@@ -199,6 +199,10 @@
                 </a>
 
                 <div class="flex items-center space-x-3">
+                    <a href="{{ route('doctor.prescription', $consultation) }}"
+                        class="px-5 py-2.5 border border-zapmed-300 rounded-lg text-sm font-medium text-zapmed-700 hover:bg-zapmed-50 transition-colors">
+                        Write Prescription
+                    </a>
                     <button wire:click="saveNotes"
                         class="px-5 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
                         Save Draft

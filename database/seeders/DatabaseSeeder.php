@@ -38,5 +38,8 @@ class DatabaseSeeder extends Seeder
 
         // Seed doctors with profiles
         $this->call(DoctorSeeder::class);
+
+        // Seed medications reference table
+        $this->call(MedicationSeeder::class);
     }
 }
