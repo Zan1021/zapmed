@@ -20,6 +20,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('role:doctor')
         ->name('doctor.dashboard');
 
+    // Doctor consultation screen
+    Route::get('doctor/consultation/{appointment}', \App\Livewire\Doctor\ConsultationScreen::class)
+        ->middleware('role:doctor')
+        ->name('doctor.consultation');
+
     // Patient onboarding
     Route::get('onboarding', Onboarding::class)
         ->middleware('role:patient')

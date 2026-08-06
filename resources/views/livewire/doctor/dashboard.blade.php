@@ -77,15 +77,15 @@
                                     Confirm
                                 </button>
                             @elseif($appointment->status === 'confirmed')
-                                <button wire:click="startConsultation({{ $appointment->id }})"
+                                <a href="{{ route('doctor.consultation', $appointment) }}"
                                     class="text-xs bg-zapmed-600 text-white hover:bg-zapmed-700 px-3 py-1.5 rounded-lg font-medium transition-colors">
                                     Start
-                                </button>
+                                </a>
                             @elseif($appointment->status === 'in_progress')
-                                <button wire:click="completeConsultation({{ $appointment->id }})"
+                                <a href="{{ route('doctor.consultation', $appointment) }}"
                                     class="text-xs bg-green-600 text-white hover:bg-green-700 px-3 py-1.5 rounded-lg font-medium transition-colors">
-                                    Complete
-                                </button>
+                                    Continue
+                                </a>
                             @elseif($appointment->status === 'completed')
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">Done</span>
                             @elseif($appointment->status === 'cancelled')
