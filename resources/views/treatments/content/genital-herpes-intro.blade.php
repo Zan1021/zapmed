@@ -1,0 +1,1 @@
+<p>Genital Herpes is a sexually transmitted infection caused by HSV-1 or HSV-2. While there is no cure, it can be effectively managed with antiviral medication to reduce outbreaks and transmission risk.</p>

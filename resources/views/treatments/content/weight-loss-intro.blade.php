@@ -1,0 +1,1 @@
+<p>Medical weight-loss programme with a Partner Doctor and dedicated Health Coach. GLP-1 medication (semaglutide) prescribed where clinically appropriate. Includes dietitian support via WhatsApp for lasting results.</p>

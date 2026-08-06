@@ -1,0 +1,1 @@
+<p>Premature ejaculation is a common sexual dysfunction characterised by the inability to control or delay ejaculation. It can be caused by both psychological and physical factors. Our doctors offer effective treatment options including numbing cream and PDE5 inhibitors.</p>

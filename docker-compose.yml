@@ -1,0 +1,36 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: zapmed_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: zapmed
+      POSTGRES_USER: zapmed
+      POSTGRES_PASSWORD: zapmed_secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - zapmed_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zapmed"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: zapmed_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - zapmed_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  zapmed_postgres_data:
+  zapmed_redis_data:

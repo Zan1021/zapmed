@@ -1,0 +1,1 @@
+<p>We're here to help remove the worry by offering STI treatment for chlamydia, gonorrhea, genital herpes, genital warts, syphilis, mycoplasma, trichomoniasis and more. Discreet consultations with fast delivery.</p>

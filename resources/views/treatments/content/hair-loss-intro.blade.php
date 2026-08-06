@@ -1,0 +1,1 @@
+<p>Hair loss can be genetic, hormonal, or age-related. For men, we offer daily pill or topical treatments. For women, topical solutions are available. Our subscription service ensures you never run out.</p>

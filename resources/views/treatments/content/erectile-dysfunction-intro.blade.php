@@ -1,0 +1,1 @@
+<p>We take the hard work out of erectile dysfunction by providing a reliable, safe and discreet online treatment and delivery service. With over 10 brands available, our doctors will find the right PDE5 inhibitor for you — whether event-based or chronic treatment.</p>
