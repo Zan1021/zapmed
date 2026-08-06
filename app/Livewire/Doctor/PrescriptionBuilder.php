@@ -39,6 +39,10 @@ class PrescriptionBuilder extends Component
     public int $repeats = 1;
     public string $pharmacistNotes = '';
 
+    // Signed state
+    public bool $prescriptionSigned = false;
+    public ?int $signedPrescriptionId = null;
+
     public function mount(Consultation $consultation): void
     {
         // Ensure the authenticated doctor owns this consultation
@@ -181,7 +185,8 @@ class PrescriptionBuilder extends Component
             ]);
         }
 
-        $this->redirect(route('doctor.dashboard'), navigate: true);
+        $this->prescriptionSigned = true;
+        $this->signedPrescriptionId = $prescription->id;
     }
 
     /**

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PdfController;
 use App\Http\Controllers\TreatmentController;
 use App\Livewire\Patient\BookAppointment;
 use App\Livewire\Patient\MyAppointments;
@@ -43,6 +44,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('appointments', MyAppointments::class)
         ->middleware(['role:patient', 'onboarding'])
         ->name('patient.appointments');
+
+    // PDF Downloads
+    Route::get('pdf/prescription/{prescription}', [PdfController::class, 'prescription'])->name('pdf.prescription');
+    Route::get('pdf/sick-note/{consultation}', [PdfController::class, 'sickNote'])->name('pdf.sick-note');
+    Route::get('pdf/certificate/{consultation}', [PdfController::class, 'medicalCertificate'])->name('pdf.certificate');
 
     // Payment
     Route::get('payment/checkout/{reference}', [PaymentController::class, 'checkout'])->name('payment.checkout');

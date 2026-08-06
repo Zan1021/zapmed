@@ -3,6 +3,35 @@
         Write Prescription — {{ $consultation->patient->first_name }} {{ $consultation->patient->last_name }}
     </x-slot>
 
+    @if($prescriptionSigned)
+    <!-- Success State -->
+    <div class="max-w-2xl mx-auto">
+        <div class="bg-white rounded-xl shadow-sm border border-green-200 p-8 text-center">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+            </div>
+            <h2 class="text-xl font-bold text-gray-900 mb-2">Prescription Signed Successfully</h2>
+            <p class="text-gray-600 mb-6">The prescription has been digitally signed and is ready for download.</p>
+
+            <div class="flex items-center justify-center space-x-4">
+                <a href="{{ route('pdf.prescription', $signedPrescriptionId) }}"
+                    class="inline-flex items-center px-5 py-2.5 bg-zapmed-600 hover:bg-zapmed-700 text-white rounded-lg text-sm font-semibold transition-colors shadow-sm">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Download PDF
+                </a>
+
+                <a href="{{ route('doctor.dashboard') }}" wire:navigate
+                    class="inline-flex items-center px-5 py-2.5 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg text-sm font-medium transition-colors">
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+    @else
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <!-- Left: Patient Info -->
         <div class="lg:col-span-1 space-y-4">
@@ -275,4 +304,5 @@
             </div>
         </div>
     </div>
+    @endif
 </div>
