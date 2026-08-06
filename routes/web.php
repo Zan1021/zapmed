@@ -15,6 +15,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('onboarding')
         ->name('dashboard');
 
+    // Doctor dashboard (Livewire - real data)
+    Route::get('doctor/dashboard', \App\Livewire\Doctor\Dashboard::class)
+        ->middleware('role:doctor')
+        ->name('doctor.dashboard');
+
     // Patient onboarding
     Route::get('onboarding', Onboarding::class)
         ->middleware('role:patient')

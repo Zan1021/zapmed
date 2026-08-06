@@ -31,7 +31,7 @@
                     Doctor-led GLP-1 weight loss with personalised coaching — plus discreet sexual, mental, skin and chronic care, all in one seamless platform.
                 </p>
                 <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <a href="{{ route('register') }}" class="w-full sm:w-auto bg-zapmed-600 hover:bg-zapmed-700 text-white px-8 py-4 rounded-xl text-base font-semibold transition-all shadow-lg shadow-zapmed-200 hover:shadow-xl hover:shadow-zapmed-200">
+                    <a href="{{ route('register') }}" class="w-full sm:w-auto bg-zapmed-600 hover:bg-zapmed-700 text-white px-8 py-4 rounded-xl text-base font-semibold transition-all">
                         Start Your Assessment
                     </a>
                     <a href="#how-it-works" class="w-full sm:w-auto flex items-center justify-center text-gray-700 hover:text-gray-900 px-8 py-4 rounded-xl text-base font-semibold transition-colors">
@@ -263,6 +263,8 @@
         </div>
     </section>
 
+
+    @include('partials.calculators')
 
     <!-- Doctors -->
     <section id="doctors" class="py-20 px-4 sm:px-6 lg:px-8">

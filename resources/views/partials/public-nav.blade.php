@@ -7,12 +7,10 @@
             </div>
             <div class="hidden md:flex items-center space-x-8">
                 <!-- All Treatments Mega Menu Trigger -->
-                <div class="relative" @mouseenter="megaOpen = true" @mouseleave="megaOpen = false">
-                    <button class="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-1">
-                        All Treatments
-                        <svg class="w-4 h-4 transition-transform" :class="megaOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                    </button>
-                </div>
+                <button @click="megaOpen = !megaOpen" class="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-1">
+                    All Treatments
+                    <svg class="w-4 h-4 transition-transform" :class="megaOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
                 <a href="/#how-it-works" class="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">How It Works</a>
                 <a href="/#pricing" class="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Pricing</a>
                 <a href="/#doctors" class="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Our Doctors</a>
@@ -46,8 +44,8 @@
         x-transition:leave="transition ease-in duration-150"
         x-transition:leave-start="opacity-100 translate-y-0"
         x-transition:leave-end="opacity-0 -translate-y-1"
-        @mouseenter="megaOpen = true"
-        @mouseleave="megaOpen = false"
+        @click.outside="megaOpen = false"
+        x-cloak
         class="hidden md:block absolute top-full left-0 right-0 bg-white border-b border-gray-200 shadow-lg"
     >
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -72,7 +70,7 @@
     </div>
 
     <!-- Mobile Menu -->
-    <div x-show="mobileOpen" x-transition class="md:hidden bg-white border-b border-gray-200 shadow-lg">
+    <div x-show="mobileOpen" x-transition x-cloak class="md:hidden bg-white border-b border-gray-200 shadow-lg">
         <div class="px-4 py-4 space-y-4">
             <a href="/#how-it-works" class="block text-sm font-medium text-gray-600 hover:text-gray-900">How It Works</a>
             <a href="/#pricing" class="block text-sm font-medium text-gray-600 hover:text-gray-900">Pricing</a>
