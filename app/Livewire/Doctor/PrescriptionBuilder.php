@@ -2,10 +2,12 @@
 
 namespace App\Livewire\Doctor;
 
+use App\Mail\PrescriptionReady;
 use App\Models\Consultation;
 use App\Models\Medication;
 use App\Models\Prescription;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
@@ -187,6 +189,10 @@ class PrescriptionBuilder extends Component
 
         $this->prescriptionSigned = true;
         $this->signedPrescriptionId = $prescription->id;
+
+        // Send prescription ready email to patient
+        $prescription->loadMissing(['items', 'doctor', 'patient']);
+        Mail::to($prescription->patient)->queue(new PrescriptionReady($prescription));
     }
 
     /**

@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\AppointmentConfirmed;
+use App\Mail\NewAppointmentForDoctor;
+use App\Mail\PaymentReceived;
 use App\Models\Appointment;
 use App\Models\Payment;
 use App\Services\PayFastService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class PaymentController extends Controller
 {
@@ -128,6 +132,16 @@ class PaymentController extends Controller
             'reference' => $payment->reference,
             'amount' => $payment->amount,
         ]);
+
+        // Send email notifications
+        $payment->loadMissing(['appointment.doctor', 'appointment.patient', 'patient']);
+
+        Mail::to($payment->patient)->queue(new PaymentReceived($payment));
+
+        if ($payment->appointment) {
+            Mail::to($payment->patient)->queue(new AppointmentConfirmed($payment->appointment));
+            Mail::to($payment->appointment->doctor)->queue(new NewAppointmentForDoctor($payment->appointment));
+        }
     }
 
     /**
