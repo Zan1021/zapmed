@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Assessment;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
@@ -33,6 +34,21 @@ new #[Layout('layouts.guest')] class extends Component
         event(new Registered($user = User::create($validated)));
 
         Auth::login($user);
+
+        // Check for pending assessment in session
+        $pendingAssessment = session()->pull('pending_assessment');
+        if ($pendingAssessment) {
+            $assessment = Assessment::create([
+                'user_id' => $user->id,
+                'treatment_slug' => $pendingAssessment['treatment_slug'],
+                'treatment_name' => $pendingAssessment['treatment_name'],
+                'answers' => $pendingAssessment['answers'],
+                'status' => 'completed',
+            ]);
+
+            $this->redirect(route('patient.book', ['assessment_id' => $assessment->id]), navigate: true);
+            return;
+        }
 
         $this->redirect(route('dashboard', absolute: false), navigate: true);
     }

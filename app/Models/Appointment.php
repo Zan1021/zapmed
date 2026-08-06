@@ -84,6 +84,11 @@ class Appointment extends Model
         return $this->hasOne(Consultation::class);
     }
 
+    public function assessment(): HasOne
+    {
+        return $this->hasOne(Assessment::class);
+    }
+
     /**
      * Get fee formatted in Rands.
      */

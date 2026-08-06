@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome');
 Route::get('treatments/{slug}', [TreatmentController::class, 'show'])->name('treatments.show');
+Route::get('assessment/{slug}', \App\Livewire\Patient\Assessment::class)->name('assessment.start');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('dashboard', 'dashboard')

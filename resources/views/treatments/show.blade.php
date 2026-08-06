@@ -39,7 +39,7 @@
                 <span class="text-2xl font-bold text-gray-900">{{ $treatment['price'] }}</span>
             </div>
             <div class="mt-6">
-                <a href="{{ route('register') }}" class="inline-block bg-zapmed-600 hover:bg-zapmed-700 text-white px-8 py-4 rounded-xl text-base font-semibold transition-all shadow-lg shadow-zapmed-200 hover:shadow-xl">
+                <a href="{{ route('assessment.start', $slug) }}" class="inline-block bg-zapmed-600 hover:bg-zapmed-700 text-white px-8 py-4 rounded-xl text-base font-semibold transition-all shadow-lg shadow-zapmed-200 hover:shadow-xl">
                     Start Your Assessment
                 </a>
             </div>
@@ -100,7 +100,7 @@
         <div class="max-w-4xl mx-auto bg-gray-900 rounded-3xl p-12 text-center">
             <h2 class="text-2xl sm:text-3xl font-bold text-white">Ready to get started?</h2>
             <p class="mt-4 text-lg text-gray-400">Complete your assessment in just a few minutes — a licensed doctor will review it the same day.</p>
-            <a href="{{ route('register') }}" class="mt-8 inline-block bg-zapmed-500 hover:bg-zapmed-600 text-white px-8 py-4 rounded-xl text-base font-semibold transition-all shadow-lg">
+            <a href="{{ route('assessment.start', $slug) }}" class="mt-8 inline-block bg-zapmed-500 hover:bg-zapmed-600 text-white px-8 py-4 rounded-xl text-base font-semibold transition-all shadow-lg">
                 Start Your Assessment
             </a>
         </div>

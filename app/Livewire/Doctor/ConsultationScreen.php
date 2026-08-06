@@ -3,6 +3,7 @@
 namespace App\Livewire\Doctor;
 
 use App\Models\Appointment;
+use App\Models\Assessment;
 use App\Models\Consultation;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -11,6 +12,7 @@ class ConsultationScreen extends Component
 {
     public Appointment $appointment;
     public ?Consultation $consultation = null;
+    public ?Assessment $assessment = null;
 
     // Clinical notes
     public string $presenting_complaint = '';
@@ -32,6 +34,9 @@ class ConsultationScreen extends Component
         }
 
         $this->appointment = $appointment->load(['patient.patientProfile.allergies', 'patient.patientProfile.chronicConditions']);
+
+        // Load linked assessment if any
+        $this->assessment = Assessment::where('appointment_id', $appointment->id)->first();
 
         // Load existing consultation or create one
         $this->consultation = Consultation::firstOrCreate(

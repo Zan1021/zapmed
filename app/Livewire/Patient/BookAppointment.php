@@ -3,6 +3,7 @@
 namespace App\Livewire\Patient;
 
 use App\Models\Appointment;
+use App\Models\Assessment;
 use App\Models\DoctorProfile;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -26,9 +27,24 @@ class BookAppointment extends Component
     // Step 3: Confirmation
     public ?Appointment $bookedAppointment = null;
 
+    // Assessment link
+    public ?int $assessmentId = null;
+
     public function mount(): void
     {
         $this->selectedDate = now()->addDay()->format('Y-m-d');
+        $this->assessmentId = request()->query('assessment_id') ? (int) request()->query('assessment_id') : null;
+
+        // Pre-fill reason from assessment if available
+        if ($this->assessmentId) {
+            $assessment = Assessment::where('id', $this->assessmentId)
+                ->where('user_id', Auth::id())
+                ->first();
+
+            if ($assessment) {
+                $this->reason = $assessment->treatment_name . ' consultation';
+            }
+        }
     }
 
     /**
@@ -108,6 +124,14 @@ class BookAppointment extends Component
             'fee_amount' => $fee,
             'is_paid' => false,
         ]);
+
+        // Link assessment to appointment if applicable
+        if ($this->assessmentId) {
+            Assessment::where('id', $this->assessmentId)
+                ->where('user_id', Auth::id())
+                ->whereNull('appointment_id')
+                ->update(['appointment_id' => $this->bookedAppointment->id]);
+        }
 
         // Create payment record
         $payment = \App\Models\Payment::create([

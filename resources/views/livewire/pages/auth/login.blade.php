@@ -1,6 +1,8 @@
 <?php
 
 use App\Livewire\Forms\LoginForm;
+use App\Models\Assessment;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
@@ -19,6 +21,21 @@ new #[Layout('layouts.guest')] class extends Component
         $this->form->authenticate();
 
         Session::regenerate();
+
+        // Check for pending assessment in session
+        $pendingAssessment = session()->pull('pending_assessment');
+        if ($pendingAssessment) {
+            $assessment = Assessment::create([
+                'user_id' => Auth::id(),
+                'treatment_slug' => $pendingAssessment['treatment_slug'],
+                'treatment_name' => $pendingAssessment['treatment_name'],
+                'answers' => $pendingAssessment['answers'],
+                'status' => 'completed',
+            ]);
+
+            $this->redirect(route('patient.book', ['assessment_id' => $assessment->id]), navigate: true);
+            return;
+        }
 
         $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
     }
