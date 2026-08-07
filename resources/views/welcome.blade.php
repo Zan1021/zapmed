@@ -8,7 +8,7 @@
     <meta name="description" content="Doctor-led online treatment for weight loss, sexual health, skincare, and chronic care. Prescribed by licensed SA doctors, delivered to your door.">
 
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700,800&display=swap" rel="stylesheet" />
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -24,7 +24,7 @@
                     <span class="w-2 h-2 bg-zapmed-500 rounded-full mr-2 animate-pulse"></span>
                     Medically-Backed, Tech-Powered
                 </div>
-                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 tracking-tight leading-tight">
+                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 tracking-tight leading-tight">
                     Online Doctor-Guided
                     <span class="text-zapmed-600">Medical Treatments</span>
                 </h1>

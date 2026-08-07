@@ -12,21 +12,21 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Inter', ...defaultTheme.fontFamily.sans],
+                sans: ['Plus Jakarta Sans', ...defaultTheme.fontFamily.sans],
             },
             colors: {
                 zapmed: {
-                    50: '#f3ffe6',
-                    100: '#e4ffc9',
-                    200: '#cbff99',
-                    300: '#a6f55c',
-                    400: '#84e62e',
-                    500: '#64cc0f',
-                    600: '#64cc0f',
-                    700: '#4ba307',
-                    800: '#31620f',
-                    900: '#2a5311',
-                    950: '#132e03',
+                    50: '#f4fce6',
+                    100: '#e6f9c8',
+                    200: '#cdf396',
+                    300: '#ade85a',
+                    400: '#93db2a',
+                    500: '#81cf00',
+                    600: '#6ab300',
+                    700: '#508a00',
+                    800: '#406d07',
+                    900: '#365c0b',
+                    950: '#1a3300',
                 },
                 sidebar: {
                     DEFAULT: '#1e293b',
