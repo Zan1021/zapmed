@@ -3,7 +3,9 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
             <div class="flex items-center">
-                <a href="/" class="text-2xl font-bold text-gray-900 tracking-tight">zapmed<span class="text-zapmed-500">.</span></a>
+                <a href="/" class="flex items-center">
+                    <img src="/images/zapmed-logo.png" alt="Zapmed - Online Doctor-Guided Medical Treatments South Africa" class="h-8 w-auto">
+                </a>
             </div>
             <div class="hidden md:flex items-center space-x-8">
                 <!-- All Treatments Mega Menu Trigger -->

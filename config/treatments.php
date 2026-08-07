@@ -7,7 +7,8 @@ return [
     | Treatment Categories & Treatments
     |--------------------------------------------------------------------------
     |
-    | Order matches mega menu from zapmed.co.za exactly.
+    | Slugs match zapmed.co.za live URLs exactly for SEO preservation.
+    | Route: /{slug} (root level, no /treatments/ prefix)
     |
     */
 
@@ -22,7 +23,7 @@ return [
                 'tagline' => 'Doctor-guided GLP-1 weight loss with personalised coaching.',
                 'description' => 'Medical weight-loss programme using clinically approved GLP-1 medication (such as semaglutide), prescribed by a licensed doctor after a private medical assessment. Includes ongoing health coaching from a registered dietitian.',
             ],
-            'health-coach' => [
+            'health-coach-support' => [
                 'name' => 'Health Coach',
                 'price' => 'Included with subscription',
                 'tagline' => 'Dedicated dietitian support for your weight loss journey.',
@@ -36,19 +37,19 @@ return [
         'description' => 'Prescription skincare personalised to you',
         'image' => '/images/categories/skincare.webp',
         'treatments' => [
-            'acne' => [
+            'acne-treatment' => [
                 'name' => 'Acne Treatment',
                 'price' => 'From R220/month',
                 'tagline' => 'Clear skin starts with the right prescription.',
                 'description' => 'Personalised prescription acne treatment. Our doctors assess your skin and prescribe effective topical or oral medication based on severity — from mild breakouts to severe cystic acne.',
             ],
-            'anti-ageing' => [
+            'anti-aging-treatment' => [
                 'name' => 'Anti-Aging',
                 'price' => 'From R220/month',
                 'tagline' => 'Clinically proven anti-ageing treatments prescribed for you.',
                 'description' => 'Prescription retinoids, antioxidants, and targeted treatments to reduce fine lines, improve skin texture, and protect against further ageing. Doctor-prescribed, delivered to your door.',
             ],
-            'rosacea' => [
+            'rosacea-treatment' => [
                 'name' => 'Rosacea',
                 'price' => 'From R250/month',
                 'tagline' => 'Reduce redness and manage flare-ups effectively.',
@@ -68,7 +69,7 @@ return [
         'description' => 'Contraception, hormonal support, and intimate health',
         'image' => '/images/categories/womens-health.png',
         'treatments' => [
-            'bacterial-vaginosis' => [
+            'bacterial-vaginosis-treatment' => [
                 'name' => 'Bacterial Vaginosis',
                 'price' => 'From R300',
                 'tagline' => 'Discreet treatment for BV — fast relief, no waiting rooms.',
@@ -100,13 +101,13 @@ return [
         'description' => 'Sexual performance, hair loss, and wellness',
         'image' => '/images/categories/mens-health.png',
         'treatments' => [
-            'erectile-dysfunction' => [
+            'erectile-dysfunction-treatment' => [
                 'name' => 'Erectile Dysfunction',
                 'price' => 'From R220/month',
                 'tagline' => 'Discreet, effective ED treatment prescribed online.',
                 'description' => 'Clinically proven treatments for erectile dysfunction prescribed by licensed doctors. Choose from daily or on-demand options — Sildenafil, Tadalafil, and more. Delivered discreetly.',
             ],
-            'premature-ejaculation' => [
+            'premature-ejaculation-treatment' => [
                 'name' => 'Premature Ejaculation',
                 'price' => 'From R300',
                 'tagline' => 'Regain control with proven prescription treatments.',
@@ -126,13 +127,13 @@ return [
         'description' => 'Discreet treatment for sexual health concerns',
         'image' => '/images/categories/sexual-health.webp',
         'treatments' => [
-            'genital-herpes' => [
+            'genital-herpes-101' => [
                 'name' => 'Genital Herpes',
                 'price' => 'From R300',
                 'tagline' => 'Manage outbreaks and reduce transmission discreetly.',
                 'description' => 'Antiviral treatment to manage genital herpes outbreaks, reduce severity, and lower transmission risk. Suppressive or episodic therapy prescribed by our doctors.',
             ],
-            'genital-warts' => [
+            'genital-warts-treatment' => [
                 'name' => 'Genital Warts',
                 'price' => 'From R300',
                 'tagline' => 'Effective prescription treatment for genital warts.',
@@ -158,13 +159,13 @@ return [
         'description' => 'Virtual GP consultations and everyday treatments',
         'image' => '/images/categories/general-health.webp',
         'treatments' => [
-            'acid-reflux' => [
+            'acid-reflux-treatment' => [
                 'name' => 'Acid Reflux',
                 'price' => 'From R250',
                 'tagline' => 'Effective relief for heartburn and acid reflux.',
                 'description' => 'Prescription PPIs and lifestyle guidance to manage gastro-oesophageal reflux (GORD). Our doctors assess your symptoms and prescribe the right treatment for lasting relief.',
             ],
-            'cold-sores' => [
+            'cold-sores-treatment' => [
                 'name' => 'Cold Sores',
                 'price' => 'From R300',
                 'tagline' => 'Fast-acting antiviral treatment for cold sores.',
@@ -176,13 +177,13 @@ return [
                 'tagline' => 'See a doctor online for any health concern.',
                 'description' => 'General practitioner consultation via video call. Discuss any health concern, get a diagnosis, prescription, sick note, or medical certificate — all from home.',
             ],
-            'haemorrhoids' => [
+            'haemorrhoids-treatment' => [
                 'name' => 'Haemorrhoids',
                 'price' => 'From R250',
                 'tagline' => 'Discreet treatment for piles — no embarrassment needed.',
                 'description' => 'Prescription creams, suppositories, and oral treatments to manage haemorrhoid symptoms. Our doctors provide discreet, effective care without the awkward in-person visit.',
             ],
-            'hair-loss' => [
+            'hair-loss-treatment' => [
                 'name' => 'Hair Loss',
                 'price' => 'From R220/month',
                 'tagline' => 'Clinically proven hair loss treatments for men.',
@@ -194,7 +195,7 @@ return [
                 'tagline' => 'Fast relief for urinary tract infections.',
                 'description' => 'Antibiotics for UTI prescribed quickly after an online assessment. No need to wait in a queue — get treatment started today and feel better within 24-48 hours.',
             ],
-            'thrush' => [
+            'thrush-treatment' => [
                 'name' => 'Thrush',
                 'price' => 'From R250',
                 'tagline' => 'Effective treatment for oral or vaginal thrush.',

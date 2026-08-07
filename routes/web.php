@@ -10,7 +10,6 @@ use App\Livewire\Patient\Onboarding;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome');
-Route::get('treatments/{slug}', [TreatmentController::class, 'show'])->name('treatments.show');
 Route::get('assessment/{slug}', \App\Livewire\Patient\Assessment::class)->name('assessment.start');
 
 // AI Health Assistant (public, rate-limited)
@@ -114,3 +113,9 @@ Route::view('profile', 'profile')
     ->name('profile');
 
 require __DIR__.'/auth.php';
+
+
+// Treatment pages (catch-all, must be LAST — matches zapmed.co.za URL structure)
+Route::get('{slug}', [TreatmentController::class, 'show'])
+    ->name('treatments.show')
+    ->where('slug', '[a-z0-9\-]+');
