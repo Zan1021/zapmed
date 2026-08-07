@@ -46,4 +46,10 @@ return [
         'sender_id' => env('SMS_SENDER_ID', 'Zapmed'),
     ],
 
+    'pharmacy' => [
+        'enabled' => env('PHARMACY_API_ENABLED', false),
+        'api_url' => env('PHARMACY_API_URL'),
+        'api_key' => env('PHARMACY_API_KEY'),
+    ],
+
 ];

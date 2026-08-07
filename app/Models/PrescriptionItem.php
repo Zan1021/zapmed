@@ -18,6 +18,8 @@ class PrescriptionItem extends Model
         'route',
         'duration_days',
         'quantity',
+        'unit_price',
+        'line_total',
         'instructions',
         'substitution_allowed',
     ];
@@ -26,6 +28,8 @@ class PrescriptionItem extends Model
     {
         return [
             'substitution_allowed' => 'boolean',
+            'unit_price' => 'integer',
+            'line_total' => 'integer',
         ];
     }
 
@@ -37,5 +41,21 @@ class PrescriptionItem extends Model
     public function medication(): BelongsTo
     {
         return $this->belongsTo(Medication::class);
+    }
+
+    /**
+     * Get formatted unit price.
+     */
+    public function getFormattedUnitPriceAttribute(): string
+    {
+        return 'R' . number_format($this->unit_price / 100, 2);
+    }
+
+    /**
+     * Get formatted line total.
+     */
+    public function getFormattedLineTotalAttribute(): string
+    {
+        return 'R' . number_format($this->line_total / 100, 2);
     }
 }

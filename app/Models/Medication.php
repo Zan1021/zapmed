@@ -15,6 +15,7 @@ class Medication extends Model
         'strength',
         'schedule',
         'nappi_code',
+        'price',
         'contraindications',
         'side_effects',
         'interactions',
@@ -25,7 +26,16 @@ class Medication extends Model
     {
         return [
             'is_active' => 'boolean',
+            'price' => 'integer',
         ];
+    }
+
+    /**
+     * Get formatted price.
+     */
+    public function getFormattedPriceAttribute(): string
+    {
+        return 'R' . number_format($this->price / 100, 2);
     }
 
     /**

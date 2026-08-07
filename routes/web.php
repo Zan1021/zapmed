@@ -67,6 +67,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware(['role:patient', 'onboarding'])
         ->name('patient.subscription');
 
+    // Patient prescriptions (view only — no download)
+    Route::get('prescriptions', \App\Livewire\Patient\MyPrescriptions::class)
+        ->middleware(['role:patient', 'onboarding'])
+        ->name('patient.prescriptions');
+
     Route::get('subscription/checkout', [SubscriptionController::class, 'checkout'])
         ->middleware(['role:patient'])
         ->name('subscription.checkout');
@@ -79,8 +84,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware(['role:patient'])
         ->name('subscription.cancel');
 
-    // PDF Downloads
-    Route::get('pdf/prescription/{prescription}', [PdfController::class, 'prescription'])->name('pdf.prescription');
+    // PDF Downloads (sick notes and medical certificates only)
     Route::get('pdf/sick-note/{consultation}', [PdfController::class, 'sickNote'])->name('pdf.sick-note');
     Route::get('pdf/certificate/{consultation}', [PdfController::class, 'medicalCertificate'])->name('pdf.certificate');
 

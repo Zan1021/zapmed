@@ -24,6 +24,7 @@ class PrescriptionBuilder extends Component
     public string $medicationName = '';
     public string $medicationForm = '';
     public string $medicationStrength = '';
+    public int $medicationPrice = 0; // price in cents
     public string $dosage = '';
     public string $frequency = 'once daily';
     public string $route = 'oral';
@@ -32,6 +33,7 @@ class PrescriptionBuilder extends Component
     public string $instructions = '';
     public bool $substitutionAllowed = true;
     public bool $isCustomMedication = false;
+    public string $customPrice = ''; // for custom medications
 
     // Prescription items (array of items before saving)
     public array $items = [];
@@ -69,6 +71,15 @@ class PrescriptionBuilder extends Component
             ->toArray();
     }
 
+    /**
+     * Get total prescription cost.
+     */
+    #[Computed]
+    public function totalCost(): int
+    {
+        return collect($this->items)->sum('line_total');
+    }
+
     public function updatedSearch(): void
     {
         $this->showResults = strlen($this->search) >= 2;
@@ -89,6 +100,7 @@ class PrescriptionBuilder extends Component
         $this->medicationName = $medication->name;
         $this->medicationForm = $medication->form;
         $this->medicationStrength = $medication->strength;
+        $this->medicationPrice = $medication->price;
         $this->isCustomMedication = false;
         $this->showResults = false;
         $this->search = '';
@@ -104,6 +116,8 @@ class PrescriptionBuilder extends Component
         $this->medicationName = '';
         $this->medicationForm = 'tablet';
         $this->medicationStrength = '';
+        $this->medicationPrice = 0;
+        $this->customPrice = '';
         $this->showResults = false;
         $this->search = '';
     }
@@ -123,6 +137,13 @@ class PrescriptionBuilder extends Component
             'quantity' => 'required|integer|min:1',
         ]);
 
+        // Calculate price
+        $unitPrice = $this->medicationPrice;
+        if ($this->isCustomMedication && $this->customPrice) {
+            $unitPrice = (int) round((float) $this->customPrice * 100);
+        }
+        $lineTotal = $unitPrice * $this->quantity;
+
         $this->items[] = [
             'medication_id' => $this->selectedMedicationId,
             'medication_name' => $this->medicationName,
@@ -133,6 +154,8 @@ class PrescriptionBuilder extends Component
             'route' => $this->route,
             'duration_days' => $this->durationDays,
             'quantity' => $this->quantity,
+            'unit_price' => $unitPrice,
+            'line_total' => $lineTotal,
             'instructions' => $this->instructions,
             'substitution_allowed' => $this->substitutionAllowed,
         ];
@@ -151,6 +174,7 @@ class PrescriptionBuilder extends Component
 
     /**
      * Sign and finalize the prescription.
+     * Creates a pending medication payment for the patient.
      */
     public function signPrescription(): void
     {
@@ -159,6 +183,11 @@ class PrescriptionBuilder extends Component
             return;
         }
 
+        $totalAmount = collect($this->items)->sum('line_total');
+
+        // Pre-fill delivery from patient's address
+        $patient = $this->consultation->patient;
+
         $prescription = Prescription::create([
             'consultation_id' => $this->consultation->id,
             'patient_id' => $this->consultation->patient_id,
@@ -166,6 +195,14 @@ class PrescriptionBuilder extends Component
             'status' => 'signed',
             'diagnosis' => $this->consultation->diagnosis,
             'notes' => $this->pharmacistNotes ?: null,
+            'total_amount' => $totalAmount,
+            'payment_status' => 'unpaid',
+            'pharmacy_status' => 'pending',
+            'delivery_address' => $patient->address,
+            'delivery_city' => $patient->city,
+            'delivery_province' => $patient->province,
+            'delivery_postal_code' => $patient->postal_code,
+            'delivery_phone' => $patient->phone,
             'is_chronic' => $this->isChronic,
             'repeats' => $this->isChronic ? $this->repeats : 0,
             'signed_at' => now(),
@@ -182,15 +219,27 @@ class PrescriptionBuilder extends Component
                 'route' => $item['route'],
                 'duration_days' => $item['duration_days'],
                 'quantity' => $item['quantity'],
+                'unit_price' => $item['unit_price'],
+                'line_total' => $item['line_total'],
                 'instructions' => $item['instructions'] ?: null,
                 'substitution_allowed' => $item['substitution_allowed'],
             ]);
         }
 
+        // Create a payment record for medication
+        \App\Models\Payment::create([
+            'patient_id' => $this->consultation->patient_id,
+            'provider' => 'payfast',
+            'amount' => $totalAmount,
+            'currency' => 'ZAR',
+            'status' => 'pending',
+            'description' => "Medication - {$prescription->reference}",
+        ]);
+
         $this->prescriptionSigned = true;
         $this->signedPrescriptionId = $prescription->id;
 
-        // Send prescription ready email to patient
+        // Notify patient that medication payment is required
         $prescription->loadMissing(['items', 'doctor', 'patient']);
         Mail::to($prescription->patient)->queue(new PrescriptionReady($prescription));
     }
@@ -212,6 +261,8 @@ class PrescriptionBuilder extends Component
         $this->medicationName = '';
         $this->medicationForm = '';
         $this->medicationStrength = '';
+        $this->medicationPrice = 0;
+        $this->customPrice = '';
         $this->dosage = '';
         $this->frequency = 'once daily';
         $this->route = 'oral';

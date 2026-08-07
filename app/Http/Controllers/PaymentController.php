@@ -120,13 +120,16 @@ class PaymentController extends Controller
             'paid_at' => now(),
         ]);
 
-        // Mark appointment as paid
+        // Mark appointment as paid (consultation payment)
         if ($payment->appointment) {
             $payment->appointment->update([
                 'is_paid' => true,
                 'status' => 'confirmed',
             ]);
         }
+
+        // Check if this is a medication payment — dispatch to pharmacy
+        $this->handleMedicationPayment($payment);
 
         Log::info('PayFast payment completed', [
             'reference' => $payment->reference,
@@ -142,6 +145,42 @@ class PaymentController extends Controller
             Mail::to($payment->patient)->queue(new AppointmentConfirmed($payment->appointment));
             Mail::to($payment->appointment->doctor)->queue(new NewAppointmentForDoctor($payment->appointment));
         }
+    }
+
+    /**
+     * Handle medication payment — mark prescription as paid and dispatch to pharmacy.
+     */
+    private function handleMedicationPayment(Payment $payment): void
+    {
+        // Check if this payment is for medication (description starts with "Medication -")
+        if (!str_starts_with($payment->description ?? '', 'Medication -')) {
+            return;
+        }
+
+        // Extract prescription reference from description
+        $reference = str_replace('Medication - ', '', $payment->description);
+        $prescription = \App\Models\Prescription::where('reference', $reference)->first();
+
+        if (!$prescription) {
+            Log::warning('Medication payment completed but prescription not found', [
+                'payment' => $payment->reference,
+                'description' => $payment->description,
+            ]);
+            return;
+        }
+
+        // Mark prescription as paid
+        $prescription->markPaid($payment->reference);
+
+        // Dispatch to pharmacy
+        $pharmacy = app(\App\Services\PharmacyService::class);
+        $result = $pharmacy->dispatch($prescription);
+
+        Log::info('Pharmacy dispatch attempted after medication payment', [
+            'prescription' => $prescription->reference,
+            'success' => $result['success'],
+            'message' => $result['message'],
+        ]);
     }
 
     /**
