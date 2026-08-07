@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AiConversation;
 use App\Services\AiAssistantService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -35,6 +36,18 @@ class AiAssistantController extends Controller
         RateLimiter::hit($key, 60);
 
         $result = $this->assistant->ask($request->input('message'));
+
+        // Log the conversation
+        AiConversation::create([
+            'question' => $request->input('message'),
+            'response' => $result['response'],
+            'matched_treatment_slug' => $result['treatment_slug'],
+            'matched_treatment_name' => $result['treatment_name'],
+            'had_match' => !empty($result['treatment_slug']),
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'source_page' => $request->header('Referer'),
+        ]);
 
         // Build the treatment URL if we have a slug
         $treatmentUrl = null;

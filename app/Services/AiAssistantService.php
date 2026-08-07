@@ -75,6 +75,7 @@ class AiAssistantService
     {
         $treatments = config('treatments');
         $treatmentContext = $this->buildTreatmentContext($treatments);
+        $customKnowledge = $this->getCustomKnowledge();
 
         return <<<PROMPT
 You are Zapmed's AI Health Assistant — a friendly, knowledgeable virtual guide on a South African telehealth platform. Your job is to help potential patients understand their health concerns and direct them to the right treatment page on the platform.
@@ -91,6 +92,8 @@ Zapmed is an online telehealth platform based in South Africa. Licensed SA docto
 
 ## Available Treatments & Pages
 {$treatmentContext}
+
+{$customKnowledge}
 
 ## Response Rules
 1. Always respond with empathy and understanding
@@ -111,6 +114,34 @@ You MUST respond in valid JSON with this exact structure:
 
 Only use treatment_slug values from the list above. If no treatment matches closely, set both to null and suggest a GP consultation in your response.
 PROMPT;
+    }
+
+    /**
+     * Get custom knowledge entries from database.
+     */
+    private function getCustomKnowledge(): string
+    {
+        try {
+            $entries = \App\Models\AiKnowledgeEntry::active()->get();
+
+            if ($entries->isEmpty()) {
+                return '';
+            }
+
+            $sections = $entries->groupBy('category');
+            $output = "## Additional Knowledge\n";
+
+            foreach ($sections as $category => $items) {
+                $output .= "\n### " . ucfirst($category) . "\n";
+                foreach ($items as $item) {
+                    $output .= "- **{$item->title}**: {$item->content}\n";
+                }
+            }
+
+            return $output;
+        } catch (\Exception $e) {
+            return '';
+        }
     }
 
     /**

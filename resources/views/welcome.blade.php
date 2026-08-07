@@ -72,53 +72,7 @@
                 </div>
             </div>
 
-            <!-- AI Health Assistant -->
-            <div class="max-w-2xl mx-auto" style="margin-top: 35px;" x-data="aiAssistant()">
-                <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-                    <div class="p-5 border-b border-gray-50">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-9 h-9 bg-zapmed-100 rounded-lg flex items-center justify-center">
-                                <svg class="w-5 h-5 text-zapmed-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-                                </svg>
-                            </div>
-                            <div>
-                                <h3 class="text-sm font-semibold text-gray-900">AI Health Assistant</h3>
-                                <p class="text-xs text-gray-500">Ask me anything about our treatments</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Response area -->
-                    <div x-show="response" x-transition class="p-5 bg-gray-50 border-b border-gray-100">
-                        <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-line" x-text="response"></p>
-                        <template x-if="treatmentUrl">
-                            <a :href="treatmentUrl" class="mt-3 inline-flex items-center px-4 py-2 bg-zapmed-600 hover:bg-zapmed-700 text-white text-sm font-medium rounded-lg transition-colors">
-                                <span x-text="'View ' + treatmentName + ' →'"></span>
-                            </a>
-                        </template>
-                    </div>
-
-                    <!-- Input -->
-                    <form @submit.prevent="askQuestion" class="p-4 flex items-center space-x-3">
-                        <input x-model="message" type="text"
-                            class="flex-1 rounded-xl border-gray-200 text-sm focus:border-zapmed-500 focus:ring-zapmed-500 placeholder-gray-400"
-                            placeholder="e.g. I want to lose weight, I need help with acne, I'm feeling stressed..."
-                            :disabled="loading" maxlength="500">
-                        <button type="submit" :disabled="loading || !message.trim()"
-                            class="flex-shrink-0 w-10 h-10 bg-zapmed-600 hover:bg-zapmed-700 disabled:bg-gray-300 text-white rounded-xl flex items-center justify-center transition-colors">
-                            <svg x-show="!loading" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-                            </svg>
-                            <svg x-show="loading" class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                        </button>
-                    </form>
-                </div>
-                <p class="text-center text-xs text-gray-400 mt-3">Powered by AI. Not a substitute for medical advice — always consult a doctor.</p>
-            </div>
+            <!-- AI Health Assistant — now a floating widget -->
         </div>
     </section>
 
@@ -433,46 +387,7 @@
 
     @include('partials.public-footer')
 
-    <script>
-    function aiAssistant() {
-        return {
-            message: '',
-            response: '',
-            treatmentUrl: null,
-            treatmentName: '',
-            loading: false,
-
-            async askQuestion() {
-                if (!this.message.trim() || this.loading) return;
-
-                this.loading = true;
-                this.response = '';
-                this.treatmentUrl = null;
-
-                try {
-                    const res = await fetch('/api/ai-assistant', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        },
-                        body: JSON.stringify({ message: this.message }),
-                    });
-
-                    const data = await res.json();
-                    this.response = data.response;
-                    this.treatmentUrl = data.treatment_url || null;
-                    this.treatmentName = data.treatment_name || '';
-                    this.message = '';
-                } catch (err) {
-                    this.response = 'Sorry, something went wrong. Please try again or browse our treatments below.';
-                } finally {
-                    this.loading = false;
-                }
-            }
-        };
-    }
-    </script>
+    @include('partials.ai-chat-widget')
 
 </body>
 </html>

@@ -29,6 +29,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/appointments', \App\Livewire\Admin\Appointments::class)->name('admin.appointments');
         Route::get('/payments', \App\Livewire\Admin\Payments::class)->name('admin.payments');
         Route::get('/subscriptions', \App\Livewire\Admin\SubscriptionPlans::class)->name('admin.subscriptions');
+        Route::get('/ai', \App\Livewire\Admin\AiManagement::class)->name('admin.ai');
         Route::get('/audit-log', \App\Livewire\Admin\AuditLog::class)->name('admin.audit-log');
     });
 
