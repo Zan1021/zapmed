@@ -70,7 +70,7 @@ class SocialLoginController extends Controller
      */
     private function validateProvider(string $provider): void
     {
-        if (!in_array($provider, ['google', 'facebook'])) {
+        if (!in_array($provider, ['google', 'facebook', 'apple'])) {
             abort(404);
         }
     }

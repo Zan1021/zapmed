@@ -64,6 +64,12 @@ return [
         'redirect' => env('FACEBOOK_REDIRECT_URL', '/auth/facebook/callback'),
     ],
 
+    'apple' => [
+        'client_id' => env('APPLE_CLIENT_ID'),
+        'client_secret' => env('APPLE_CLIENT_SECRET'),
+        'redirect' => env('APPLE_REDIRECT_URL', '/auth/apple/callback'),
+    ],
+
     'openai' => [
         'api_key' => env('OPENAI_API_KEY'),
         'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
