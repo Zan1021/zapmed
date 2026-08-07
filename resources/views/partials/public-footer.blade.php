@@ -38,3 +38,6 @@
         </div>
     </div>
 </footer>
+
+
+@include('partials.ai-chat-widget')

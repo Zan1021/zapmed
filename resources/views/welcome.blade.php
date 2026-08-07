@@ -73,6 +73,76 @@
             </div>
 
             <!-- AI Health Assistant — now a floating widget -->
+
+            <!-- Inline AI Chat (Homepage only) -->
+            <div class="max-w-2xl mx-auto" style="margin-top: 35px;" x-data="aiChatWidget()">
+                <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                    <div class="p-5 border-b border-gray-50">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-9 h-9 bg-zapmed-100 rounded-lg flex items-center justify-center overflow-hidden">
+                                <img src="/images/ai-doctor-avatar.svg" alt="AI Doctor" class="w-9 h-9">
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-semibold text-gray-900">AI Health Assistant</h3>
+                                <p class="text-xs text-gray-500">Ask me anything about our treatments</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Response area -->
+                    <template x-if="messages.length > 0">
+                        <div class="p-5 bg-gray-50 border-b border-gray-100 max-h-[300px] overflow-y-auto space-y-3">
+                            <template x-for="(msg, i) in messages" :key="i">
+                                <div>
+                                    <template x-if="msg.role === 'user'">
+                                        <div class="flex justify-end">
+                                            <div class="bg-zapmed-600 text-white rounded-xl rounded-tr-sm px-3 py-2 max-w-[85%]">
+                                                <p class="text-sm" x-text="msg.text"></p>
+                                            </div>
+                                        </div>
+                                    </template>
+                                    <template x-if="msg.role === 'ai'">
+                                        <div class="flex items-start space-x-2">
+                                            <div class="w-7 h-7 rounded-full flex-shrink-0 overflow-hidden">
+                                                <img src="/images/ai-doctor-avatar.svg" alt="AI" class="w-7 h-7">
+                                            </div>
+                                            <div class="max-w-[85%]">
+                                                <div class="bg-white rounded-xl rounded-tl-sm px-3 py-2 border border-gray-200">
+                                                    <p class="text-sm text-gray-700 whitespace-pre-line" x-text="msg.text"></p>
+                                                </div>
+                                                <template x-if="msg.treatmentUrl">
+                                                    <a :href="msg.treatmentUrl" class="mt-2 inline-flex items-center px-3 py-1.5 bg-zapmed-600 hover:bg-zapmed-700 text-white text-xs font-medium rounded-lg transition-colors">
+                                                        <span x-text="'View ' + msg.treatmentName + ' →'"></span>
+                                                    </a>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <!-- Input -->
+                    <form @submit.prevent="sendMessage" class="p-4 flex items-center space-x-3">
+                        <input x-model="message" type="text"
+                            class="flex-1 rounded-xl border-gray-200 text-sm focus:border-zapmed-500 focus:ring-zapmed-500 placeholder-gray-400"
+                            placeholder="e.g. I want to lose weight, I need help with acne..."
+                            :disabled="loading" maxlength="500">
+                        <button type="submit" :disabled="loading || !message.trim()"
+                            class="flex-shrink-0 w-10 h-10 bg-zapmed-600 hover:bg-zapmed-700 disabled:bg-gray-300 text-white rounded-xl flex items-center justify-center transition-colors">
+                            <svg x-show="!loading" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                            </svg>
+                            <svg x-show="loading" class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+                <p class="text-center text-xs text-gray-400 mt-3">Powered by AI. Not a substitute for medical advice — always consult a doctor.</p>
+            </div>
         </div>
     </section>
 
@@ -386,8 +456,6 @@
     </section>
 
     @include('partials.public-footer')
-
-    @include('partials.ai-chat-widget')
 
 </body>
 </html>
