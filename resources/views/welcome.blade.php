@@ -145,73 +145,31 @@
 
 
     <!-- Services -->
-    <section id="services" class="py-20 bg-gray-50 px-4 sm:px-6 lg:px-8">
+    <section id="services" class="py-20 bg-white px-4 sm:px-6 lg:px-8">
         <div class="max-w-7xl mx-auto">
             <div class="text-center mb-16">
                 <h2 class="text-3xl sm:text-4xl font-bold text-gray-900">Our Services</h2>
                 <p class="mt-4 text-lg text-gray-500 max-w-2xl mx-auto">Doctor-led online treatment — personalised, discreet, and delivered.</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Weight Loss -->
-                <a href="#" class="group bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg hover:border-zapmed-200 transition-all">
-                    <div class="w-14 h-14 bg-gradient-to-br from-green-100 to-emerald-50 rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-                        <svg class="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+                @foreach(config('treatments') as $categorySlug => $category)
+                <div class="text-center">
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">{{ $category['name'] }}</h3>
+                    <div class="w-48 h-48 mx-auto mb-5 rounded-2xl overflow-hidden">
+                        <img src="{{ $category['image'] }}" alt="{{ $category['name'] }} - Zapmed telehealth South Africa" class="w-full h-full object-cover">
                     </div>
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Weight Loss</h3>
-                    <p class="text-sm text-gray-500 leading-relaxed">GLP-1 medically guided weight loss with a dedicated Health Coach. Includes semaglutide where clinically appropriate.</p>
-                    <p class="mt-3 text-sm font-semibold text-zapmed-600">From R450/month →</p>
-                </a>
-
-                <!-- Skincare -->
-                <a href="#" class="group bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg hover:border-zapmed-200 transition-all">
-                    <div class="w-14 h-14 bg-gradient-to-br from-pink-100 to-rose-50 rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-                        <svg class="w-7 h-7 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
-                    </div>
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Skincare</h3>
-                    <p class="text-sm text-gray-500 leading-relaxed">Prescription treatments for acne, anti-ageing, hyperpigmentation, and more. Personalised to your skin.</p>
-                    <p class="mt-3 text-sm font-semibold text-zapmed-600">From R220/month →</p>
-                </a>
-
-                <!-- Women's Health -->
-                <a href="#" class="group bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg hover:border-zapmed-200 transition-all">
-                    <div class="w-14 h-14 bg-gradient-to-br from-purple-100 to-violet-50 rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-                        <svg class="w-7 h-7 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
-                    </div>
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Women's Health</h3>
-                    <p class="text-sm text-gray-500 leading-relaxed">Contraception, UTI treatment, period management, and hormone support. Private, judgement-free care.</p>
-                    <p class="mt-3 text-sm font-semibold text-zapmed-600">From R220/month →</p>
-                </a>
-
-                <!-- Men's Health -->
-                <a href="#" class="group bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg hover:border-zapmed-200 transition-all">
-                    <div class="w-14 h-14 bg-gradient-to-br from-blue-100 to-indigo-50 rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-                        <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                    </div>
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Men's Health</h3>
-                    <p class="text-sm text-gray-500 leading-relaxed">Hair loss treatment, testosterone support, and men's wellness. Discreet delivery in unbranded packaging.</p>
-                    <p class="mt-3 text-sm font-semibold text-zapmed-600">From R220/month →</p>
-                </a>
-
-                <!-- Sexual Health -->
-                <a href="#" class="group bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg hover:border-zapmed-200 transition-all">
-                    <div class="w-14 h-14 bg-gradient-to-br from-amber-100 to-orange-50 rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-                        <svg class="w-7 h-7 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                    </div>
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Sexual Health</h3>
-                    <p class="text-sm text-gray-500 leading-relaxed">Erectile dysfunction, STI treatment, and genital herpes care. Completely private and confidential consultations.</p>
-                    <p class="mt-3 text-sm font-semibold text-zapmed-600">From R300 once-off →</p>
-                </a>
-
-                <!-- General Health -->
-                <a href="#" class="group bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg hover:border-zapmed-200 transition-all">
-                    <div class="w-14 h-14 bg-gradient-to-br from-teal-100 to-cyan-50 rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-                        <svg class="w-7 h-7 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
-                    </div>
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">General Health</h3>
-                    <p class="text-sm text-gray-500 leading-relaxed">Virtual GP consultations for everyday health concerns. Get your e-prescription emailed to you or medication delivered.</p>
-                    <p class="mt-3 text-sm font-semibold text-zapmed-600">R450 once-off →</p>
-                </a>
+                    <ul class="space-y-2">
+                        @foreach($category['treatments'] as $treatmentSlug => $treatment)
+                        <li>
+                            <a href="{{ route('treatments.show', $treatmentSlug) }}" class="text-sm text-gray-600 hover:text-zapmed-600 transition-colors">
+                                {{ $treatment['name'] }}
+                            </a>
+                        </li>
+                        @endforeach
+                    </ul>
+                </div>
+                @endforeach
             </div>
         </div>
     </section>
@@ -343,6 +301,159 @@
 
 
     @include('partials.calculators')
+
+    <!-- Doctor-Trusted Solutions Carousel -->
+    <section class="py-20 bg-gradient-to-b from-gray-50 to-white overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-14">
+            <div class="text-center">
+                <h2 class="text-3xl sm:text-4xl font-bold text-gray-900">Doctor-Trusted Solutions</h2>
+                <p class="mt-3 text-lg text-gray-500">Personalised For You</p>
+            </div>
+        </div>
+
+        <div x-data="trustCarousel()" class="relative px-4 sm:px-6">
+            <!-- Cards container - full width -->
+            <div class="overflow-hidden">
+                <div class="flex transition-transform duration-700 ease-out" :style="'transform: translateX(-' + (current * slideWidth) + '%)'">
+                    <!-- Card 1 -->
+                    <div class="w-full sm:w-1/2 lg:w-1/2 flex-shrink-0 px-3">
+                        <div class="h-full rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow group relative" style="min-height: 380px;">
+                                <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('/images/trust-slides/professional-female-doctor-banner.webp');"></div>
+
+                                <div class="relative h-full p-8 flex flex-col justify-end text-white">
+                                    <div class="w-12 h-12 bg-zapmed-500 rounded-xl flex items-center justify-center mb-4">
+                                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                                    </div>
+                                    <h3 class="text-lg font-bold mb-2">Prescribed by Licensed Providers</h3>
+                                    <p class="text-sm text-white/80 leading-relaxed">Every medication prescribed by HPCSA-registered doctors and dispensed by regulated pharmacy partners.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Card 2 -->
+                        <div class="w-full sm:w-1/2 lg:w-1/3 flex-shrink-0 px-3">
+                            <div class="h-full rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow group relative" style="min-height: 380px;">
+                                <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('/images/trust-slides/Sliders_Images65.jpg');"></div>
+
+                                <div class="relative h-full p-8 flex flex-col justify-end text-white">
+                                    <div class="w-12 h-12 bg-zapmed-500 rounded-xl flex items-center justify-center mb-4">
+                                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                    </div>
+                                    <h3 class="text-lg font-bold mb-2">Qualified SA Doctors</h3>
+                                    <p class="text-sm text-white/80 leading-relaxed">Fully registered with the Health Professions Council with experience in telehealth and chronic care.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Card 3 -->
+                        <div class="w-full sm:w-1/2 lg:w-1/3 flex-shrink-0 px-3">
+                            <div class="h-full rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow group relative" style="min-height: 380px;">
+                                <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('/images/trust-slides/Sliders_Images909.jpg');"></div>
+
+                                <div class="relative h-full p-8 flex flex-col justify-end text-white">
+                                    <div class="w-12 h-12 bg-zapmed-500 rounded-xl flex items-center justify-center mb-4">
+                                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                    </div>
+                                    <h3 class="text-lg font-bold mb-2">Private & Confidential</h3>
+                                    <p class="text-sm text-white/80 leading-relaxed">POPIA compliant. Encrypted records. Discreet, unbranded packaging. Your health stays your business.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Card 4 -->
+                        <div class="w-full sm:w-1/2 lg:w-1/3 flex-shrink-0 px-3">
+                            <div class="h-full rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow group relative" style="min-height: 380px;">
+                                <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('/images/trust-slides/healthy-nutrition-meal-prep-containers.webp');"></div>
+
+                                <div class="relative h-full p-8 flex flex-col justify-end text-white">
+                                    <div class="w-12 h-12 bg-zapmed-500 rounded-xl flex items-center justify-center mb-4">
+                                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                    </div>
+                                    <h3 class="text-lg font-bold mb-2">Fast Delivery Nationwide</h3>
+                                    <p class="text-sm text-white/80 leading-relaxed">Medication delivered to your door in 1-3 business days. All 9 provinces. Plain packaging, no questions asked.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Card 5 -->
+                        <div class="w-full sm:w-1/2 lg:w-1/3 flex-shrink-0 px-3">
+                            <div class="h-full rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow group relative" style="min-height: 380px;">
+                                <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('/images/trust-slides/professional-female-doctor-banner.webp');"></div>
+
+                                <div class="relative h-full p-8 flex flex-col justify-end text-white">
+                                    <div class="w-12 h-12 bg-zapmed-500 rounded-xl flex items-center justify-center mb-4">
+                                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                                    </div>
+                                    <h3 class="text-lg font-bold mb-2">Ongoing Support & Care</h3>
+                                    <p class="text-sm text-white/80 leading-relaxed">Continuous check-ins, dose adjustments, and a dedicated health coach to guide you every step of the way.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Card 6 -->
+                        <div class="w-full sm:w-1/2 lg:w-1/3 flex-shrink-0 px-3">
+                            <div class="h-full rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow group relative" style="min-height: 380px;">
+                                <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('/images/trust-slides/Sliders_Images65.jpg');"></div>
+
+                                <div class="relative h-full p-8 flex flex-col justify-end text-white">
+                                    <div class="w-12 h-12 bg-zapmed-500 rounded-xl flex items-center justify-center mb-4">
+                                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    </div>
+                                    <h3 class="text-lg font-bold mb-2">Affordable & Transparent</h3>
+                                    <p class="text-sm text-white/80 leading-relaxed">No hidden fees. Clear pricing from R220/month. Cancel anytime. Medical aid invoices provided.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation -->
+                <div class="flex items-center justify-center mt-10 space-x-4">
+                    <button @click="prev()" class="w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-500 hover:text-zapmed-600 hover:border-zapmed-300 transition-colors shadow-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    </button>
+                    <div class="flex space-x-2">
+                        <template x-for="i in dots" :key="i">
+                            <button @click="goTo(i - 1)" class="w-2.5 h-2.5 rounded-full transition-all duration-300" :class="current === (i - 1) ? 'bg-zapmed-500 w-6' : 'bg-gray-300'"></button>
+                        </template>
+                    </div>
+                    <button @click="next()" class="w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-500 hover:text-zapmed-600 hover:border-zapmed-300 transition-colors shadow-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+    function trustCarousel() {
+        return {
+            current: 0,
+            totalSlides: 6,
+            interval: null,
+            get slideWidth() {
+                if (window.innerWidth >= 1024) return 33.333;
+                if (window.innerWidth >= 640) return 50;
+                return 100;
+            },
+            get maxSlide() {
+                if (window.innerWidth >= 1024) return this.totalSlides - 3;
+                if (window.innerWidth >= 640) return this.totalSlides - 2;
+                return this.totalSlides - 1;
+            },
+            get dots() {
+                return this.maxSlide + 1;
+            },
+            init() {
+                this.interval = setInterval(() => this.next(), 4000);
+            },
+            next() {
+                this.current = this.current >= this.maxSlide ? 0 : this.current + 1;
+            },
+            prev() {
+                this.current = this.current <= 0 ? this.maxSlide : this.current - 1;
+            },
+            goTo(index) {
+                this.current = index;
+            }
+        };
+    }
+    </script>
 
     <!-- Doctors -->
     <section id="doctors" class="py-20 px-4 sm:px-6 lg:px-8">
