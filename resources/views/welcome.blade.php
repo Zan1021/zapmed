@@ -8,7 +8,7 @@
     <meta name="description" content="Doctor-led online treatment for weight loss, sexual health, skincare, and chronic care. Prescribed by licensed SA doctors, delivered to your door.">
 
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=manrope:400,500,600,700,800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.bunny.net/css?family=noto-sans:400,500,600,700,800&display=swap" rel="stylesheet" />
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -152,20 +152,21 @@
                 <p class="mt-4 text-lg text-gray-500 max-w-2xl mx-auto">Doctor-led online treatment — personalised, discreet, and delivered.</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
                 @foreach(config('treatments') as $categorySlug => $category)
-                <div class="text-center">
-                    <h3 class="text-xl font-bold text-gray-900 mb-4">{{ $category['name'] }}</h3>
-                    <div class="w-48 h-48 mx-auto mb-5 rounded-2xl overflow-hidden">
-                        <img src="{{ $category['image'] }}" alt="{{ $category['name'] }} - Zapmed telehealth South Africa" class="w-full h-full object-cover">
+                <div>
+                    <!-- Category Image (rectangular, small) -->
+                    <div class="mb-3 rounded-lg overflow-hidden h-16 bg-gray-100">
+                        <img src="{{ $category['image'] }}" alt="{{ $category['name'] }} treatments - Zapmed online telehealth South Africa" class="w-full h-full object-cover" loading="lazy">
                     </div>
+                    <h3 class="text-sm font-semibold text-gray-900 mb-3">{{ $category['name'] }}</h3>
                     <ul class="space-y-2">
                         @foreach($category['treatments'] as $treatmentSlug => $treatment)
-                        <li>
-                            <a href="{{ route('treatments.show', $treatmentSlug) }}" class="text-sm text-gray-600 hover:text-zapmed-600 transition-colors">
-                                {{ $treatment['name'] }}
-                            </a>
-                        </li>
+                            <li>
+                                <a href="{{ route('treatments.show', $treatmentSlug) }}" class="text-sm text-gray-600 hover:text-zapmed-600 transition-colors">
+                                    {{ $treatment['name'] }}
+                                </a>
+                            </li>
                         @endforeach
                     </ul>
                 </div>

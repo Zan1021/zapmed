@@ -12,7 +12,7 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Manrope', ...defaultTheme.fontFamily.sans],
+                sans: ['Noto Sans', ...defaultTheme.fontFamily.sans],
             },
             colors: {
                 zapmed: {
