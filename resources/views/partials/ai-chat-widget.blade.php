@@ -1,7 +1,7 @@
 <!-- AI Health Assistant Floating Widget -->
 <div x-data="aiChatWidget()" class="fixed bottom-6 right-6 z-50">
     <!-- Chat Panel (slides up from bottom-right) -->
-    <div x-show="open" x-transition:enter="transition ease-out duration-300"
+    <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0 translate-y-4 scale-95"
          x-transition:enter-end="opacity-100 translate-y-0 scale-100"
          x-transition:leave="transition ease-in duration-200"
@@ -107,7 +107,7 @@
 
     <!-- Floating Button -->
     <div class="flex items-center space-x-3">
-        <span x-show="!open" x-transition class="bg-white text-gray-700 text-sm font-medium px-4 py-2 rounded-full shadow-lg border border-gray-100 hidden sm:block">
+        <span x-show="!open" x-cloak x-transition class="bg-white text-gray-700 text-sm font-medium px-4 py-2 rounded-full shadow-lg border border-gray-100 hidden sm:block">
             How can we assist?
         </span>
         <button @click="open = !open"
@@ -184,6 +184,7 @@ function aiChatWidget() {
 </script>
 
 <style>
+[x-cloak] { display: none !important; }
 @keyframes bounce-subtle {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-4px); }
