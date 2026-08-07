@@ -99,9 +99,13 @@
                             <p class="text-xs text-gray-500">{{ $qa['question'] }}</p>
                             @if(($qa['type'] ?? '') === 'image' && is_array($qa['answer']))
                                 <div class="grid grid-cols-2 gap-2 mt-1">
-                                    @foreach($qa['answer'] as $imagePath)
-                                        <a href="{{ asset('storage/' . $imagePath) }}" target="_blank" class="block">
-                                            <img src="{{ asset('storage/' . $imagePath) }}" class="w-full h-24 object-cover rounded-lg border border-purple-200 hover:opacity-80 transition-opacity" alt="Patient photo">
+                                    @foreach($qa['answer'] as $image)
+                                        @php
+                                            $imgPath = is_array($image) ? $image['path'] : $image;
+                                            $imgAlt = is_array($image) ? ($image['alt'] ?? 'Patient photo') : 'Patient photo';
+                                        @endphp
+                                        <a href="{{ asset('storage/' . $imgPath) }}" target="_blank" class="block">
+                                            <img src="{{ asset('storage/' . $imgPath) }}" class="w-full h-24 object-cover rounded-lg border border-purple-200 hover:opacity-80 transition-opacity" alt="{{ $imgAlt }}">
                                         </a>
                                     @endforeach
                                 </div>

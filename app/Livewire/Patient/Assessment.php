@@ -82,13 +82,22 @@ class Assessment extends Component
             'photoUploads.*.*.max' => 'Image must be under 5MB.',
         ]);
 
-        // Store uploaded photos
+        // Store uploaded photos (optimized as WebP with SEO naming)
         $uploadedPaths = [];
+        $imageService = app(\App\Services\ImageService::class);
+
         foreach ($this->photoUploads as $questionId => $files) {
             if (is_array($files)) {
-                foreach ($files as $file) {
-                    $path = $file->store('assessments/' . $this->slug, 'public');
-                    $uploadedPaths[$questionId][] = $path;
+                $question = collect($this->questions)->firstWhere('id', $questionId);
+                $altContext = $this->treatmentName . ' ' . ($question['text'] ?? 'assessment photo');
+
+                $processed = $imageService->processMultiple($files, 'assessments/' . $this->slug, $altContext);
+
+                foreach ($processed as $result) {
+                    $uploadedPaths[$questionId][] = [
+                        'path' => $result['path'],
+                        'alt' => $result['alt'],
+                    ];
                 }
             }
         }

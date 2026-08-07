@@ -54,7 +54,7 @@
                     <div>
                         <!-- Category Image (rectangular, small) -->
                         <div class="mb-3 rounded-lg overflow-hidden h-16 bg-gray-100">
-                            <img src="{{ $category['image'] }}" alt="{{ $category['name'] }}" class="w-full h-full object-cover">
+                            <img src="{{ $category['image'] }}" alt="{{ $category['name'] }} treatments - Zapmed online telehealth South Africa" class="w-full h-full object-cover" loading="lazy">
                         </div>
                         <h3 class="text-sm font-semibold text-gray-900 mb-3">{{ $category['name'] }}</h3>
                         <ul class="space-y-2">
