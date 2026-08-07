@@ -188,6 +188,14 @@ return [
             'required' => true,
         ],
         [
+            'id' => 'gp_photos',
+            'text' => 'Upload photos of the affected area (if applicable)',
+            'type' => 'image',
+            'options' => [],
+            'required' => false,
+            'hint' => 'Optional — upload up to 3 clear photos if relevant to your concern',
+        ],
+        [
             'id' => 'gp_medications',
             'text' => 'Are you currently on any medication?',
             'type' => 'textarea',
@@ -203,14 +211,229 @@ return [
         ],
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Default Questionnaire
-    |--------------------------------------------------------------------------
-    |
-    | Used for any treatment slug not explicitly defined above.
-    |
-    */
+    'acne' => [
+        [
+            'id' => 'acne_duration',
+            'text' => 'How long have you had acne?',
+            'type' => 'select',
+            'options' => ['Less than 3 months', '3-6 months', '6-12 months', '1-3 years', 'Over 3 years'],
+            'required' => true,
+        ],
+        [
+            'id' => 'acne_severity',
+            'text' => 'How would you rate your acne severity?',
+            'type' => 'radio',
+            'options' => ['Mild (few spots)', 'Moderate (noticeable breakouts)', 'Severe (widespread, painful)'],
+            'required' => true,
+        ],
+        [
+            'id' => 'acne_areas',
+            'text' => 'Where is your acne mainly located?',
+            'type' => 'checkbox',
+            'options' => ['Face', 'Back', 'Chest', 'Shoulders', 'Other'],
+            'required' => true,
+        ],
+        [
+            'id' => 'acne_photos',
+            'text' => 'Upload clear photos of the affected area(s)',
+            'type' => 'image',
+            'options' => [],
+            'required' => true,
+            'hint' => 'Please upload 1-3 well-lit photos showing the affected areas clearly',
+        ],
+        [
+            'id' => 'acne_tried_before',
+            'text' => 'What treatments have you tried before?',
+            'type' => 'checkbox',
+            'options' => ['Over-the-counter creams', 'Prescribed topicals', 'Antibiotics', 'Isotretinoin (Roaccutane)', 'None'],
+            'required' => true,
+        ],
+        [
+            'id' => 'acne_pregnant',
+            'text' => 'Are you pregnant or planning to become pregnant?',
+            'type' => 'radio',
+            'options' => ['Yes', 'No', 'Not applicable'],
+            'required' => true,
+        ],
+        [
+            'id' => 'acne_medications',
+            'text' => 'Current medications?',
+            'type' => 'textarea',
+            'options' => [],
+            'required' => true,
+        ],
+    ],
+
+    'hyperpigmentation' => [
+        [
+            'id' => 'hp_duration',
+            'text' => 'How long have you noticed dark spots or uneven skin tone?',
+            'type' => 'select',
+            'options' => ['Less than 3 months', '3-6 months', '6-12 months', 'Over 1 year'],
+            'required' => true,
+        ],
+        [
+            'id' => 'hp_areas',
+            'text' => 'Where are the dark spots located?',
+            'type' => 'checkbox',
+            'options' => ['Forehead', 'Cheeks', 'Upper lip', 'Chin', 'Neck', 'Body'],
+            'required' => true,
+        ],
+        [
+            'id' => 'hp_photos',
+            'text' => 'Upload clear photos of the affected areas',
+            'type' => 'image',
+            'options' => [],
+            'required' => true,
+            'hint' => 'Well-lit photos without makeup showing the dark spots clearly',
+        ],
+        [
+            'id' => 'hp_cause',
+            'text' => 'What do you think caused it?',
+            'type' => 'checkbox',
+            'options' => ['Sun exposure', 'Pregnancy/hormones', 'Acne scars', 'Injury/inflammation', 'Not sure'],
+            'required' => true,
+        ],
+        [
+            'id' => 'hp_sunscreen',
+            'text' => 'Do you use sunscreen daily?',
+            'type' => 'radio',
+            'options' => ['Yes, SPF 30+', 'Sometimes', 'No'],
+            'required' => true,
+        ],
+        [
+            'id' => 'hp_medications',
+            'text' => 'Current medications or skincare products?',
+            'type' => 'textarea',
+            'options' => [],
+            'required' => true,
+        ],
+    ],
+
+    'hair-loss' => [
+        [
+            'id' => 'hl_duration',
+            'text' => 'When did you first notice hair loss?',
+            'type' => 'select',
+            'options' => ['Less than 3 months ago', '3-6 months ago', '6-12 months ago', '1-3 years ago', 'Over 3 years ago'],
+            'required' => true,
+        ],
+        [
+            'id' => 'hl_pattern',
+            'text' => 'Where is the hair loss most noticeable?',
+            'type' => 'checkbox',
+            'options' => ['Hairline/temples', 'Crown/top', 'Overall thinning', 'Patches', 'All over'],
+            'required' => true,
+        ],
+        [
+            'id' => 'hl_photos',
+            'text' => 'Upload photos showing your hair loss pattern',
+            'type' => 'image',
+            'options' => [],
+            'required' => true,
+            'hint' => 'Photos from front, top, and back of head in good lighting',
+        ],
+        [
+            'id' => 'hl_family',
+            'text' => 'Is there a family history of hair loss?',
+            'type' => 'radio',
+            'options' => ['Yes (father)', 'Yes (mother)', 'Both parents', 'No', 'Not sure'],
+            'required' => true,
+        ],
+        [
+            'id' => 'hl_tried_before',
+            'text' => 'Have you tried hair loss treatments before?',
+            'type' => 'checkbox',
+            'options' => ['Minoxidil', 'Finasteride', 'Hair supplements', 'None'],
+            'required' => true,
+        ],
+        [
+            'id' => 'hl_medications',
+            'text' => 'Current medications?',
+            'type' => 'textarea',
+            'options' => [],
+            'required' => true,
+        ],
+    ],
+
+    'genital-herpes' => [
+        [
+            'id' => 'gh_first_outbreak',
+            'text' => 'Is this your first outbreak?',
+            'type' => 'radio',
+            'options' => ['Yes', 'No, recurring'],
+            'required' => true,
+        ],
+        [
+            'id' => 'gh_symptoms',
+            'text' => 'What symptoms are you experiencing?',
+            'type' => 'checkbox',
+            'options' => ['Blisters/sores', 'Itching', 'Burning', 'Pain', 'Tingling', 'Flu-like symptoms'],
+            'required' => true,
+        ],
+        [
+            'id' => 'gh_photos',
+            'text' => 'Upload a photo of the affected area (optional but helps diagnosis)',
+            'type' => 'image',
+            'options' => [],
+            'required' => false,
+            'hint' => 'Confidential — only seen by your doctor. Helps with accurate diagnosis.',
+        ],
+        [
+            'id' => 'gh_duration',
+            'text' => 'How long have you had current symptoms?',
+            'type' => 'select',
+            'options' => ['Less than 24 hours', '1-3 days', '3-7 days', 'Over a week'],
+            'required' => true,
+        ],
+        [
+            'id' => 'gh_medications',
+            'text' => 'Current medications?',
+            'type' => 'textarea',
+            'options' => [],
+            'required' => true,
+        ],
+    ],
+
+    'sti-treatment' => [
+        [
+            'id' => 'sti_symptoms',
+            'text' => 'What symptoms are you experiencing?',
+            'type' => 'checkbox',
+            'options' => ['Discharge', 'Burning when urinating', 'Itching', 'Sores/blisters', 'Rash', 'Pain', 'No symptoms (exposure concern)'],
+            'required' => true,
+        ],
+        [
+            'id' => 'sti_photos',
+            'text' => 'Upload a photo if you have visible symptoms (optional)',
+            'type' => 'image',
+            'options' => [],
+            'required' => false,
+            'hint' => 'Completely confidential. Helps the doctor with visual assessment.',
+        ],
+        [
+            'id' => 'sti_duration',
+            'text' => 'When did symptoms start?',
+            'type' => 'select',
+            'options' => ['Today', '1-3 days ago', '4-7 days ago', '1-2 weeks ago', 'Over 2 weeks ago'],
+            'required' => true,
+        ],
+        [
+            'id' => 'sti_tested',
+            'text' => 'Have you been tested for STIs recently?',
+            'type' => 'radio',
+            'options' => ['Yes, in the last month', 'Yes, 1-6 months ago', 'No'],
+            'required' => true,
+        ],
+        [
+            'id' => 'sti_medications',
+            'text' => 'Current medications?',
+            'type' => 'textarea',
+            'options' => [],
+            'required' => true,
+        ],
+    ],
+
     'default' => [
         [
             'id' => 'default_treatment',

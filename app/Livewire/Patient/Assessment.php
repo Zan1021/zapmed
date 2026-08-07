@@ -5,13 +5,17 @@ namespace App\Livewire\Patient;
 use App\Models\Assessment as AssessmentModel;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class Assessment extends Component
 {
+    use WithFileUploads;
+
     public string $slug;
     public string $treatmentName = '';
     public array $questions = [];
     public array $answers = [];
+    public array $photoUploads = []; // Temporary uploaded files
 
     public function mount(string $slug): void
     {
@@ -28,10 +32,27 @@ class Assessment extends Component
         foreach ($this->questions as $question) {
             if ($question['type'] === 'checkbox') {
                 $this->answers[$question['id']] = [];
+            } elseif ($question['type'] === 'image') {
+                $this->answers[$question['id']] = '';
             } elseif (isset($question['prefill']) && $question['prefill'] === 'treatment_name') {
                 $this->answers[$question['id']] = $this->treatmentName;
             } else {
                 $this->answers[$question['id']] = '';
+            }
+        }
+    }
+
+    /**
+     * Handle photo upload for a specific question.
+     */
+    public function updatedPhotoUploads(): void
+    {
+        // Validate each uploaded file
+        foreach ($this->photoUploads as $questionId => $files) {
+            if (is_array($files)) {
+                $this->validate([
+                    "photoUploads.{$questionId}.*" => 'image|max:5120', // 5MB per image
+                ]);
             }
         }
     }
@@ -44,6 +65,9 @@ class Assessment extends Component
             if ($question['required']) {
                 if ($question['type'] === 'checkbox') {
                     $rules["answers.{$question['id']}"] = 'required|array|min:1';
+                } elseif ($question['type'] === 'image') {
+                    $rules["photoUploads.{$question['id']}"] = 'required|array|min:1';
+                    $rules["photoUploads.{$question['id']}.*"] = 'image|max:5120';
                 } else {
                     $rules["answers.{$question['id']}"] = 'required|string|min:1';
                 }
@@ -53,18 +77,41 @@ class Assessment extends Component
         $this->validate($rules, [
             'answers.*.required' => 'This field is required.',
             'answers.*.min' => 'This field is required.',
+            'photoUploads.*.required' => 'Please upload at least one photo.',
+            'photoUploads.*.*.image' => 'File must be an image.',
+            'photoUploads.*.*.max' => 'Image must be under 5MB.',
         ]);
+
+        // Store uploaded photos
+        $uploadedPaths = [];
+        foreach ($this->photoUploads as $questionId => $files) {
+            if (is_array($files)) {
+                foreach ($files as $file) {
+                    $path = $file->store('assessments/' . $this->slug, 'public');
+                    $uploadedPaths[$questionId][] = $path;
+                }
+            }
+        }
 
         // Build structured Q&A for storage
         $structuredAnswers = [];
         foreach ($this->questions as $question) {
-            $answer = $this->answers[$question['id']] ?? null;
-            $structuredAnswers[] = [
-                'question_id' => $question['id'],
-                'question' => $question['text'],
-                'type' => $question['type'],
-                'answer' => $answer,
-            ];
+            if ($question['type'] === 'image') {
+                $structuredAnswers[] = [
+                    'question_id' => $question['id'],
+                    'question' => $question['text'],
+                    'type' => 'image',
+                    'answer' => $uploadedPaths[$question['id']] ?? [],
+                ];
+            } else {
+                $answer = $this->answers[$question['id']] ?? null;
+                $structuredAnswers[] = [
+                    'question_id' => $question['id'],
+                    'question' => $question['text'],
+                    'type' => $question['type'],
+                    'answer' => $answer,
+                ];
+            }
         }
 
         // If not authenticated, store in session and redirect to register

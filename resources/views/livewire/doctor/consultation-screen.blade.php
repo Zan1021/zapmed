@@ -97,13 +97,23 @@
                     @foreach($assessment->answers as $qa)
                         <div>
                             <p class="text-xs text-gray-500">{{ $qa['question'] }}</p>
-                            <p class="text-xs font-semibold text-gray-900 mt-0.5">
-                                @if(is_array($qa['answer']))
-                                    {{ implode(', ', $qa['answer']) }}
-                                @else
-                                    {{ $qa['answer'] ?: '—' }}
-                                @endif
-                            </p>
+                            @if(($qa['type'] ?? '') === 'image' && is_array($qa['answer']))
+                                <div class="grid grid-cols-2 gap-2 mt-1">
+                                    @foreach($qa['answer'] as $imagePath)
+                                        <a href="{{ asset('storage/' . $imagePath) }}" target="_blank" class="block">
+                                            <img src="{{ asset('storage/' . $imagePath) }}" class="w-full h-24 object-cover rounded-lg border border-purple-200 hover:opacity-80 transition-opacity" alt="Patient photo">
+                                        </a>
+                                    @endforeach
+                                </div>
+                            @else
+                                <p class="text-xs font-semibold text-gray-900 mt-0.5">
+                                    @if(is_array($qa['answer']))
+                                        {{ implode(', ', $qa['answer']) }}
+                                    @else
+                                        {{ $qa['answer'] ?: '—' }}
+                                    @endif
+                                </p>
+                            @endif
                         </div>
                     @endforeach
                 </div>
