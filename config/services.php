@@ -35,4 +35,15 @@ return [
         ],
     ],
 
+    'daily' => [
+        'api_key' => env('DAILY_API_KEY'),
+        'domain' => env('DAILY_DOMAIN'), // e.g. your-domain.daily.co
+    ],
+
+    'sms' => [
+        'provider' => env('SMS_PROVIDER', 'bulksms'), // bulksms or clickatell
+        'api_token' => env('SMS_API_TOKEN'),
+        'sender_id' => env('SMS_SENDER_ID', 'Zapmed'),
+    ],
+
 ];

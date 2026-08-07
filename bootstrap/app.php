@@ -14,7 +14,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\EnsureUserHasRole::class,
             'onboarding' => \App\Http\Middleware\EnsureOnboardingComplete::class,
+            'two-factor' => \App\Http\Middleware\EnsureTwoFactorVerified::class,
         ]);
+
+        // Apply 2FA check to all authenticated web routes
+        $middleware->appendToGroup('web', \App\Http\Middleware\EnsureTwoFactorVerified::class);
 
         $middleware->validateCsrfTokens(except: [
             'payment/notify', // PayFast ITN webhook

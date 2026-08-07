@@ -90,6 +90,14 @@ class Appointment extends Model
     }
 
     /**
+     * Get the active video session for this appointment.
+     */
+    public function activeVideoSession(): HasOne
+    {
+        return $this->hasOne(VideoSession::class)->whereIn('status', ['waiting', 'in_progress']);
+    }
+
+    /**
      * Get fee formatted in Rands.
      */
     public function getFormattedFeeAttribute(): string

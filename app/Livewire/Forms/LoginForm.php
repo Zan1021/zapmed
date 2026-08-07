@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Forms;
 
+use App\Services\SmsService;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
@@ -39,6 +40,13 @@ class LoginForm extends Form
         }
 
         RateLimiter::clear($this->throttleKey());
+
+        // If user has 2FA enabled, send the OTP code
+        $user = Auth::user();
+        if ($user->two_factor_enabled && $user->phone) {
+            $code = $user->generateTwoFactorCode();
+            app(SmsService::class)->sendOtp($user->phone, $code);
+        }
     }
 
     /**

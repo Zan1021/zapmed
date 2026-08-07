@@ -29,6 +29,10 @@ Route::middleware('auth')->group(function () {
     Volt::route('confirm-password', 'pages.auth.confirm-password')
         ->name('password.confirm');
 
+    // Two-factor authentication challenge
+    Volt::route('two-factor-challenge', 'pages.auth.two-factor-challenge')
+        ->name('two-factor.challenge');
+
     Route::post('logout', function () {
         auth()->guard('web')->logout();
         request()->session()->invalidate();

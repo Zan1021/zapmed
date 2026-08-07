@@ -23,7 +23,7 @@ class MyAppointments extends Component
     public function getAppointmentsProperty()
     {
         $query = Appointment::where('patient_id', Auth::id())
-            ->with(['doctor', 'doctor.doctorProfile']);
+            ->with(['doctor', 'doctor.doctorProfile', 'activeVideoSession']);
 
         return match ($this->filter) {
             'upcoming' => $query->upcoming()->get(),

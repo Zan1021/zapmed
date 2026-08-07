@@ -17,6 +17,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('onboarding')
         ->name('dashboard');
 
+    // Admin panel
+    Route::middleware('role:admin')->prefix('admin')->group(function () {
+        Route::get('/', \App\Livewire\Admin\Dashboard::class)->name('admin.dashboard');
+        Route::get('/users', \App\Livewire\Admin\UserManagement::class)->name('admin.users');
+        Route::get('/appointments', \App\Livewire\Admin\Appointments::class)->name('admin.appointments');
+        Route::get('/payments', \App\Livewire\Admin\Payments::class)->name('admin.payments');
+        Route::get('/audit-log', \App\Livewire\Admin\AuditLog::class)->name('admin.audit-log');
+    });
+
     // Doctor dashboard (Livewire - real data)
     Route::get('doctor/dashboard', \App\Livewire\Doctor\Dashboard::class)
         ->middleware('role:doctor')
@@ -45,6 +54,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('appointments', MyAppointments::class)
         ->middleware(['role:patient', 'onboarding'])
         ->name('patient.appointments');
+
+    // Patient video call
+    Route::get('video/{appointment}', \App\Livewire\Patient\VideoCall::class)
+        ->middleware(['role:patient', 'onboarding'])
+        ->name('patient.video');
 
     // PDF Downloads
     Route::get('pdf/prescription/{prescription}', [PdfController::class, 'prescription'])->name('pdf.prescription');
