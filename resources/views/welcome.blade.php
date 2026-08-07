@@ -16,30 +16,38 @@
     @include('partials.public-nav')
 
     <!-- Hero -->
-    <section class="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
+    <section class="pt-28 pb-16 lg:pt-32 lg:pb-20 px-4 sm:px-6 lg:px-8">
         <div class="max-w-7xl mx-auto">
-            <div class="text-center max-w-4xl mx-auto">
-                <div class="inline-flex items-center bg-zapmed-50 text-zapmed-700 px-4 py-1.5 rounded-full text-sm font-medium mb-8">
-                    <span class="w-2 h-2 bg-zapmed-500 rounded-full mr-2 animate-pulse"></span>
-                    Medically-Backed, Tech-Powered
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <!-- Text -->
+                <div class="text-center lg:text-left">
+                    <div class="inline-flex items-center bg-zapmed-50 text-zapmed-700 px-4 py-1.5 rounded-full text-sm font-medium mb-8">
+                        <span class="w-2 h-2 bg-zapmed-500 rounded-full mr-2 animate-pulse"></span>
+                        Medically-Backed, Tech-Powered
+                    </div>
+                    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 tracking-tight leading-tight">
+                        Online Doctor-Guided
+                        <span class="text-zapmed-600">Medical Treatments</span>
+                    </h1>
+                    <p class="mt-6 text-lg text-gray-500 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+                        Doctor-led GLP-1 weight loss with personalised coaching — plus discreet sexual, mental, skin and chronic care, all in one seamless platform.
+                    </p>
+                    <div class="mt-8 flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-4">
+                        <a href="{{ route('register') }}" class="w-full sm:w-auto bg-zapmed-600 hover:bg-zapmed-700 text-white px-8 py-4 rounded-xl text-base font-semibold transition-all">
+                            Start Your Assessment
+                        </a>
+                        <a href="#how-it-works" class="w-full sm:w-auto flex items-center justify-center text-gray-700 hover:text-gray-900 px-8 py-4 rounded-xl text-base font-semibold transition-colors">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
+                            </svg>
+                            See How It Works
+                        </a>
+                    </div>
                 </div>
-                <h1 class="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-gray-900 tracking-tight leading-tight">
-                    Online Doctor-Guided
-                    <span class="text-zapmed-600">Medical Treatments</span>
-                </h1>
-                <p class="mt-6 text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed">
-                    Doctor-led GLP-1 weight loss with personalised coaching — plus discreet sexual, mental, skin and chronic care, all in one seamless platform.
-                </p>
-                <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <a href="{{ route('register') }}" class="w-full sm:w-auto bg-zapmed-600 hover:bg-zapmed-700 text-white px-8 py-4 rounded-xl text-base font-semibold transition-all">
-                        Start Your Assessment
-                    </a>
-                    <a href="#how-it-works" class="w-full sm:w-auto flex items-center justify-center text-gray-700 hover:text-gray-900 px-8 py-4 rounded-xl text-base font-semibold transition-colors">
-                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
-                        </svg>
-                        See How It Works
-                    </a>
+
+                <!-- Hero Image -->
+                <div class="relative">
+                    <img src="/images/hero.png" alt="Zapmed telehealth consultation" class="w-full h-auto rounded-2xl shadow-xl">
                 </div>
             </div>
 

@@ -4,7 +4,11 @@ namespace App\Services;
 
 use App\Models\Appointment;
 use App\Models\Payment;
+use App\Models\Subscription;
+use App\Models\SubscriptionPlan;
+use App\Models\User;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class PayFastService
 {
@@ -50,6 +54,132 @@ class PayFastService
         $data['signature'] = $this->generateSignature($data);
 
         return $data;
+    }
+
+    /**
+     * Generate the subscription payment form data for PayFast recurring billing.
+     */
+    public function generateSubscriptionData(User $user, SubscriptionPlan $plan, Subscription $subscription): array
+    {
+        $data = [
+            'merchant_id' => $this->merchantId,
+            'merchant_key' => $this->merchantKey,
+            'return_url' => url('/subscription/success') . '?reference=' . $subscription->payment_reference,
+            'cancel_url' => url('/subscription/cancel') . '?reference=' . $subscription->payment_reference,
+            'notify_url' => url('/subscription/notify'),
+            'name_first' => $user->first_name,
+            'name_last' => $user->last_name,
+            'email_address' => $user->email,
+            'cell_number' => $user->phone ?? '',
+            'm_payment_id' => $subscription->payment_reference,
+            'amount' => number_format($plan->price / 100, 2, '.', ''),
+            'item_name' => "Zapmed {$plan->name} Plan",
+            'item_description' => "{$plan->name} - {$plan->billing_label}",
+            // Subscription-specific fields
+            'subscription_type' => '1', // 1 = subscription
+            'billing_date' => now()->addMonths($plan->cycle_frequency)->format('Y-m-d'),
+            'recurring_amount' => number_format($plan->price / 100, 2, '.', ''),
+            'frequency' => $this->getPayFastFrequency($plan),
+            'cycles' => '0', // 0 = indefinite
+        ];
+
+        $data['signature'] = $this->generateSignature($data);
+
+        return $data;
+    }
+
+    /**
+     * Cancel a subscription via PayFast API.
+     */
+    public function cancelSubscription(string $token): bool
+    {
+        if (!$token) {
+            return false;
+        }
+
+        $apiUrl = $this->testMode
+            ? "https://sandbox.payfast.co.za/eng/recurring/update"
+            : "https://api.payfast.co.za/subscriptions/{$token}/cancel";
+
+        try {
+            // In test mode, we just mark it as cancelled locally
+            if ($this->testMode) {
+                Log::info('PayFast subscription cancel (sandbox mode)', ['token' => $token]);
+                return true;
+            }
+
+            $timestamp = now()->toISOString();
+            $response = file_get_contents($apiUrl, false, stream_context_create([
+                'http' => [
+                    'method' => 'PUT',
+                    'header' => implode("\r\n", [
+                        'merchant-id: ' . $this->merchantId,
+                        'version: v1',
+                        'timestamp: ' . $timestamp,
+                        'signature: ' . $this->generateApiSignature($timestamp),
+                        'Content-Type: application/json',
+                    ]),
+                    'content' => json_encode(['response' => 'cancel']),
+                ],
+            ]));
+
+            return $response !== false;
+        } catch (\Exception $e) {
+            Log::error('PayFast subscription cancel failed', [
+                'token' => $token,
+                'error' => $e->getMessage(),
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Generate a unique subscription reference.
+     */
+    public static function generateSubscriptionReference(): string
+    {
+        do {
+            $reference = 'SUB-' . strtoupper(Str::random(8));
+        } while (Subscription::where('payment_reference', $reference)->exists());
+
+        return $reference;
+    }
+
+    /**
+     * Map plan billing cycle to PayFast frequency code.
+     */
+    private function getPayFastFrequency(SubscriptionPlan $plan): string
+    {
+        // PayFast frequencies: 3=Monthly, 4=Quarterly, 5=Biannual, 6=Annual
+        if ($plan->billing_cycle === 'annually') {
+            return '6';
+        }
+
+        return match ($plan->cycle_frequency) {
+            1 => '3', // Monthly
+            3 => '4', // Quarterly
+            6 => '5', // Biannual
+            12 => '6', // Annual
+            default => '3',
+        };
+    }
+
+    /**
+     * Generate API signature for PayFast API calls.
+     */
+    private function generateApiSignature(string $timestamp): string
+    {
+        $data = [
+            'merchant-id' => $this->merchantId,
+            'passphrase' => $this->passphrase,
+            'timestamp' => $timestamp,
+            'version' => 'v1',
+        ];
+
+        ksort($data);
+        $pfOutput = http_build_query($data);
+
+        return md5($pfOutput);
     }
 
     /**

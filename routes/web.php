@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PdfController;
+use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TreatmentController;
 use App\Livewire\Patient\BookAppointment;
 use App\Livewire\Patient\MyAppointments;
@@ -23,6 +24,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/users', \App\Livewire\Admin\UserManagement::class)->name('admin.users');
         Route::get('/appointments', \App\Livewire\Admin\Appointments::class)->name('admin.appointments');
         Route::get('/payments', \App\Livewire\Admin\Payments::class)->name('admin.payments');
+        Route::get('/subscriptions', \App\Livewire\Admin\SubscriptionPlans::class)->name('admin.subscriptions');
         Route::get('/audit-log', \App\Livewire\Admin\AuditLog::class)->name('admin.audit-log');
     });
 
@@ -60,6 +62,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware(['role:patient', 'onboarding'])
         ->name('patient.video');
 
+    // Patient subscription
+    Route::get('subscription', \App\Livewire\Patient\MySubscription::class)
+        ->middleware(['role:patient', 'onboarding'])
+        ->name('patient.subscription');
+
+    Route::get('subscription/checkout', [SubscriptionController::class, 'checkout'])
+        ->middleware(['role:patient'])
+        ->name('subscription.checkout');
+
+    Route::get('subscription/success', [SubscriptionController::class, 'success'])
+        ->middleware(['role:patient'])
+        ->name('subscription.success');
+
+    Route::get('subscription/cancel', [SubscriptionController::class, 'cancel'])
+        ->middleware(['role:patient'])
+        ->name('subscription.cancel');
+
     // PDF Downloads
     Route::get('pdf/prescription/{prescription}', [PdfController::class, 'prescription'])->name('pdf.prescription');
     Route::get('pdf/sick-note/{consultation}', [PdfController::class, 'sickNote'])->name('pdf.sick-note');
@@ -75,6 +94,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::post('payment/notify', [PaymentController::class, 'notify'])
     ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
     ->name('payment.notify');
+
+// PayFast Subscription ITN webhook
+Route::post('subscription/notify', [SubscriptionController::class, 'notify'])
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
+    ->name('subscription.notify');
 
 Route::view('profile', 'profile')
     ->middleware(['auth'])
