@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Zapmed - Online Doctor-Guided Medical Treatments</title>
     <meta name="description" content="Doctor-led online treatment for weight loss, sexual health, skincare, and chronic care. Prescribed by licensed SA doctors, delivered to your door.">
 
@@ -72,7 +73,7 @@
             </div>
 
             <!-- AI Health Assistant -->
-            <div class="mt-12 max-w-2xl mx-auto" x-data="aiAssistant()">
+            <div class="max-w-2xl mx-auto" style="margin-top: 35px;" x-data="aiAssistant()">
                 <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
                     <div class="p-5 border-b border-gray-50">
                         <div class="flex items-center space-x-3">

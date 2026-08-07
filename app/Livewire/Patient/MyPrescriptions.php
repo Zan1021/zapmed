@@ -38,6 +38,75 @@ class MyPrescriptions extends Component
     }
 
     /**
+     * Request a repeat of a chronic prescription.
+     * Creates a new prescription with the same items at the same prices.
+     */
+    public function requestRepeat(int $prescriptionId): void
+    {
+        $original = Prescription::where('patient_id', Auth::id())
+            ->where('is_chronic', true)
+            ->where('payment_status', 'paid')
+            ->with('items')
+            ->findOrFail($prescriptionId);
+
+        // Check repeats remaining
+        if ($original->repeats > 0 && $original->repeats_used >= $original->repeats) {
+            session()->flash('error', 'No repeats remaining on this prescription. Please book a consultation for a new script.');
+            return;
+        }
+
+        // Create a new prescription as a repeat
+        $repeat = Prescription::create([
+            'consultation_id' => $original->consultation_id,
+            'patient_id' => Auth::id(),
+            'doctor_id' => $original->doctor_id,
+            'status' => 'signed',
+            'diagnosis' => $original->diagnosis,
+            'notes' => $original->notes,
+            'total_amount' => $original->total_amount,
+            'payment_status' => 'unpaid',
+            'pharmacy_status' => 'pending',
+            'delivery_address' => $original->delivery_address,
+            'delivery_city' => $original->delivery_city,
+            'delivery_province' => $original->delivery_province,
+            'delivery_postal_code' => $original->delivery_postal_code,
+            'delivery_phone' => $original->delivery_phone,
+            'delivery_instructions' => $original->delivery_instructions,
+            'is_chronic' => true,
+            'repeats' => 0, // Repeat of a repeat doesn't get more repeats
+            'signed_at' => now(),
+        ]);
+
+        // Copy items
+        foreach ($original->items as $item) {
+            $repeat->items()->create([
+                'medication_id' => $item->medication_id,
+                'medication_name' => $item->medication_name,
+                'strength' => $item->strength,
+                'form' => $item->form,
+                'dosage' => $item->dosage,
+                'frequency' => $item->frequency,
+                'route' => $item->route,
+                'duration_days' => $item->duration_days,
+                'quantity' => $item->quantity,
+                'unit_price' => $item->unit_price,
+                'line_total' => $item->line_total,
+                'instructions' => $item->instructions,
+                'substitution_allowed' => $item->substitution_allowed,
+            ]);
+        }
+
+        // Increment repeats used on original
+        $original->increment('repeats_used');
+
+        // Redirect to payment for the repeat
+        $this->viewingPrescription = null;
+        $this->startPayment($repeat->id);
+
+        session()->flash('message', 'Repeat prescription created. Please confirm delivery and pay to dispatch.');
+    }
+
+    /**
      * Start medication payment flow — show delivery address form.
      */
     public function startPayment(int $prescriptionId): void
@@ -115,6 +184,23 @@ class MyPrescriptions extends Component
     {
         return Prescription::where('patient_id', Auth::id())
             ->with(['items', 'doctor'])
+            ->latest()
+            ->get();
+    }
+
+    /**
+     * Get prescriptions that are eligible for repeat.
+     */
+    public function getRepeatEligibleProperty()
+    {
+        return Prescription::where('patient_id', Auth::id())
+            ->where('is_chronic', true)
+            ->where('payment_status', 'paid')
+            ->where(function ($q) {
+                $q->where('repeats', 0) // unlimited repeats
+                  ->orWhereColumn('repeats_used', '<', 'repeats');
+            })
+            ->with('items')
             ->latest()
             ->get();
     }

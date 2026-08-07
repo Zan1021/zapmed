@@ -34,6 +34,7 @@ class Prescription extends Model
         'pharmacy_reference',
         'dispatched_at',
         'pharmacy_response',
+        'metadata',
         'is_chronic',
         'repeats',
         'repeats_used',
@@ -52,6 +53,7 @@ class Prescription extends Model
             'dispatched_at' => 'datetime',
             'total_amount' => 'integer',
             'pharmacy_response' => 'array',
+            'metadata' => 'array',
         ];
     }
 

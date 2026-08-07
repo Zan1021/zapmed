@@ -126,6 +126,52 @@
                 </div>
                 @endif
 
+                <!-- Repeat button for chronic prescriptions -->
+                @if($viewingPrescription->is_chronic && $viewingPrescription->payment_status === 'paid')
+                <div class="p-4 border-t border-gray-100">
+                    <div class="flex items-center justify-between mb-3">
+                        <div>
+                            <p class="text-sm font-medium text-gray-700">Chronic Prescription</p>
+                            @if($viewingPrescription->repeats > 0)
+                                <p class="text-xs text-gray-500">{{ $viewingPrescription->repeats - $viewingPrescription->repeats_used }} repeats remaining</p>
+                            @else
+                                <p class="text-xs text-gray-500">Unlimited repeats (review required periodically)</p>
+                            @endif
+                        </div>
+                        @php
+                            $canRepeat = $viewingPrescription->repeats === 0 || $viewingPrescription->repeats_used < $viewingPrescription->repeats;
+                        @endphp
+                        @if($canRepeat)
+                            <button wire:click="requestRepeat({{ $viewingPrescription->id }})"
+                                wire:confirm="Request a repeat of this prescription? You'll be asked to confirm delivery and pay for medication."
+                                class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors">
+                                Reorder Medication
+                            </button>
+                        @else
+                            <span class="text-xs text-amber-600 font-medium">No repeats left — book a consultation</span>
+                        @endif
+                    </div>
+
+                    <!-- Estimated next refill -->
+                    @php
+                        $maxDuration = $viewingPrescription->items->max('duration_days');
+                        $refillDate = $viewingPrescription->paid_at?->addDays($maxDuration ?? 30);
+                    @endphp
+                    @if($refillDate)
+                    <div class="p-3 bg-blue-50 rounded-lg border border-blue-100">
+                        <p class="text-xs text-blue-700">
+                            <span class="font-medium">Estimated refill date:</span> {{ $refillDate->format('j M Y') }}
+                            @if($refillDate->isPast())
+                                — <span class="text-red-600 font-medium">Overdue</span>
+                            @elseif($refillDate->diffInDays(now()) <= 7)
+                                — <span class="text-amber-600 font-medium">Due soon</span>
+                            @endif
+                        </p>
+                    </div>
+                    @endif
+                </div>
+                @endif
+
                 <!-- Delivery info if dispatched -->
                 @if($viewingPrescription->isDispatched())
                 <div class="p-4 border-t border-gray-100">
