@@ -13,6 +13,10 @@ Route::view('/', 'welcome');
 Route::get('treatments/{slug}', [TreatmentController::class, 'show'])->name('treatments.show');
 Route::get('assessment/{slug}', \App\Livewire\Patient\Assessment::class)->name('assessment.start');
 
+// AI Health Assistant (public, rate-limited)
+Route::post('api/ai-assistant', [\App\Http\Controllers\AiAssistantController::class, 'ask'])
+    ->name('ai.ask');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('dashboard', 'dashboard')
         ->middleware('onboarding')
