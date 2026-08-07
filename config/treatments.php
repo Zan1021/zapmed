@@ -14,7 +14,7 @@ return [
     'weight-loss' => [
         'name' => 'Weight Loss',
         'description' => 'GLP-1 medically guided weight loss with Health Coach support',
-        'image' => '/images/categories/weight-loss.jpg',
+        'image' => '/images/categories/weight-loss.webp',
         'treatments' => [
             'weight-loss' => [
                 'name' => 'Weight Loss',
@@ -34,7 +34,7 @@ return [
     'skincare' => [
         'name' => 'Skincare',
         'description' => 'Prescription skincare personalised to you',
-        'image' => '/images/categories/skincare.jpg',
+        'image' => '/images/categories/skincare.webp',
         'treatments' => [
             'acne' => [
                 'name' => 'Acne Treatment',
@@ -66,7 +66,7 @@ return [
     'womens-health' => [
         'name' => "Women's Health",
         'description' => 'Contraception, hormonal support, and intimate health',
-        'image' => '/images/categories/womens-health.jpg',
+        'image' => '/images/categories/womens-health.png',
         'treatments' => [
             'bacterial-vaginosis' => [
                 'name' => 'Bacterial Vaginosis',
@@ -98,7 +98,7 @@ return [
     'mens-health' => [
         'name' => "Men's Health",
         'description' => 'Sexual performance, hair loss, and wellness',
-        'image' => '/images/categories/mens-health.jpg',
+        'image' => '/images/categories/mens-health.png',
         'treatments' => [
             'erectile-dysfunction' => [
                 'name' => 'Erectile Dysfunction',
@@ -124,7 +124,7 @@ return [
     'sexual-health' => [
         'name' => 'Sexual Health',
         'description' => 'Discreet treatment for sexual health concerns',
-        'image' => '/images/categories/sexual-health.jpg',
+        'image' => '/images/categories/sexual-health.webp',
         'treatments' => [
             'genital-herpes' => [
                 'name' => 'Genital Herpes',
@@ -156,7 +156,7 @@ return [
     'general-health' => [
         'name' => 'General Health',
         'description' => 'Virtual GP consultations and everyday treatments',
-        'image' => '/images/categories/general-health.jpg',
+        'image' => '/images/categories/general-health.webp',
         'treatments' => [
             'acid-reflux' => [
                 'name' => 'Acid Reflux',
