@@ -17,38 +17,39 @@
     @include('partials.public-nav')
 
     <!-- Hero -->
-    <section class="pt-28 pb-16 lg:pt-32 lg:pb-20 px-4 sm:px-6 lg:px-8">
-        <div class="max-w-7xl mx-auto">
-            <!-- Hero with background image -->
-            <div class="rounded-2xl bg-cover bg-center bg-no-repeat px-6 py-16 sm:px-12 sm:py-20 lg:py-24" style="background-image: url('/images/hero-bg.jpg');">
-                <div class="text-center max-w-3xl mx-auto">
-                    <div class="inline-flex items-center bg-white/90 text-zapmed-700 px-4 py-1.5 rounded-full text-sm font-medium mb-8">
-                        <span class="w-2 h-2 bg-zapmed-500 rounded-full mr-2 animate-pulse"></span>
-                        Medically-Backed, Tech-Powered
-                    </div>
-                    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-tight drop-shadow-lg">
-                        Online Doctor-Guided
-                        <span class="text-zapmed-300">Medical Treatments</span>
-                    </h1>
-                    <p class="mt-6 text-lg text-white/90 max-w-xl mx-auto leading-relaxed drop-shadow">
-                        Doctor-led GLP-1 weight loss with personalised coaching — plus discreet sexual, mental, skin and chronic care, all in one seamless platform.
-                    </p>
-                    <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-                        <a href="{{ route('register') }}" class="w-full sm:w-auto bg-zapmed-600 hover:bg-zapmed-700 text-white px-8 py-4 rounded-xl text-base font-semibold transition-all shadow-lg">
-                            Start Your Assessment
-                        </a>
-                        <a href="#how-it-works" class="w-full sm:w-auto flex items-center justify-center text-white hover:text-white/80 px-8 py-4 rounded-xl text-base font-semibold transition-colors">
-                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
-                            </svg>
-                            See How It Works
-                        </a>
-                    </div>
+    <section class="pt-28 pb-16 lg:pt-32 lg:pb-20 bg-cover bg-center bg-no-repeat" style="background-image: url('/images/hero-bg.jpg');">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto">
+                <div class="inline-flex items-center bg-white/90 text-zapmed-700 px-4 py-1.5 rounded-full text-sm font-medium mb-8">
+                    <span class="w-2 h-2 bg-zapmed-500 rounded-full mr-2 animate-pulse"></span>
+                    Medically-Backed, Tech-Powered
+                </div>
+                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-tight drop-shadow-lg">
+                    Online Doctor-Guided
+                    <span class="text-zapmed-300">Medical Treatments</span>
+                </h1>
+                <p class="mt-6 text-lg text-white/90 max-w-xl mx-auto leading-relaxed drop-shadow">
+                    Doctor-led GLP-1 weight loss with personalised coaching — plus discreet sexual, mental, skin and chronic care, all in one seamless platform.
+                </p>
+                <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <a href="{{ route('register') }}" class="w-full sm:w-auto bg-zapmed-600 hover:bg-zapmed-700 text-white px-8 py-4 rounded-xl text-base font-semibold transition-all shadow-lg">
+                        Start Your Assessment
+                    </a>
+                    <a href="#how-it-works" class="w-full sm:w-auto flex items-center justify-center text-white hover:text-white/80 px-8 py-4 rounded-xl text-base font-semibold transition-colors">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
+                        </svg>
+                        See How It Works
+                    </a>
                 </div>
             </div>
+        </div>
+    </section>
 
-            <!-- Trust badges (below the image) -->
-            <div class="mt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-4 text-sm text-gray-500">
+    <!-- Trust badges (below hero) -->
+    <section class="py-8 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 text-sm text-gray-500">
                 <div class="flex items-center space-x-2">
                     <svg class="w-5 h-5 text-zapmed-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
                     <span>Licensed SA Doctors</span>
@@ -66,6 +67,8 @@
                     <span>Regulated Pharmacy Partners</span>
                 </div>
             </div>
+        </div>
+    </section>
 
             <!-- AI Health Assistant — now a floating widget -->
 
