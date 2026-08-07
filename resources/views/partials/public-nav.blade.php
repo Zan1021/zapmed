@@ -52,6 +52,10 @@
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
                 @foreach(config('treatments') as $categorySlug => $category)
                     <div>
+                        <!-- Category Image (rectangular, small) -->
+                        <div class="mb-3 rounded-lg overflow-hidden h-16 bg-gray-100">
+                            <img src="{{ $category['image'] }}" alt="{{ $category['name'] }}" class="w-full h-full object-cover">
+                        </div>
                         <h3 class="text-sm font-semibold text-gray-900 mb-3">{{ $category['name'] }}</h3>
                         <ul class="space-y-2">
                             @foreach($category['treatments'] as $treatmentSlug => $treatment)
@@ -59,7 +63,6 @@
                                     <a href="{{ route('treatments.show', $treatmentSlug) }}" class="text-sm text-gray-600 hover:text-zapmed-600 transition-colors">
                                         {{ $treatment['name'] }}
                                     </a>
-                                    <span class="block text-xs text-gray-400">{{ $treatment['price'] }}</span>
                                 </li>
                             @endforeach
                         </ul>

@@ -30,6 +30,11 @@
                 <div class="mt-6 text-lg text-gray-500 max-w-2xl mx-auto leading-relaxed">
                     @include('treatments.content.' . $slug . '-intro')
                 </div>
+            @elseif(isset($treatment['tagline']))
+                <p class="mt-4 text-xl text-zapmed-700 font-medium">{{ $treatment['tagline'] }}</p>
+                <p class="mt-4 text-lg text-gray-500 max-w-2xl mx-auto leading-relaxed">
+                    {{ $treatment['description'] ?? $treatment['category_description'] }}
+                </p>
             @else
                 <p class="mt-6 text-lg text-gray-500 max-w-2xl mx-auto leading-relaxed">
                     {{ $treatment['category_description'] }}
