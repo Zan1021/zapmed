@@ -44,6 +44,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/doctor-applications', \App\Livewire\Admin\DoctorApplications::class)->name('admin.doctor-applications');
         Route::get('/failed-payments', \App\Livewire\Admin\FailedPayments::class)->name('admin.failed-payments');
         Route::get('/blog', \App\Livewire\Admin\BlogManagement::class)->name('admin.blog');
+        Route::get('/help-center', \App\Livewire\Admin\HelpCenter::class)->name('admin.help-center');
     });
 
     // Doctor dashboard (Livewire - real data)
@@ -197,8 +198,10 @@ Route::view('profile', 'profile')
     ->middleware(['auth'])
     ->name('profile');
 
-// Public pages
-Route::view('faq', 'faq')->name('faq');
+// Public Help Center
+Route::get('help', \App\Livewire\HelpCenter\Index::class)->name('help');
+Route::get('help/{slug}', \App\Livewire\HelpCenter\Show::class)->name('help.show');
+Route::get('faq', fn () => redirect()->route('help'))->name('faq');
 Route::view('privacy-policy', 'legal.privacy-policy')->name('privacy-policy');
 Route::view('cookie-policy', 'legal.cookie-policy')->name('cookie-policy');
 Route::view('terms', 'legal.terms')->name('terms');

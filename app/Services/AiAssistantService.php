@@ -31,12 +31,14 @@ class AiAssistantService
         }
 
         try {
+            $helpContext = $this->getHelpArticleContext($userMessage);
+
             $response = Http::withToken($this->apiKey)
                 ->timeout(30)
                 ->post("{$this->baseUrl}/chat/completions", [
                     'model' => $this->model,
                     'messages' => [
-                        ['role' => 'system', 'content' => $this->getSystemPrompt()],
+                        ['role' => 'system', 'content' => $this->getSystemPrompt() . $helpContext],
                         ['role' => 'user', 'content' => $userMessage],
                     ],
                     'temperature' => 0.7,
@@ -65,6 +67,50 @@ class AiAssistantService
         } catch (\Exception $e) {
             Log::error('AI Assistant error', ['error' => $e->getMessage()]);
             return $this->getFallbackResponse($userMessage);
+        }
+    }
+
+    /**
+     * Search published help articles for relevant content matching the user's question.
+     */
+    private function getHelpArticleContext(string $question): string
+    {
+        try {
+            $keywords = collect(explode(' ', $question))
+                ->filter(fn ($w) => strlen($w) >= 3)
+                ->take(5)
+                ->values();
+
+            if ($keywords->isEmpty()) {
+                return '';
+            }
+
+            $articles = \App\Models\HelpArticle::published()
+                ->public()
+                ->where(function ($q) use ($keywords) {
+                    foreach ($keywords as $keyword) {
+                        $term = '%' . strtolower($keyword) . '%';
+                        $q->orWhereRaw('lower(title) LIKE ?', [$term])
+                          ->orWhereRaw('lower(body) LIKE ?', [$term]);
+                    }
+                })
+                ->limit(3)
+                ->get();
+
+            if ($articles->isEmpty()) {
+                return '';
+            }
+
+            $context = "\n## Relevant Help Articles\nIf any of these articles answer the user's question, reference it and include the link.\n";
+            foreach ($articles as $article) {
+                $url = route('help.show', $article->slug);
+                $body = \Illuminate\Support\Str::limit(strip_tags($article->body), 300);
+                $context .= "- **{$article->title}** ({$url}): {$body}\n";
+            }
+
+            return $context;
+        } catch (\Exception $e) {
+            return '';
         }
     }
 
