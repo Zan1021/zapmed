@@ -21,9 +21,15 @@ Route::post('api/ai-assistant', [\App\Http\Controllers\AiAssistantController::cl
     ->name('ai.ask');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::view('dashboard', 'dashboard')
-        ->middleware('onboarding')
-        ->name('dashboard');
+    Route::get('dashboard', function () {
+        if (auth()->user()->isAdmin()) {
+            return redirect()->route('admin.dashboard');
+        }
+        if (auth()->user()->isDoctor()) {
+            return redirect()->route('doctor.dashboard');
+        }
+        return view('dashboard');
+    })->middleware('onboarding')->name('dashboard');
 
     // Admin panel
     Route::middleware('role:admin')->prefix('admin')->group(function () {

@@ -78,7 +78,44 @@ class BookAppointment extends Component
             'selectedTreatment' => 'required',
         ]);
 
+        // Pre-fill assessment answers from patient profile
+        $this->prefillFromProfile();
+
         $this->step = 2;
+    }
+
+    /**
+     * Pre-fill assessment answers from patient onboarding data.
+     */
+    private function prefillFromProfile(): void
+    {
+        $profile = Auth::user()->patientProfile;
+        if (!$profile) {
+            return;
+        }
+
+        $questions = config("assessment-questions.{$this->selectedTreatment}", []);
+        $questionIds = array_column($questions, 'id');
+
+        // Weight
+        if (in_array('current_weight', $questionIds) && $profile->weight_kg) {
+            $this->assessmentAnswers['current_weight'] = (string) $profile->weight_kg;
+        }
+
+        // Height
+        if (in_array('height', $questionIds) && $profile->height_cm) {
+            $this->assessmentAnswers['height'] = (string) $profile->height_cm;
+        }
+
+        // Smoker
+        if (in_array('smoker', $questionIds)) {
+            $this->assessmentAnswers['smoker'] = $profile->is_smoker ? 'Yes' : 'No';
+        }
+
+        // Alcohol
+        if (in_array('alcohol', $questionIds)) {
+            $this->assessmentAnswers['alcohol'] = $profile->consumes_alcohol ? 'Yes' : 'No';
+        }
     }
 
     /**

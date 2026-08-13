@@ -21,10 +21,11 @@
         <!-- Upcoming Appointment -->
         @php
             $nextAppointment = auth()->user()->appointments()
-                ->where('scheduled_at', '>=', now())
+                ->where('appointment_date', '>=', now()->toDateString())
                 ->where('status', '!=', 'cancelled')
-                ->orderBy('scheduled_at')
-                ->with('doctor.user')
+                ->orderBy('appointment_date')
+                ->orderBy('start_time')
+                ->with('doctor')
                 ->first();
         @endphp
 
@@ -33,7 +34,7 @@
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-sm font-semibold text-blue-900 uppercase tracking-wide">Next Appointment</h3>
                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    {{ $nextAppointment->scheduled_at->diffForHumans() }}
+                    {{ \Carbon\Carbon::parse($nextAppointment->appointment_date)->diffForHumans() }}
                 </span>
             </div>
             <div class="flex items-center space-x-4">
@@ -43,10 +44,10 @@
                     </svg>
                 </div>
                 <div class="flex-1">
-                    <p class="text-lg font-semibold text-gray-900">Dr. {{ $nextAppointment->doctor->user->last_name }}</p>
+                    <p class="text-lg font-semibold text-gray-900">Dr. {{ $nextAppointment->doctor->last_name }}</p>
                     <p class="text-sm text-gray-600">{{ $nextAppointment->type ?? 'General Consultation' }}</p>
                     <p class="text-sm text-gray-500 mt-1">
-                        <span class="font-medium">{{ $nextAppointment->scheduled_at->format('l, j M') }}</span> at <span class="font-medium">{{ $nextAppointment->scheduled_at->format('H:i') }}</span>
+                        <span class="font-medium">{{ \Carbon\Carbon::parse($nextAppointment->appointment_date)->format('l, j M') }}</span> at <span class="font-medium">{{ substr($nextAppointment->start_time, 0, 5) }}</span>
                     </p>
                 </div>
             </div>
@@ -71,8 +72,8 @@
         @php
             $recentAppointments = auth()->user()->appointments()
                 ->where('status', 'completed')
-                ->orderByDesc('scheduled_at')
-                ->with('doctor.user')
+                ->orderByDesc('appointment_date')
+                ->with('doctor')
                 ->limit(5)
                 ->get();
         @endphp
@@ -94,7 +95,7 @@
                             </div>
                             <div>
                                 <p class="text-sm font-medium text-gray-900">{{ $appointment->type ?? 'General Consultation' }}</p>
-                                <p class="text-xs text-gray-500">Dr. {{ $appointment->doctor->user->last_name }} - {{ $appointment->scheduled_at->format('j M Y') }}</p>
+                                <p class="text-xs text-gray-500">Dr. {{ $appointment->doctor->last_name }} - {{ \Carbon\Carbon::parse($appointment->appointment_date)->format('j M Y') }}</p>
                             </div>
                         </div>
                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Completed</span>
