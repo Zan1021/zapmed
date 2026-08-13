@@ -6,6 +6,7 @@ use App\Mail\PrescriptionReady;
 use App\Models\Consultation;
 use App\Models\Medication;
 use App\Models\Prescription;
+use App\Services\AiPrescriptionService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Livewire\Attributes\Computed;
@@ -42,6 +43,11 @@ class PrescriptionBuilder extends Component
     public bool $isChronic = false;
     public int $repeats = 1;
     public string $pharmacistNotes = '';
+
+    // AI state
+    public bool $aiLoading = false;
+    public string $aiWarning = '';
+    public array $aiWarnings = [];
 
     // Signed state
     public bool $prescriptionSigned = false;
@@ -104,6 +110,9 @@ class PrescriptionBuilder extends Component
         $this->isCustomMedication = false;
         $this->showResults = false;
         $this->search = '';
+
+        // Automatically suggest dosage via AI
+        $this->aiSuggestDosage();
     }
 
     /**
@@ -242,6 +251,92 @@ class PrescriptionBuilder extends Component
         // Notify patient that medication payment is required
         $prescription->loadMissing(['items', 'doctor', 'patient']);
         Mail::to($prescription->patient)->queue(new PrescriptionReady($prescription));
+    }
+
+    /**
+     * AI auto-fill: suggest dosage when a medication is selected.
+     */
+    public function aiSuggestDosage(): void
+    {
+        if (!$this->medicationName) {
+            return;
+        }
+
+        $this->aiLoading = true;
+        $this->aiWarning = '';
+
+        try {
+            $aiService = app(AiPrescriptionService::class);
+            $suggestion = $aiService->suggestDosage(
+                $this->medicationName,
+                $this->medicationForm,
+                $this->medicationStrength,
+                $this->consultation
+            );
+
+            $this->dosage = $suggestion['dosage'];
+            $this->frequency = $suggestion['frequency'];
+            $this->route = $suggestion['route'];
+            $this->durationDays = $suggestion['duration_days'];
+            $this->quantity = $suggestion['quantity'];
+            $this->instructions = $suggestion['instructions'];
+            $this->aiWarning = $suggestion['warning'] ?? '';
+        } catch (\Exception $e) {
+            // Silently fail — doctor can still fill manually
+        }
+
+        $this->aiLoading = false;
+    }
+
+    /**
+     * AI full prescription: generate entire prescription from consultation notes.
+     */
+    public function aiGeneratePrescription(): void
+    {
+        $this->aiLoading = true;
+        $this->aiWarnings = [];
+
+        try {
+            $aiService = app(AiPrescriptionService::class);
+            $result = $aiService->generateFullPrescription($this->consultation);
+
+            if (!empty($result['error'])) {
+                $this->aiWarnings = [$result['error']];
+                $this->aiLoading = false;
+                return;
+            }
+
+            // Set chronic flag
+            $this->isChronic = $result['is_chronic'] ?? false;
+            if ($result['pharmacist_notes']) {
+                $this->pharmacistNotes = $result['pharmacist_notes'];
+            }
+
+            // Add all generated items
+            foreach ($result['items'] as $item) {
+                $this->items[] = [
+                    'medication_id' => null, // AI doesn't know our DB IDs
+                    'medication_name' => $item['medication_name'],
+                    'form' => $item['form'] ?? 'tablet',
+                    'strength' => $item['strength'] ?? '',
+                    'dosage' => $item['dosage'],
+                    'frequency' => $item['frequency'],
+                    'route' => $item['route'] ?? 'oral',
+                    'duration_days' => $item['duration_days'] ?? null,
+                    'quantity' => $item['quantity'] ?? 1,
+                    'unit_price' => 0, // Doctor can adjust pricing
+                    'line_total' => 0,
+                    'instructions' => $item['instructions'] ?? '',
+                    'substitution_allowed' => $item['substitution_allowed'] ?? true,
+                ];
+            }
+
+            $this->aiWarnings = $result['warnings'] ?? [];
+        } catch (\Exception $e) {
+            $this->aiWarnings = ['AI generation failed: ' . $e->getMessage()];
+        }
+
+        $this->aiLoading = false;
     }
 
     /**

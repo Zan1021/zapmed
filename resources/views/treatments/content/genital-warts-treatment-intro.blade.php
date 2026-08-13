@@ -1,0 +1,1 @@
+<p>Effective prescription treatment for genital warts caused by HPV. Our doctors provide discreet online consultations with topical treatments delivered directly to you — no waiting rooms or embarrassment.</p>

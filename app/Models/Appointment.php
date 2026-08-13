@@ -24,12 +24,16 @@ class Appointment extends Model
         'end_time',
         'duration_minutes',
         'reason',
+        'communication_preference',
         'notes',
         'cancellation_reason',
         'cancelled_by',
         'cancelled_at',
         'fee_amount',
         'is_paid',
+        'reminder_24h_sent_at',
+        'reminder_1h_sent_at',
+        'reminder_15m_sent_at',
     ];
 
     protected function casts(): array
@@ -40,6 +44,9 @@ class Appointment extends Model
             'fee_amount' => 'integer',
             'is_paid' => 'boolean',
             'duration_minutes' => 'integer',
+            'reminder_24h_sent_at' => 'datetime',
+            'reminder_1h_sent_at' => 'datetime',
+            'reminder_15m_sent_at' => 'datetime',
         ];
     }
 

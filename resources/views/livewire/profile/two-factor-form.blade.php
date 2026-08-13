@@ -13,7 +13,7 @@ new class extends Component
 
     public function mount(): void
     {
-        $this->twoFactorEnabled = Auth::user()->two_factor_enabled;
+        $this->twoFactorEnabled = Auth::user()->two_factor_enabled ?? false;
     }
 
     /**

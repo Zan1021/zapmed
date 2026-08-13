@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\EncryptsSensitiveFields;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -10,7 +11,12 @@ use Illuminate\Support\Str;
 
 class Prescription extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, EncryptsSensitiveFields;
+
+    protected array $encryptedFields = [
+        'diagnosis',
+        'notes',
+    ];
 
     protected $fillable = [
         'reference',
@@ -184,6 +190,60 @@ class Prescription extends Model
     {
         $total = $this->items->sum('line_total');
         $this->update(['total_amount' => $total]);
+    }
+
+    /**
+     * Check if prescription has refills remaining.
+     */
+    public function hasRefillsRemaining(): bool
+    {
+        return $this->is_chronic && $this->repeats_used < $this->repeats;
+    }
+
+    /**
+     * Get number of refills remaining.
+     */
+    public function getRefillsRemainingAttribute(): int
+    {
+        if (!$this->is_chronic) return 0;
+        return max(0, $this->repeats - $this->repeats_used);
+    }
+
+    /**
+     * Request a refill — creates a new payment record for the same items.
+     */
+    public function requestRefill(): ?Payment
+    {
+        if (!$this->hasRefillsRemaining()) {
+            return null;
+        }
+
+        $payment = Payment::create([
+            'patient_id' => $this->patient_id,
+            'provider' => 'payfast',
+            'amount' => $this->total_amount,
+            'currency' => 'ZAR',
+            'status' => 'pending',
+            'description' => "Refill (" . ($this->repeats_used + 1) . "/{$this->repeats}) - {$this->reference}",
+        ]);
+
+        return $payment;
+    }
+
+    /**
+     * Mark a refill as dispensed (increment repeats_used).
+     */
+    public function markRefillDispensed(): void
+    {
+        $this->increment('repeats_used');
+    }
+
+    /**
+     * Check if prescription is expired.
+     */
+    public function isExpired(): bool
+    {
+        return $this->valid_until && $this->valid_until->isPast();
     }
 
     /**

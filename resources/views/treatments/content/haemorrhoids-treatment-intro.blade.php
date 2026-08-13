@@ -1,0 +1,1 @@
+<p>Discreet prescription treatment for haemorrhoids (piles). Our doctors provide effective care without the awkward in-person visit — creams, suppositories, and oral treatments delivered to your door.</p>

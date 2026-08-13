@@ -8,6 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Drop the basic version created in consultations migration, replace with full version
+        Schema::dropIfExists('video_sessions');
+
         Schema::create('video_sessions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('appointment_id')->constrained()->cascadeOnDelete();

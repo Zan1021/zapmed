@@ -1,0 +1,1 @@
+<p>Discreet online treatment for bacterial vaginosis. Our doctors prescribe effective antibiotic treatment after a confidential assessment — no waiting rooms, with medication delivered to your door.</p>

@@ -1,0 +1,1 @@
+<p>Work with a dedicated registered dietitian who supports you via WhatsApp. Get nutrition guidance, side-effect management, motivation, and real-life adjustments to help you stay on track with your weight loss journey.</p>

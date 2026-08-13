@@ -1,0 +1,1 @@
+<p>Effective relief for heartburn and acid reflux. Our doctors assess your symptoms and prescribe PPIs or other treatments for lasting relief — no more relying on over-the-counter antacids that don't solve the problem.</p>

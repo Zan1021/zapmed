@@ -2,12 +2,24 @@
 
 namespace App\Models;
 
+use App\Traits\EncryptsSensitiveFields;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Consultation extends Model
 {
+    use EncryptsSensitiveFields;
+
+    protected array $encryptedFields = [
+        'presenting_complaint',
+        'history_of_presenting_illness',
+        'examination_findings',
+        'diagnosis',
+        'treatment_plan',
+        'doctor_notes',
+        'follow_up_notes',
+    ];
     protected $fillable = [
         'appointment_id',
         'patient_id',
@@ -50,6 +62,14 @@ class Consultation extends Model
     public function doctor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'doctor_id');
+    }
+
+    /**
+     * Get the testimonial for this consultation.
+     */
+    public function testimonial(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(\App\Models\Testimonial::class);
     }
 
     /**

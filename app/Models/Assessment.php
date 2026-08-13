@@ -19,7 +19,7 @@ class Assessment extends Model
     protected function casts(): array
     {
         return [
-            'answers' => 'array',
+            'answers' => 'encrypted:array',
         ];
     }
 

@@ -13,16 +13,20 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @include('partials.analytics')
+        @include('partials.pwa-meta')
     </head>
     <body class="font-sans text-gray-900 antialiased">
         <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100">
-            <div>
+            <div class="text-center mb-6">
                 <a href="/" wire:navigate>
-                    <x-application-logo class="w-20 h-20 fill-current text-gray-500" />
+                    <img src="/images/zapmed-logo.png" alt="Zapmed" class="h-10 mx-auto">
                 </a>
+                <h1 class="mt-4 text-2xl font-bold text-gray-900">Welcome back</h1>
+                <p class="mt-1 text-sm text-gray-500">Sign in to manage your health, consultations, and prescriptions.</p>
             </div>
 
-            <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg">
+            <div class="w-full sm:max-w-md px-6 py-6 bg-white shadow-md overflow-hidden sm:rounded-lg">
                 {{ $slot }}
             </div>
         </div>

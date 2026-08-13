@@ -157,6 +157,7 @@ class ConsultationScreen extends Component
 
     /**
      * Get the doctor's video call URL with token.
+     * For audio-only preference, appends cam_off parameter.
      */
     public function getDoctorVideoUrlProperty(): ?string
     {
@@ -164,7 +165,14 @@ class ConsultationScreen extends Component
             return null;
         }
 
-        return $this->videoSession->room_url . '?t=' . $this->videoSession->doctor_token;
+        $url = $this->videoSession->room_url . '?t=' . $this->videoSession->doctor_token;
+
+        // If patient prefers audio-only, start with camera off
+        if ($this->appointment->communication_preference === 'audio') {
+            $url .= '&cam=off';
+        }
+
+        return $url;
     }
 
     /**
@@ -216,6 +224,30 @@ class ConsultationScreen extends Component
         ]);
 
         $this->redirect(route('doctor.dashboard'), navigate: true);
+    }
+
+    /**
+     * Get the consultation deadline (started_at + duration_minutes) as ISO string for the frontend timer.
+     */
+    public function getConsultationDeadlineProperty(): ?string
+    {
+        if (!$this->consultation || !$this->consultation->started_at) {
+            return null;
+        }
+
+        $durationMinutes = $this->appointment->duration_minutes ?? 30;
+
+        return $this->consultation->started_at
+            ->addMinutes($durationMinutes)
+            ->toIso8601String();
+    }
+
+    /**
+     * Get the consultation duration in minutes for display.
+     */
+    public function getConsultationDurationProperty(): int
+    {
+        return $this->appointment->duration_minutes ?? 30;
     }
 
     /**

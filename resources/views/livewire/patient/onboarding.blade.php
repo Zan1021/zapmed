@@ -33,6 +33,17 @@
         <!-- Step 1: Personal Information -->
         @if($currentStep === 1)
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            @if($errors->any())
+                <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <p class="text-sm font-medium text-red-800">Please fix the following errors:</p>
+                    <ul class="mt-2 text-sm text-red-600 list-disc list-inside">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <h2 class="text-xl font-semibold text-gray-900 mb-1">Personal Information</h2>
             <p class="text-sm text-gray-500 mb-6">Let's start with your basic details.</p>
 
@@ -413,9 +424,11 @@
             <div>
                 @if($currentStep < $totalSteps)
                     <button wire:click="nextStep"
-                        class="inline-flex items-center px-6 py-2.5 bg-zapmed-600 hover:bg-zapmed-700 text-white rounded-lg text-sm font-semibold transition-colors shadow-sm">
-                        Next Step
-                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        wire:loading.attr="disabled"
+                        class="inline-flex items-center px-6 py-2.5 bg-zapmed-600 hover:bg-zapmed-700 text-white rounded-lg text-sm font-semibold transition-colors shadow-sm disabled:opacity-50">
+                        <span wire:loading.remove wire:target="nextStep">Next Step</span>
+                        <span wire:loading wire:target="nextStep">Processing...</span>
+                        <svg wire:loading.remove wire:target="nextStep" class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </button>
                 @else
                     <button wire:click="complete"

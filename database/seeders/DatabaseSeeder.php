@@ -41,5 +41,11 @@ class DatabaseSeeder extends Seeder
 
         // Seed medications reference table
         $this->call(MedicationSeeder::class);
+
+        // Seed subscription plans
+        $this->call(SubscriptionPlanSeeder::class);
+
+        // Seed partner pharmacies
+        $this->call(PharmacySeeder::class);
     }
 }

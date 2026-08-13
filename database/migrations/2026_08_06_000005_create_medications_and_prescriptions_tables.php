@@ -70,26 +70,10 @@ return new class extends Migration
             $table->boolean('substitution_allowed')->default(true);
             $table->timestamps();
         });
-
-        // Pharmacy assignments
-        Schema::create('pharmacies', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->text('address');
-            $table->string('city', 100);
-            $table->string('province', 50);
-            $table->string('postal_code', 10);
-            $table->string('phone', 20);
-            $table->string('email')->nullable();
-            $table->string('fax', 20)->nullable();
-            $table->boolean('is_active')->default(true);
-            $table->timestamps();
-        });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('pharmacies');
         Schema::dropIfExists('prescription_items');
         Schema::dropIfExists('prescriptions');
         Schema::dropIfExists('medications');

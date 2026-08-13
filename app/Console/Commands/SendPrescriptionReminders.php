@@ -3,67 +3,64 @@
 namespace App\Console\Commands;
 
 use App\Models\Prescription;
+use App\Services\SmsService;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class SendPrescriptionReminders extends Command
 {
     protected $signature = 'prescriptions:remind';
-    protected $description = 'Send reminders to patients with chronic prescriptions due for refill';
+
+    protected $description = 'Remind patients with chronic prescriptions to refill before they run out';
 
     public function handle(): int
     {
-        $remindDaysBefore = 5; // Remind 5 days before medication runs out
+        $sent = 0;
 
-        // Find chronic prescriptions that are paid and due for refill
+        // Find chronic prescriptions that:
+        // 1. Have refills remaining
+        // 2. Were last dispensed ~25-28 days ago (assuming monthly meds)
+        // 3. Haven't been reminded in the last 7 days
         $prescriptions = Prescription::where('is_chronic', true)
-            ->where('payment_status', 'paid')
-            ->where('pharmacy_status', 'dispatched')
-            ->whereNotNull('paid_at')
+            ->whereColumn('repeats_used', '<', 'repeats')
+            ->where('status', 'dispensed')
             ->where(function ($q) {
-                $q->where('repeats', 0) // unlimited
-                  ->orWhereColumn('repeats_used', '<', 'repeats');
+                // Last dispensed 25-30 days ago (time for refill)
+                $q->whereBetween('dispatched_at', [now()->subDays(30), now()->subDays(25)]);
             })
+            ->whereNull('valid_until')
+            ->orWhere('valid_until', '>', now())
             ->with(['patient', 'items'])
             ->get();
 
-        $sent = 0;
+        $sms = app(SmsService::class);
 
         foreach ($prescriptions as $prescription) {
-            // Calculate when meds run out based on longest duration item
-            $maxDuration = $prescription->items->max('duration_days') ?? 30;
-            $refillDate = $prescription->paid_at->addDays($maxDuration);
+            $patient = $prescription->patient;
+            $remaining = $prescription->refills_remaining;
+            $medNames = $prescription->items->pluck('medication_name')->implode(', ');
 
-            // Check if we're within the reminder window
-            $daysUntilRefill = now()->diffInDays($refillDate, false);
-
-            if ($daysUntilRefill > 0 && $daysUntilRefill <= $remindDaysBefore) {
-                // Don't send if we already reminded (check metadata)
-                $lastReminder = $prescription->metadata['last_reminder_sent'] ?? null;
-                if ($lastReminder && now()->diffInDays($lastReminder) < 3) {
-                    continue; // Don't spam — max once every 3 days
-                }
-
-                // Send reminder email
-                Mail::to($prescription->patient)->queue(
-                    new \App\Mail\PrescriptionRefillReminder($prescription, $daysUntilRefill)
+            // Send SMS
+            if ($patient->phone) {
+                $sms->send(
+                    $patient->phone,
+                    "Hi {$patient->first_name}, your medication ({$medNames}) may be running low. You have {$remaining} refill(s) remaining. Log in to Zapmed to request a refill. — Zapmed"
                 );
-
-                // Track that we sent a reminder
-                $prescription->update([
-                    'metadata' => array_merge($prescription->metadata ?? [], [
-                        'last_reminder_sent' => now()->toISOString(),
-                    ]),
-                ]);
-
                 $sent++;
             }
+
+            // Send email
+            Mail::raw(
+                "Hi {$patient->first_name},\n\nYour medication may be running low:\n\n{$medNames}\n\nYou have {$remaining} refill(s) remaining on prescription {$prescription->reference}.\n\nLog in to request your refill: " . url('/prescriptions') . "\n\n— Zapmed",
+                function ($message) use ($patient) {
+                    $message->to($patient->email)
+                        ->subject('Time to refill your medication — Zapmed');
+                }
+            );
+            $sent++;
         }
 
-        $this->info("Sent {$sent} prescription refill reminders.");
-        Log::info("Prescription reminders sent: {$sent}");
-
-        return Command::SUCCESS;
+        $this->info("Sent {$sent} refill reminder(s).");
+        return self::SUCCESS;
     }
 }

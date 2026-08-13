@@ -261,7 +261,7 @@ class Onboarding extends Component
                 'emergency_contact_phone' => 'required|string|max:20',
                 'emergency_contact_relationship' => 'required|string|max:50',
             ]),
-            3 => $this->validate([]), // allergies/conditions are optional
+            3 => null, // allergies/conditions are optional — no validation needed
             4 => $this->validate([
                 'consent_terms' => 'accepted',
                 'consent_privacy' => 'accepted',
@@ -309,6 +309,7 @@ class Onboarding extends Component
 
     private function saveMedicalHistory($user): void
     {
+        $user->refresh();
         $user->patientProfile->update([
             'blood_type' => $this->blood_type ?: null,
             'height_cm' => $this->height_cm ?: null,

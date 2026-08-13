@@ -106,7 +106,33 @@
         <div class="lg:col-span-3 space-y-4">
             <!-- Medication Search -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-                <h3 class="text-sm font-semibold text-gray-900 mb-3">Search Medication</h3>
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-sm font-semibold text-gray-900">Search Medication</h3>
+                    @if(count($items) === 0)
+                    <button wire:click="aiGeneratePrescription"
+                        wire:loading.attr="disabled"
+                        wire:target="aiGeneratePrescription"
+                        class="inline-flex items-center px-3 py-1.5 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-300 text-white text-xs font-medium rounded-lg transition-colors shadow-sm">
+                        <svg class="w-3.5 h-3.5 mr-1.5" wire:loading.class="animate-spin" wire:target="aiGeneratePrescription" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                        </svg>
+                        <span wire:loading.remove wire:target="aiGeneratePrescription">AI Generate Prescription</span>
+                        <span wire:loading wire:target="aiGeneratePrescription">Generating...</span>
+                    </button>
+                    @endif
+                </div>
+
+                <!-- AI Warnings -->
+                @if(count($aiWarnings) > 0)
+                <div class="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    <p class="text-xs font-semibold text-amber-800 mb-1">AI Warnings:</p>
+                    <ul class="space-y-0.5">
+                        @foreach($aiWarnings as $warning)
+                        <li class="text-xs text-amber-700">• {{ $warning }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+                @endif
 
                 <div class="relative">
                     <input wire:model.live.debounce.300ms="search" type="text"
@@ -143,9 +169,27 @@
             <!-- Add Item Form (shows when medication selected or custom mode) -->
             @if($medicationName || $isCustomMedication)
             <div class="bg-white rounded-xl shadow-sm border border-zapmed-100 p-5">
-                <h3 class="text-sm font-semibold text-gray-900 mb-4">
-                    {{ $isCustomMedication ? 'Add Custom Medication' : 'Add: ' . $medicationName }}
-                </h3>
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm font-semibold text-gray-900">
+                        {{ $isCustomMedication ? 'Add Custom Medication' : 'Add: ' . $medicationName }}
+                    </h3>
+                    @if(!$isCustomMedication && $dosage)
+                    <span class="inline-flex items-center text-xs text-purple-600 font-medium">
+                        <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                        </svg>
+                        AI suggested — review & adjust
+                    </span>
+                    @endif
+                </div>
+
+                <!-- AI allergy/interaction warning -->
+                @if($aiWarning)
+                <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+                    <svg class="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                    <p class="text-xs text-red-700">{{ $aiWarning }}</p>
+                </div>
+                @endif
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     @if($isCustomMedication)

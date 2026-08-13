@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\EncryptsSensitiveFields;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,7 +10,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PatientProfile extends Model
 {
-    use HasFactory;
+    use HasFactory, EncryptsSensitiveFields;
+
+    protected array $encryptedFields = [
+        'medical_aid_number',
+        'surgical_history',
+        'family_history',
+    ];
 
     protected $fillable = [
         'user_id',

@@ -136,6 +136,30 @@ class PaymentController extends Controller
             'amount' => $payment->amount,
         ]);
 
+        // Record partner commission if this patient was referred
+        $referralService = app(\App\Services\ReferralService::class);
+        if ($payment->appointment) {
+            $referralService->recordConsultationCommission(
+                $payment->patient,
+                $payment->amount,
+                $payment->appointment->reference ?? $payment->reference
+            );
+        } else {
+            $referralService->recordMedicationCommission(
+                $payment->patient,
+                $payment->amount,
+                $payment->reference
+            );
+        }
+
+        // Record revenue split (payout tracking)
+        $payoutService = app(\App\Services\PayoutService::class);
+        if ($payment->appointment) {
+            $payoutService->recordConsultationPayout($payment);
+        } else {
+            $payoutService->recordMedicationPayout($payment);
+        }
+
         // Send email notifications
         $payment->loadMissing(['appointment.doctor', 'appointment.patient', 'patient']);
 

@@ -3,12 +3,33 @@
 namespace App\Http\Controllers;
 
 use App\Models\Consultation;
+use App\Models\Prescription;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class PdfController extends Controller
 {
+    /**
+     * Generate and download a prescription PDF.
+     */
+    public function prescription(Prescription $prescription)
+    {
+        $user = Auth::user();
+
+        if ($user->id !== $prescription->doctor_id && $user->id !== $prescription->patient_id) {
+            abort(403, 'Unauthorized access to this prescription.');
+        }
+
+        $prescription->load(['items', 'doctor.doctorProfile', 'patient', 'consultation']);
+
+        $pdf = Pdf::loadView('pdf.prescription', [
+            'prescription' => $prescription,
+        ])->setPaper('a4');
+
+        return $pdf->download("prescription-{$prescription->reference}.pdf");
+    }
+
     /**
      * Generate and download a sick note PDF.
      */

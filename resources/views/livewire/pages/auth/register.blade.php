@@ -35,6 +35,9 @@ new #[Layout('layouts.guest')] class extends Component
 
         Auth::login($user);
 
+        // Attribute referral if user came from a partner
+        app(\App\Services\ReferralService::class)->attributeRegistration($user);
+
         // Check for pending assessment in session
         $pendingAssessment = session()->pull('pending_assessment');
         if ($pendingAssessment) {

@@ -1,0 +1,1 @@
+<p>Expert support for perimenopause and menopause symptoms. Our doctors provide personalised HRT and non-hormonal options to manage hot flushes, mood changes, sleep disruption, and other symptoms effectively and safely.</p>

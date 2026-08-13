@@ -1,0 +1,1 @@
+<p>Confidential care for any sexual health concern. Our doctors provide judgement-free consultations and personalised treatment plans — from assessment to treatment, all handled online and discreetly.</p>

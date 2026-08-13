@@ -1,0 +1,1 @@
+<p>Effective prescription treatment for oral or vaginal thrush (candida). Our doctors assess your symptoms and prescribe the right antifungal — topical or oral — delivered discreetly to your door.</p>

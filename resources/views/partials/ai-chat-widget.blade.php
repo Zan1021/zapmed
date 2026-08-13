@@ -14,7 +14,7 @@
         <div class="bg-gradient-to-r from-zapmed-600 to-zapmed-700 p-4 flex items-center justify-between">
             <div class="flex items-center space-x-3">
                 <div class="w-8 h-8 rounded-lg overflow-hidden">
-                    <img src="/images/ai-doctor-avatar.svg" alt="AI Doctor" class="w-8 h-8">
+                    <img src="/images/aiavatar.webp" alt="AI Doctor" class="w-8 h-8">
                 </div>
                 <div>
                     <p class="text-sm font-semibold text-white">AI Health Assistant</p>
@@ -33,7 +33,7 @@
             <!-- Welcome message -->
             <div class="flex items-start space-x-2">
                 <div class="w-7 h-7 rounded-full flex-shrink-0 overflow-hidden">
-                    <img src="/images/ai-doctor-avatar.svg" alt="AI" class="w-7 h-7">
+                    <img src="/images/aiavatar.webp" alt="AI" class="w-7 h-7">
                 </div>
                 <div class="bg-gray-50 rounded-xl rounded-tl-sm px-3 py-2 max-w-[85%]">
                     <p class="text-sm text-gray-700">Hi! I'm Zapmed's AI assistant. I can help you find the right treatment. What's on your mind?</p>
@@ -56,7 +56,7 @@
                     <template x-if="msg.role === 'ai'">
                         <div class="flex items-start space-x-2">
                             <div class="w-7 h-7 rounded-full flex-shrink-0 overflow-hidden">
-                                <img src="/images/ai-doctor-avatar.svg" alt="AI" class="w-7 h-7">
+                                <img src="/images/aiavatar.webp" alt="AI" class="w-7 h-7">
                             </div>
                             <div class="max-w-[85%]">
                                 <div class="bg-gray-50 rounded-xl rounded-tl-sm px-3 py-2">
@@ -76,7 +76,7 @@
             <!-- Loading -->
             <div x-show="loading" class="flex items-start space-x-2">
                 <div class="w-7 h-7 rounded-full flex-shrink-0 overflow-hidden">
-                    <img src="/images/ai-doctor-avatar.svg" alt="AI" class="w-7 h-7">
+                    <img src="/images/aiavatar.webp" alt="AI" class="w-7 h-7">
                 </div>
                 <div class="bg-gray-50 rounded-xl rounded-tl-sm px-4 py-3">
                     <div class="flex space-x-1">
@@ -108,17 +108,24 @@
     <!-- Floating Button -->
     <div class="flex items-center space-x-3">
         <span x-show="!open" x-cloak x-transition class="bg-white text-gray-700 text-sm font-medium px-4 py-2 rounded-full shadow-lg border border-gray-100 hidden sm:block">
-            How can we assist?
+            Chat with our AI Doctor
         </span>
         <button @click="open = !open"
-            class="w-14 h-14 bg-zapmed-600 hover:bg-zapmed-700 text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-200 hover:scale-105"
+            class="relative w-16 h-16 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group"
             :class="open ? '' : 'animate-bounce-subtle'">
-            <svg x-show="!open" x-cloak class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-            </svg>
-            <svg x-show="open" x-cloak class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
+            <!-- Pulsing ring (when closed) -->
+            <span x-show="!open" class="absolute inset-0 rounded-full bg-zapmed-400 animate-ping opacity-20"></span>
+            <span class="absolute inset-0 rounded-full bg-gradient-to-br from-zapmed-500 to-zapmed-700 ring-3 ring-zapmed-300 ring-offset-2 ring-offset-white"></span>
+            <!-- Avatar (when closed) -->
+            <img x-show="!open" x-cloak src="/images/aiavatar.webp" alt="AI Health Assistant" class="relative w-full h-full rounded-full object-cover border-2 border-white">
+            <!-- Close icon (when open) -->
+            <span x-show="open" x-cloak class="relative flex items-center justify-center w-full h-full">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </span>
+            <!-- Online indicator dot -->
+            <span x-show="!open" class="absolute top-0 right-0 w-4 h-4 bg-green-400 border-2 border-white rounded-full"></span>
         </button>
     </div>
 </div>

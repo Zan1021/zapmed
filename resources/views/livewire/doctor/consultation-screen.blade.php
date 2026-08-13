@@ -127,6 +127,69 @@
 
         <!-- Right: Clinical Notes -->
         <div class="lg:col-span-3 space-y-4">
+            <!-- Consultation Countdown Timer -->
+            @if($this->consultationDeadline)
+            <div x-data="consultationTimer('{{ $this->consultationDeadline }}', {{ $this->consultationDuration }})"
+                 x-init="startTimer()"
+                 class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-lg flex items-center justify-center"
+                             :class="{
+                                'bg-green-50': status === 'ok',
+                                'bg-amber-50': status === 'warning',
+                                'bg-red-50 animate-pulse': status === 'overtime'
+                             }">
+                            <svg class="w-5 h-5" :class="{
+                                    'text-green-600': status === 'ok',
+                                    'text-amber-600': status === 'warning',
+                                    'text-red-600': status === 'overtime'
+                                 }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-gray-500">Consultation Time</p>
+                            <p class="text-sm text-gray-700">{{ $this->consultationDuration }} min slot</p>
+                        </div>
+                    </div>
+
+                    <div class="text-right">
+                        <p class="text-2xl font-bold font-mono tabular-nums"
+                           :class="{
+                               'text-green-700': status === 'ok',
+                               'text-amber-700': status === 'warning',
+                               'text-red-700': status === 'overtime'
+                           }"
+                           x-text="display">
+                            --:--
+                        </p>
+                        <p class="text-xs font-medium"
+                           :class="{
+                               'text-green-600': status === 'ok',
+                               'text-amber-600': status === 'warning',
+                               'text-red-600': status === 'overtime'
+                           }"
+                           x-text="status === 'overtime' ? 'OVERTIME' : 'remaining'">
+                            remaining
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Progress bar -->
+                <div class="mt-3 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div class="h-full rounded-full transition-all duration-1000"
+                         :class="{
+                             'bg-green-500': status === 'ok',
+                             'bg-amber-500': status === 'warning',
+                             'bg-red-500': status === 'overtime'
+                         }"
+                         :style="'width: ' + Math.min(progress, 100) + '%'">
+                    </div>
+                </div>
+            </div>
+            @endif
+
             <!-- Video Call Panel -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                 @if(session('error'))
@@ -135,17 +198,32 @@
                     </div>
                 @endif
 
-                @if($showVideoPanel && $videoSession)
-                    <!-- Active Video Call -->
+                @if($appointment->communication_preference === 'text')
+                    <!-- Text-Only Consultation Notice -->
+                    <div class="p-4 flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">Text-Only Consultation</p>
+                            <p class="text-xs text-gray-500">The patient has requested a text-only consultation — no video or audio call.</p>
+                        </div>
+                    </div>
+                @elseif($showVideoPanel && $videoSession)
+                    <!-- Active Video/Audio Call -->
                     <div class="p-4 bg-gray-900 border-b border-gray-700">
                         <div class="flex items-center justify-between mb-3">
                             <div class="flex items-center space-x-2">
                                 <div class="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
-                                <span class="text-sm font-medium text-white">Video Call Active</span>
+                                <span class="text-sm font-medium text-white">
+                                    {{ $appointment->communication_preference === 'audio' ? 'Audio Call Active' : 'Video Call Active' }}
+                                </span>
                                 <span class="text-xs text-gray-400">&middot; {{ $videoSession->room_name }}</span>
                             </div>
                             <button wire:click="endVideoCall"
-                                wire:confirm="End the video call for both participants?"
+                                wire:confirm="End the call for both participants?"
                                 class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded-lg transition-colors">
                                 End Call
                             </button>
@@ -160,25 +238,44 @@
                         </div>
                     </div>
                 @else
-                    <!-- Start Video Call Button -->
+                    <!-- Start Call Button -->
                     <div class="p-4 flex items-center justify-between">
                         <div class="flex items-center space-x-3">
                             <div class="w-10 h-10 bg-zapmed-50 rounded-lg flex items-center justify-center">
+                                @if($appointment->communication_preference === 'audio')
+                                <svg class="w-5 h-5 text-zapmed-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                                </svg>
+                                @else
                                 <svg class="w-5 h-5 text-zapmed-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                                 </svg>
+                                @endif
                             </div>
                             <div>
-                                <p class="text-sm font-medium text-gray-900">Video Consultation</p>
-                                <p class="text-xs text-gray-500">Start a secure video call with the patient</p>
+                                <p class="text-sm font-medium text-gray-900">
+                                    {{ $appointment->communication_preference === 'audio' ? 'Audio Consultation' : 'Video Consultation' }}
+                                </p>
+                                <p class="text-xs text-gray-500">
+                                    {{ $appointment->communication_preference === 'audio'
+                                        ? 'Start a secure audio call with the patient (no camera)'
+                                        : 'Start a secure video call with the patient' }}
+                                </p>
                             </div>
                         </div>
                         <button wire:click="startVideoCall"
                             class="px-4 py-2.5 bg-zapmed-600 hover:bg-zapmed-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm flex items-center space-x-2">
+                            @if($appointment->communication_preference === 'audio')
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                            </svg>
+                            <span>Start Audio Call</span>
+                            @else
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                             </svg>
                             <span>Start Video Call</span>
+                            @endif
                         </button>
                     </div>
                 @endif

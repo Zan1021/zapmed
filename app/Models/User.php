@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\UserRole;
+use App\Traits\EncryptsSensitiveFields;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,7 +16,11 @@ use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, SoftDeletes;
+    use HasFactory, Notifiable, SoftDeletes, EncryptsSensitiveFields;
+
+    protected array $encryptedFields = [
+        'id_number',
+    ];
 
     /**
      * The attributes that are mass assignable.
@@ -38,7 +43,31 @@ class User extends Authenticatable implements MustVerifyEmail
         'postal_code',
         'two_factor_enabled',
         'is_active',
+        'member_number',
+        'avatar_path',
     ];
+
+    /**
+     * Boot the model.
+     */
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        static::creating(function ($user) {
+            if (empty($user->member_number)) {
+                $lastNumber = static::whereNotNull('member_number')
+                    ->orderByRaw("CAST(SUBSTR(member_number, 4) AS INTEGER) DESC")
+                    ->value('member_number');
+
+                $nextNumber = $lastNumber
+                    ? (int) substr($lastNumber, 3) + 1
+                    : 1;
+
+                $user->member_number = 'ZM-' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
+            }
+        });
+    }
 
     /**
      * The attributes that should be hidden for serialization.
@@ -80,6 +109,22 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Get the user's appointments (as patient).
+     */
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class, 'patient_id');
+    }
+
+    /**
+     * Get the user's prescriptions (as patient).
+     */
+    public function prescriptions(): HasMany
+    {
+        return $this->hasMany(Prescription::class, 'patient_id');
+    }
+
+    /**
      * Get the doctor profile.
      */
     public function doctorProfile(): HasOne
@@ -113,6 +158,26 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getNameAttribute(): string
     {
         return "{$this->first_name} {$this->last_name}";
+    }
+
+    /**
+     * Get the user's avatar URL (or null for initials fallback).
+     */
+    public function getAvatarUrlAttribute(): ?string
+    {
+        if ($this->avatar_path) {
+            return asset('storage/' . $this->avatar_path);
+        }
+
+        return null;
+    }
+
+    /**
+     * Get the user's initials.
+     */
+    public function getInitialsAttribute(): string
+    {
+        return strtoupper(substr($this->first_name, 0, 1) . substr($this->last_name, 0, 1));
     }
 
     /**

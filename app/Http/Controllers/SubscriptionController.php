@@ -137,11 +137,36 @@ class SubscriptionController extends Controller
             'metadata' => array_merge($subscription->metadata ?? [], [
                 'last_failure' => $data,
                 'last_failure_at' => now()->toISOString(),
+                'failure_reason' => $data['reason'] ?? 'Unknown',
             ]),
         ]);
 
+        // Send failed payment email to patient
+        try {
+            $user = $subscription->user;
+            \Illuminate\Support\Facades\Mail::raw(
+                "Dear {$user->first_name},\n\n" .
+                "We were unable to process your subscription payment of {$subscription->plan->formatted_price} for your {$subscription->plan->name} plan.\n\n" .
+                "This could be due to insufficient funds, an expired card, or a temporary issue with your bank.\n\n" .
+                "What to do:\n" .
+                "1. Log in to your Zapmed account\n" .
+                "2. Go to My Subscription\n" .
+                "3. Update your payment method or contact your bank\n\n" .
+                "If we're unable to collect payment, your subscription will be paused and you may lose access to consultations.\n\n" .
+                "Need help? Reply to this email or contact support@zapmed.co.za\n\n" .
+                "Kind regards,\nThe Zapmed Team",
+                function ($message) use ($user) {
+                    $message->to($user->email)
+                        ->subject('Payment Failed - Action Required | Zapmed');
+                }
+            );
+        } catch (\Exception $e) {
+            Log::error('Failed to send payment failure email', ['error' => $e->getMessage()]);
+        }
+
         Log::warning('Subscription payment failed', [
             'reference' => $subscription->payment_reference,
+            'user_id' => $subscription->user_id,
         ]);
     }
 }

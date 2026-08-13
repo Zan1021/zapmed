@@ -9,5 +9,6 @@
         @include('dashboards.doctor')
     @else
         @include('dashboards.patient')
+        <livewire:patient.testimonial-popup />
     @endif
 </x-app-layout>

@@ -1,0 +1,1 @@
+<p>Prescription treatments to reduce facial redness, bumps, and irritation caused by rosacea. Our doctors create a personalised skincare plan to manage symptoms and prevent flare-ups — all online, delivered to your door.</p>
