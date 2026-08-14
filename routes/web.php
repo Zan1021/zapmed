@@ -11,6 +11,14 @@ use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome');
 Route::view('offline', 'offline');
+Route::get('health', \App\Http\Controllers\HealthCheckController::class)->name('health');
+
+// Sentry test route (only available in non-production)
+if (app()->environment('local', 'staging')) {
+    Route::get('debug-sentry', function () {
+        throw new \RuntimeException('Sentry test — if you see this in Sentry, it works!');
+    });
+}
 Route::get('assessment/{slug}', \App\Livewire\Patient\Assessment::class)->name('assessment.start');
 Route::get('doctors/apply', \App\Livewire\DoctorApply::class)->name('doctors.apply');
 Route::get('blog', \App\Livewire\Blog\BlogIndex::class)->name('blog');
