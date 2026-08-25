@@ -24,6 +24,9 @@ Route::get('doctors/apply', \App\Livewire\DoctorApply::class)->name('doctors.app
 Route::get('blog', \App\Livewire\Blog\BlogIndex::class)->name('blog');
 Route::get('blog/{slug}', \App\Livewire\Blog\BlogShow::class)->name('blog.show');
 
+// SPAR "My Meds" OTP Login (public)
+Route::get('my-meds/login', \App\Livewire\Spar\MyMedsLogin::class)->name('my-meds.login');
+
 // AI Health Assistant (public, rate-limited)
 Route::post('api/ai-assistant', [\App\Http\Controllers\AiAssistantController::class, 'ask'])
     ->name('ai.ask');
@@ -35,6 +38,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         }
         if (auth()->user()->isDoctor()) {
             return redirect()->route('doctor.dashboard');
+        }
+        if (auth()->user()->isPharmacyStaff()) {
+            return redirect()->route('spar.dashboard');
         }
         return view('dashboard');
     })->middleware('onboarding')->name('dashboard');
@@ -59,12 +65,33 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/failed-payments', \App\Livewire\Admin\FailedPayments::class)->name('admin.failed-payments');
         Route::get('/blog', \App\Livewire\Admin\BlogManagement::class)->name('admin.blog');
         Route::get('/help-center', \App\Livewire\Admin\HelpCenter::class)->name('admin.help-center');
+
+        // SPAR Chronic Medication Module
+        Route::prefix('spar')->group(function () {
+            Route::get('/', \App\Livewire\Admin\SparDashboard::class)->name('admin.spar.dashboard');
+            Route::get('/pharmacies', \App\Livewire\Admin\SparPharmacies::class)->name('admin.spar.pharmacies');
+            Route::get('/imports', \App\Livewire\Admin\SparImports::class)->name('admin.spar.imports');
+            Route::get('/exceptions', \App\Livewire\Admin\SparExceptions::class)->name('admin.spar.exceptions');
+            Route::get('/reporting', \App\Livewire\Admin\SparReporting::class)->name('admin.spar.reporting');
+        });
     });
 
     // Doctor dashboard (Livewire - real data)
     Route::get('doctor/dashboard', \App\Livewire\Doctor\Dashboard::class)
         ->middleware(['role:doctor', 'doctor.availability'])
         ->name('doctor.dashboard');
+
+    // SPAR Pharmacy Staff Dashboard
+    Route::middleware(['role:pharmacy_staff', 'spar.scope', 'spar.timeout'])->prefix('spar')->group(function () {
+        Route::get('/dashboard', \App\Livewire\Spar\PharmacyDashboard::class)->name('spar.dashboard');
+        Route::get('/patients', \App\Livewire\Spar\PatientList::class)->name('spar.patients');
+    });
+
+    // SPAR Patient "My Meds" Portal (authenticated)
+    Route::middleware('role:patient')->prefix('my-meds')->group(function () {
+        Route::get('/', \App\Livewire\Spar\MyMedsDashboard::class)->name('my-meds.dashboard');
+        Route::get('/history', \App\Livewire\Spar\MyMedsHistory::class)->name('my-meds.history');
+    });
 
     // Doctor my patients
     Route::get('doctor/patients', \App\Livewire\Doctor\MyPatients::class)

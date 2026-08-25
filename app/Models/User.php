@@ -46,6 +46,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'member_number',
         'avatar_path',
         'email_verified_at',
+        'spar_pharmacy_id',
     ];
 
     /**
@@ -107,6 +108,30 @@ class User extends Authenticatable implements MustVerifyEmail
     public function patientProfile(): HasOne
     {
         return $this->hasOne(PatientProfile::class);
+    }
+
+    /**
+     * Get the SPAR pharmacy this staff member belongs to.
+     */
+    public function sparPharmacy(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(\App\Models\SparPharmacy::class, 'spar_pharmacy_id');
+    }
+
+    /**
+     * Get SPAR patient records linked to this user.
+     */
+    public function sparPatients(): HasMany
+    {
+        return $this->hasMany(\App\Models\SparPatient::class, 'user_id');
+    }
+
+    /**
+     * Check if user is pharmacy staff.
+     */
+    public function isPharmacyStaff(): bool
+    {
+        return $this->role === UserRole::PharmacyStaff;
     }
 
     /**

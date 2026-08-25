@@ -73,6 +73,14 @@ return [
             'replace_placeholders' => true,
         ],
 
+        'spar_audit' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/spar-audit.log'),
+            'level' => 'info',
+            'days' => 365,
+            'replace_placeholders' => true,
+        ],
+
         'slack' => [
             'driver' => 'slack',
             'url' => env('LOG_SLACK_WEBHOOK_URL'),
