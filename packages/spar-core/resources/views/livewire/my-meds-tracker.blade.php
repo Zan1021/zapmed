@@ -88,15 +88,15 @@
         @if($this->banners->isNotEmpty())
             <div class="my-4" x-data="{ i: 0, n: {{ $this->banners->count() }} }"
                  x-init="if (n > 1) setInterval(() => i = (i + 1) % n, 5000)">
-                <div class="relative overflow-hidden rounded-2xl">
+                <div class="relative overflow-hidden rounded-2xl aspect-[1080/420]">
                     @foreach($this->banners as $idx => $banner)
-                        <div x-show="i === {{ $idx }}" x-transition.opacity class="w-full">
+                        <div x-show="i === {{ $idx }}" x-transition.opacity class="absolute inset-0 w-full h-full">
                             @if($banner->link_url)
                                 <a href="{{ route('spar.banner.click', $banner->id) }}" target="_blank" rel="noopener">
-                                    <img src="{{ $banner->image_url }}" alt="{{ $banner->title }}" loading="lazy" class="w-full object-cover" />
+                                    <img src="{{ $banner->image_url }}" alt="{{ $banner->title }}" loading="lazy" class="w-full h-full object-cover" />
                                 </a>
                             @else
-                                <img src="{{ $banner->image_url }}" alt="{{ $banner->title }}" loading="lazy" class="w-full object-cover" />
+                                <img src="{{ $banner->image_url }}" alt="{{ $banner->title }}" loading="lazy" class="w-full h-full object-cover" />
                             @endif
                         </div>
                     @endforeach
@@ -118,19 +118,134 @@
             <p class="text-sm text-gray-500">Here's your medication status.</p>
         </div>
 
-        {{-- Permanent online-consultation button (config-driven external link).
-             Lets a patient book an online consult for a NEW prescription any
-             time — not only at renewal. Plain outbound link, no telehealth
-             coupling (AC-4 preserved). --}}
-        @if(config('spar.online_consult.enabled') && config('spar.online_consult.url'))
-            <a href="{{ config('spar.online_consult.url') }}" target="_blank" rel="noopener"
-               class="flex items-center justify-center gap-2 w-full text-center bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl py-3 mb-4">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                {{ config('spar.online_consult.label', 'Get a new prescription online') }}
-            </a>
-        @endif
+        {{-- Journeys across the whole profile (self + dependants, spec FR-8).
+             Alpine filter toggle: "My Prescriptions" (main member) vs
+             "Dependants". Cards are tagged data-owner="mine|dependant". --}}
+        <div x-data="{ filter: 'mine' }">
+            <div class="grid grid-cols-3 gap-2 mb-4">
+                <button type="button" @click="filter = 'mine'"
+                        :style="filter === 'mine' ? 'background: {{ config('spar.branding.primary_color', '#006B3F') }}; color: #fff;' : ''"
+                        :class="filter === 'mine' ? '' : 'bg-white text-gray-700 border border-gray-200'"
+                        class="text-center font-semibold rounded-xl py-2.5 text-sm transition-colors">
+                    My Prescriptions
+                </button>
+                <button type="button" @click="filter = 'dependants'"
+                        :style="filter === 'dependants' ? 'background: {{ config('spar.branding.primary_color', '#006B3F') }}; color: #fff;' : ''"
+                        :class="filter === 'dependants' ? '' : 'bg-white text-gray-700 border border-gray-200'"
+                        class="text-center font-semibold rounded-xl py-2.5 text-sm transition-colors">
+                    Dependants
+                </button>
+                <button type="button" @click="filter = 'renewals'"
+                        :style="filter === 'renewals' ? 'background: {{ config('spar.branding.primary_color', '#006B3F') }}; color: #fff;' : ''"
+                        :class="filter === 'renewals' ? '' : 'bg-white text-gray-700 border border-gray-200'"
+                        class="text-center font-semibold rounded-xl py-2.5 text-sm transition-colors">
+                    Renewals
+                </button>
+            </div>
 
-        {{-- Renewal funnel card (spec FR-13). CTA varies by host mode. --}}
+            @forelse($this->journeys as $journey)
+                @php
+                    $owner = ($journey->patient && !$journey->patient->is_primary_member) ? 'dependants' : 'mine';
+                    $isRenewal = $journey->status === 'renewal_due' ? 'true' : 'false';
+                @endphp
+                <div data-owner="{{ $owner }}"
+                     x-show="filter === '{{ $owner }}' || (filter === 'renewals' && {{ $isRenewal }})"
+                     class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-4">
+                <div class="flex items-center justify-between mb-2">
+                    <div>
+                        <h3 class="font-semibold text-gray-900">Prescription</h3>
+                        @if($journey->pharmacy)
+                            <p class="text-xs text-gray-500 flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                Collected at: {{ $journey->pharmacy->name }}
+                            </p>
+                        @endif
+                        @if($journey->patient && !$journey->patient->is_primary_member)
+                            <p class="text-xs font-medium text-green-600">
+                                For dependant: {{ $journey->patient->first_name ?: 'Dependant #'.$journey->patient->dependent_code }}
+                            </p>
+                        @else
+                            <p class="text-xs font-medium text-red-600">Main member</p>
+                        @endif
+                    </div>
+                    <span class="text-xs font-medium px-2 py-0.5 rounded-full
+                        {{ $journey->status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-600 text-white' }}">
+                        {{ $journey->status === 'renewal_due' ? 'Renewal Due' : 'Active' }}
+                    </span>
+                </div>
+                <p class="text-sm text-gray-600">
+                    <span class="font-semibold">Dispenses:</span> {{ $journey->dispenses_completed }} / {{ $journey->total_dispenses }}
+                </p>
+                <dl class="mt-2 grid grid-cols-1 gap-y-1 text-xs text-gray-500">
+                    @if($journey->start_date)
+                        <div class="flex justify-between">
+                            <dt>Started</dt>
+                            <dd class="text-gray-700">{{ $journey->start_date->format('d M Y') }}</dd>
+                        </div>
+                    @endif
+                    @if($journey->next_dispense_date)
+                        <div class="flex justify-between">
+                            <dt>Next collection</dt>
+                            <dd class="text-gray-700">{{ $journey->next_dispense_date->format('d M Y') }}</dd>
+                        </div>
+                    @endif
+                    @if($journey->renewal_due_date)
+                        <div class="flex justify-between">
+                            <dt>Renewal due</dt>
+                            <dd class="text-gray-700">{{ $journey->renewal_due_date->format('d M Y') }}</dd>
+                        </div>
+                    @endif
+                </dl>
+                @if(!empty($journey->medications))
+                    <p class="mt-3 text-sm font-semibold text-gray-700">Medication</p>
+                    <ul class="mt-1 text-sm text-gray-700 list-disc list-inside">
+                        @foreach($journey->medications as $med)
+                            <li>{{ $med['name'] ?? '' }}</li>
+                        @endforeach
+                    </ul>
+                @endif
+
+                @if($journey->status === 'renewal_due' && config('spar.online_consult.enabled') && config('spar.online_consult.url'))
+                    <div class="mt-4">
+                        <a href="{{ config('spar.online_consult.url') }}" target="_blank" rel="noopener"
+                           class="block w-full text-center bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl py-3">
+                            {{ config('spar.online_consult.label', 'Get a new prescription online') }}
+                        </a>
+                        <p class="text-xs text-gray-400 text-center mt-1">www.zapmed.co.za</p>
+                    </div>
+                @endif
+            </div>
+        @empty
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-6 text-center">
+                <p class="text-amber-800">No active prescription found on your profile.</p>
+                <p class="text-sm text-amber-600 mt-2">Contact your SPAR pharmacy for assistance.</p>
+            </div>
+        @endforelse
+
+        @php
+            $mineCount = $this->journeys->filter(fn ($j) => !($j->patient && !$j->patient->is_primary_member))->count();
+            $depCount = $this->journeys->filter(fn ($j) => $j->patient && !$j->patient->is_primary_member)->count();
+            $renewalCount = $this->journeys->filter(fn ($j) => $j->status === 'renewal_due')->count();
+        @endphp
+        @if($mineCount === 0)
+            <div x-show="filter === 'mine'" class="bg-gray-50 rounded-xl p-6 text-center text-sm text-gray-600">
+                No prescriptions on your own profile.
+            </div>
+        @endif
+        @if($depCount === 0)
+            <div x-show="filter === 'dependants'" class="bg-gray-50 rounded-xl p-6 text-center text-sm text-gray-600">
+                No dependants have prescriptions on your profile.
+            </div>
+        @endif
+        @if($renewalCount === 0)
+            <div x-show="filter === 'renewals'" class="bg-gray-50 rounded-xl p-6 text-center text-sm text-gray-600">
+                Nothing due for renewal right now.
+            </div>
+        @endif
+        </div>{{-- /x-data filter wrapper --}}
+
+        {{-- Renewal funnel card (spec FR-13). Moved to bottom, above history.
+             CTA varies by host mode. Opens in a new window. --}}
         @if($this->renewalDue)
             <div class="bg-white rounded-2xl shadow-sm border border-amber-200 p-5 mb-4">
                 <h3 class="font-semibold text-gray-900 mb-1">Prescription renewal needed</h3>
@@ -139,7 +254,7 @@
                     you'll need a new script.
                 </p>
                 @if(config('spar.host_mode', 'integrated') === 'integrated')
-                    <a href="{{ config('app.url') }}" target="_blank"
+                    <a href="{{ config('app.url') }}" target="_blank" rel="noopener"
                        class="block w-full text-center bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl py-3 mb-2">
                         Book an online consultation
                     </a>
@@ -161,47 +276,6 @@
                 @endif
             </div>
         @endif
-
-        {{-- Journeys across the whole profile (self + dependants, spec FR-8). --}}
-        @forelse($this->journeys as $journey)
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-4">
-                <div class="flex items-center justify-between mb-2">
-                    <div>
-                        <h3 class="font-semibold text-gray-900">Prescription</h3>
-                        @if($journey->pharmacy)
-                            <p class="text-xs text-gray-500 flex items-center gap-1">
-                                <svg class="w-3.5 h-3.5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                Collected at: {{ $journey->pharmacy->name }}
-                            </p>
-                        @endif
-                        @if($journey->patient && !$journey->patient->is_primary_member)
-                            <p class="text-xs text-gray-500">
-                                For dependant: {{ $journey->patient->first_name ?: 'Dependant #'.$journey->patient->dependent_code }}
-                            </p>
-                        @endif
-                    </div>
-                    <span class="text-xs font-medium px-2 py-0.5 rounded-full
-                        {{ $journey->status === 'active' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700' }}">
-                        {{ $journey->status === 'renewal_due' ? 'Renewal Due' : 'Active' }}
-                    </span>
-                </div>
-                <p class="text-sm text-gray-600">
-                    Dispenses: {{ $journey->dispenses_completed }} / {{ $journey->total_dispenses }}
-                </p>
-                @if(!empty($journey->medications))
-                    <ul class="mt-2 text-sm text-gray-700 list-disc list-inside">
-                        @foreach($journey->medications as $med)
-                            <li>{{ $med['name'] ?? '' }}</li>
-                        @endforeach
-                    </ul>
-                @endif
-            </div>
-        @empty
-            <div class="bg-amber-50 border border-amber-200 rounded-xl p-6 text-center">
-                <p class="text-amber-800">No active prescription found on your profile.</p>
-                <p class="text-sm text-amber-600 mt-2">Contact your SPAR pharmacy for assistance.</p>
-            </div>
-        @endforelse
 
         <a href="{{ route('my-meds.history') }}" class="block text-center text-sm text-green-700 py-3">
             View full history

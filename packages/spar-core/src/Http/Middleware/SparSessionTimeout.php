@@ -25,6 +25,16 @@ class SparSessionTimeout
             return $next($request);
         }
 
+        // Livewire component updates are AJAX round-trips, not fresh user
+        // navigations. Writing to the session on every one of them churns the
+        // session store and, under file sessions on a single-process dev
+        // server, can race the CSRF token the page already holds — surfacing
+        // as a spurious 419 "This page has expired". Idle-timeout tracks page
+        // activity, so skip Livewire's own update calls.
+        if ($request->is('livewire/*')) {
+            return $next($request);
+        }
+
         // Only scoped pharmacy-staff sessions get the stricter timeout.
         $pharmacyId = app(SparIdentityProvider::class)->currentPharmacyId();
         if ($pharmacyId === null) {
@@ -34,7 +44,8 @@ class SparSessionTimeout
         $timeout = (int) config('spar.session_timeout_minutes', 30);
         $lastActivity = session('spar_last_activity');
 
-        if ($lastActivity && now()->diffInMinutes($lastActivity) > $timeout) {
+        // Carbon 3 returns a signed diff; use absolute minutes elapsed.
+        if ($lastActivity && now()->diffInMinutes($lastActivity, true) > $timeout) {
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();

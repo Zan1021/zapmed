@@ -81,8 +81,11 @@ class SparImports extends Component
 
     public function render()
     {
-        $batches = SparImportBatch::with('importedBy')
-            ->latest()
+        // NOTE: no ->with('importedBy') — SparImportBatch intentionally has no
+        // importedBy relation (imported_by is a plain nullable column, AC-3, no
+        // host-User coupling). Eager-loading it threw RelationNotFoundException,
+        // which Livewire surfaced as a misleading "page expired" dialog.
+        $batches = SparImportBatch::latest()
             ->paginate(15);
 
         return view('spar::livewire.admin.spar-imports', ['batches' => $batches])

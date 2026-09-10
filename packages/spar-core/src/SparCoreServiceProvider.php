@@ -3,6 +3,23 @@
 namespace Zapmed\SparCore;
 
 use Illuminate\Support\ServiceProvider;
+use Livewire\Livewire;
+use Zapmed\SparCore\Livewire\MyMedsLogin;
+use Zapmed\SparCore\Livewire\MyMedsTracker;
+use Zapmed\SparCore\Livewire\MyMedsHistory;
+use Zapmed\SparCore\Livewire\PatientList;
+use Zapmed\SparCore\Livewire\PatientDetail;
+use Zapmed\SparCore\Livewire\PharmacistCapture;
+use Zapmed\SparCore\Livewire\PharmacyDashboard;
+use Zapmed\SparCore\Livewire\Admin\SparBanners;
+use Zapmed\SparCore\Livewire\Admin\SparConsents;
+use Zapmed\SparCore\Livewire\Admin\SparDashboard;
+use Zapmed\SparCore\Livewire\Admin\SparExceptions;
+use Zapmed\SparCore\Livewire\Admin\SparGroups;
+use Zapmed\SparCore\Livewire\Admin\SparImports;
+use Zapmed\SparCore\Livewire\Admin\SparPharmacies;
+use Zapmed\SparCore\Livewire\Admin\SparReporting;
+use Zapmed\SparCore\Livewire\Admin\SparStats;
 
 /**
  * SPAR core package provider (spec FR-1.1). Registers the SPAR domain's config,
@@ -44,6 +61,46 @@ class SparCoreServiceProvider extends ServiceProvider
         $routes = __DIR__ . '/../routes/spar.php';
         if (file_exists($routes)) {
             $this->loadRoutesFrom($routes);
+        }
+
+        // Explicitly register the package's Livewire components under stable
+        // aliases. Routing to them by class only registers them for the render
+        // request; the subsequent /livewire/update POST must be able to resolve
+        // the component name back to its class. Without this, ComponentRegistry
+        // throws ComponentNotFoundException on update, which Livewire surfaces
+        // as LivewireReleaseTokenMismatchException → a spurious 419
+        // "This page has expired" on every wire:click. (App\Livewire components
+        // are auto-discovered, which is why the login screen was unaffected.)
+        $this->registerLivewireComponents();
+    }
+
+    private function registerLivewireComponents(): void
+    {
+        if (! class_exists(Livewire::class)) {
+            return;
+        }
+
+        $components = [
+            'spar.my-meds-login'      => MyMedsLogin::class,
+            'spar.my-meds-tracker'    => MyMedsTracker::class,
+            'spar.my-meds-history'    => MyMedsHistory::class,
+            'spar.patient-list'       => PatientList::class,
+            'spar.patient-detail'     => PatientDetail::class,
+            'spar.pharmacist-capture' => PharmacistCapture::class,
+            'spar.pharmacy-dashboard' => PharmacyDashboard::class,
+            'spar.admin.banners'      => SparBanners::class,
+            'spar.admin.consents'     => SparConsents::class,
+            'spar.admin.dashboard'    => SparDashboard::class,
+            'spar.admin.exceptions'   => SparExceptions::class,
+            'spar.admin.groups'       => SparGroups::class,
+            'spar.admin.imports'      => SparImports::class,
+            'spar.admin.pharmacies'   => SparPharmacies::class,
+            'spar.admin.reporting'    => SparReporting::class,
+            'spar.admin.stats'        => SparStats::class,
+        ];
+
+        foreach ($components as $alias => $class) {
+            Livewire::component($alias, $class);
         }
     }
 }

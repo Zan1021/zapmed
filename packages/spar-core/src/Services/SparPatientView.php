@@ -72,7 +72,8 @@ class SparPatientView
         return SparPrescriptionJourney::whereIn('spar_patient_id', $memberIds)
             ->whereIn('status', ['active', 'renewal_due'])
             ->with(['patient', 'pharmacy'])
-            ->latest()
+            ->orderByDesc('start_date')
+            ->orderByDesc('created_at')
             ->get();
     }
 
