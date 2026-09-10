@@ -68,3 +68,26 @@ same result as the manual upload. See `docs/imports.md`.
   payloads are written to the log so the flow is fully demoable without provider creds.
 - `NullTelehealthBridge` is bound, so renewal offers "see your own doctor" only (no ZapMed
   online-consult CTA) — that's the standalone behaviour.
+
+
+## Staff patient detail (2026-09-11)
+On the Patients screen (`/spar/patients` or admin), **click a patient's name** to open their
+detail page (`/spar/patients/{id}`):
+- **Overview tab** — a READ-ONLY mirror of exactly what the patient sees on their mobi tracker
+  (household roll-up, meds with "Collected at: <pharmacy>", renewal card), plus **Previous
+  prescriptions** and **Collection history**.
+- **Dependants tab** — everyone under the profile.
+- **Staff panel** (right) — the patient's **mobi tracker URL** (copy/resend), contact + consent,
+  **onboarding pharmacy + pharmacist + date**, and the full consent history.
+Every open is audit-logged (`patient_access`) and scope-gated (a store only opens patients with
+activity there). It's a view, not a login-as — staff can't act as the patient.
+
+
+## Group promo banners (2026-09-11)
+SPAR **group admins** manage a promo slider shown on the patient mobi page (under the logo,
+after consent). Admin → **Banners** (`/admin/spar/banners`, super/group admin only):
+- Upload JPG/PNG/WebP (recommended **1080×420**) — auto-resized + converted to compact **WebP**.
+- Optional **click-through URL**, reorder, activate/hide, schedule, max 5 active per group.
+- Per-banner **impressions + clicks + CTR** shown.
+On the patient tracker the banners appear as a slider (group-scoped, after consent). Clicks go
+through a tracked redirect. The demo seeds 2 sample banners for "SPAR Western Cape".

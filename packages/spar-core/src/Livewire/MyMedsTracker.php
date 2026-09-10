@@ -9,6 +9,7 @@ use Zapmed\SparCore\Models\SparOrder;
 use Zapmed\SparCore\Models\SparPatient;
 use Zapmed\SparCore\Models\SparPrescriptionJourney;
 use Zapmed\SparCore\Services\SparPatientSession;
+use Zapmed\SparCore\Services\SparPatientView;
 use Zapmed\SparCore\Services\SparOrderService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -180,8 +181,9 @@ class MyMedsTracker extends Component
     // ---- Dashboard data (scoped to the session patient + dependants) -------
 
     /**
-     * The primary member for this session. Dependants roll up under them
-     * (spec FR-8): we resolve to the primary member of the profile.
+     * The primary member for this session (dependants roll up under them,
+     * spec FR-8). Resolved via the shared SparPatientView (one source of truth
+     * with the staff mirror).
      */
     public function getSparPatientProperty(): ?SparPatient
     {
@@ -190,35 +192,20 @@ class MyMedsTracker extends Component
             return null;
         }
 
-        // profile_code is encrypted — can't query it directly. Filter members
-        // in PHP within the same pharmacy by decrypted profile_code.
-        if (!$patient->is_primary_member) {
-            $primary = SparPatient::where('spar_pharmacy_id', $patient->spar_pharmacy_id)
-                ->where('is_primary_member', true)
-                ->get()
-                ->first(fn (SparPatient $p) => $p->profile_code === $patient->profile_code);
-            $patient = $primary ?? $patient;
-        }
-
-        return $patient->load(['pharmacy']);
+        return app(SparPatientView::class)->primary($patient);
     }
 
     /**
      * All patients under this profile (primary + dependants) for the roll-up.
-     * profile_code is encrypted, so match on the decrypted value in PHP.
      */
     public function getProfileMembersProperty()
     {
-        $patient = $this->sparPatient;
+        $patient = $this->session()->patient();
         if (!$patient) {
             return collect();
         }
 
-        return SparPatient::where('spar_pharmacy_id', $patient->spar_pharmacy_id)
-            ->get()
-            ->filter(fn (SparPatient $p) => $p->profile_code === $patient->profile_code)
-            ->sortByDesc('is_primary_member')
-            ->values();
+        return app(SparPatientView::class)->members($patient);
     }
 
     /**
@@ -226,18 +213,46 @@ class MyMedsTracker extends Component
      */
     public function getJourneysProperty()
     {
-        $memberIds = $this->profileMembers->pluck('id');
+        $patient = $this->session()->patient();
+        if (!$patient) {
+            return collect();
+        }
 
-        return SparPrescriptionJourney::whereIn('spar_patient_id', $memberIds)
-            ->whereIn('status', ['active', 'renewal_due'])
-            ->with(['patient', 'pharmacy'])
-            ->latest()
-            ->get();
+        return app(SparPatientView::class)->journeys($patient);
     }
 
     public function getRenewalDueProperty()
     {
         return $this->journeys->firstWhere('status', 'renewal_due');
+    }
+
+    /**
+     * Live promo banners for THIS patient's pharmacy group (spec — shown after
+     * consent, under the logo). Records an impression for each rendered banner.
+     */
+    public function getBannersProperty()
+    {
+        $patient = $this->sparPatient;
+        // Resolve the group via the patient's (home) pharmacy.
+        $groupId = $patient?->pharmacy?->group_id
+            ?? \Zapmed\SparCore\Models\SparPharmacy::whereKey($patient?->spar_pharmacy_id)->value('group_id');
+
+        if (!$groupId) {
+            return collect();
+        }
+
+        $banners = \Zapmed\SparCore\Models\SparBanner::forGroup((int) $groupId)
+            ->liveNow()
+            ->limit((int) config('spar.banners.max_per_group', 5))
+            ->get();
+
+        // Impression count (batch increment the shown banners).
+        if ($banners->isNotEmpty()) {
+            \Zapmed\SparCore\Models\SparBanner::whereIn('id', $banners->pluck('id'))
+                ->increment('impressions');
+        }
+
+        return $banners;
     }
 
     public function render()

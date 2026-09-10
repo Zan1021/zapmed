@@ -230,6 +230,8 @@ class SparImportService
             if (!$patient) {
                 $patient = SparPatient::create([
                     'spar_pharmacy_id' => $pharmacy->id, // home / most-recent pharmacy
+                    'onboarding_pharmacy_id' => $pharmacy->id, // first store seen (set once)
+                    'captured_at' => now(),
                     'profile_code' => $profileCode,
                     'dependent_code' => $dependentCode,
                     'dependent_relation' => trim($firstRow['dependent_relation'] ?? null),

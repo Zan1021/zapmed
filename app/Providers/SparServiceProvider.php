@@ -50,6 +50,11 @@ class SparServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Resolve captured_by_id → staff display name for the patient detail view.
+        config([
+            'spar.staff_name_resolver' => fn ($id) => \App\Models\User::whereKey($id)->value('name') ?? "Staff #{$id}",
+        ]);
+
         // Register the host's SMS channel with the package MessagingDispatcher.
         // The package ships portable in-app + email channels; each host injects
         // its own SMS implementation via `spar.channel_factories` (a map of

@@ -42,6 +42,12 @@ class SparStandaloneServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Resolve captured_by_id → pharmacist display name for the staff patient
+        // detail view (the package stays free of the host user model).
+        config([
+            'spar.staff_name_resolver' => fn ($id) => \App\Models\PharmacyUser::whereKey($id)->value('name') ?? "Staff #{$id}",
+        ]);
+
         // Register the standalone SMS channel with the package MessagingDispatcher.
         // The package ships portable in-app + email channels; the host supplies
         // its own SMS. WhatsApp slots in here later with no rewrite.

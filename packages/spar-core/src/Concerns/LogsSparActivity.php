@@ -23,12 +23,17 @@ trait LogsSparActivity
     {
         $user = auth()->user();
 
+        // role may be a string (standalone PharmacyUser) or an enum with ->value
+        // (ZapMed UserRole). Normalise both without assuming a type.
+        $role = $user?->role ?? null;
+        $roleValue = is_object($role) && property_exists($role, 'value') ? $role->value : $role;
+
         $entry = [
             'action' => $action,
             'description' => $description,
             'user_id' => $user?->id,
             'user_email' => $user?->email,
-            'user_role' => $user?->role?->value,
+            'user_role' => $roleValue,
             'spar_pharmacy_id' => $user?->spar_pharmacy_id,
             'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),

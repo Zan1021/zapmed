@@ -99,6 +99,10 @@ class PharmacistCapture extends Component
             'last_name' => trim($this->lastName),
             'cellphone' => trim($this->cellphone) ?: null,
             'email' => trim($this->email) ?: null,
+            // Provenance: who onboarded this patient + when + where (set once).
+            'captured_by_id' => $patient->captured_by_id ?? auth()->id(),
+            'captured_at' => $patient->captured_at ?? now(),
+            'onboarding_pharmacy_id' => $patient->onboarding_pharmacy_id ?? $patient->spar_pharmacy_id ?? $this->pharmacyId(),
         ]);
 
         // Record consent if the pharmacist confirmed the patient agreed in-store.

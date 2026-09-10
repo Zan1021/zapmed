@@ -82,6 +82,37 @@
 
         @php $patient = $this->sparPatient; @endphp
 
+        {{-- ===================== PROMO BANNER SLIDER ===================== --}}
+        {{-- Group-scoped ads, shown ONLY here (post-consent), under the logo.
+             Lightweight Alpine carousel, lazy WebP, capped at 5. --}}
+        @if($this->banners->isNotEmpty())
+            <div class="my-4" x-data="{ i: 0, n: {{ $this->banners->count() }} }"
+                 x-init="if (n > 1) setInterval(() => i = (i + 1) % n, 5000)">
+                <div class="relative overflow-hidden rounded-2xl">
+                    @foreach($this->banners as $idx => $banner)
+                        <div x-show="i === {{ $idx }}" x-transition.opacity class="w-full">
+                            @if($banner->link_url)
+                                <a href="{{ route('spar.banner.click', $banner->id) }}" target="_blank" rel="noopener">
+                                    <img src="{{ $banner->image_url }}" alt="{{ $banner->title }}" loading="lazy" class="w-full object-cover" />
+                                </a>
+                            @else
+                                <img src="{{ $banner->image_url }}" alt="{{ $banner->title }}" loading="lazy" class="w-full object-cover" />
+                            @endif
+                        </div>
+                    @endforeach
+                    @if($this->banners->count() > 1)
+                        <div class="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5">
+                            @foreach($this->banners as $idx => $banner)
+                                <button @click="i = {{ $idx }}"
+                                        class="w-2 h-2 rounded-full"
+                                        :class="i === {{ $idx }} ? 'bg-white' : 'bg-white/50'"></button>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            </div>
+        @endif
+
         <div class="my-6">
             <h2 class="text-xl font-bold text-gray-900">Hi, {{ $patient?->first_name ?: $patient?->display_name }}!</h2>
             <p class="text-sm text-gray-500">Here's your medication status.</p>

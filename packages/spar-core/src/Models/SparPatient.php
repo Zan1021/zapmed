@@ -25,6 +25,9 @@ class SparPatient extends Model
     protected $fillable = [
         'user_id',
         'spar_pharmacy_id',
+        'onboarding_pharmacy_id',
+        'captured_by_id',
+        'captured_at',
         'profile_code',
         'profile_code_hash',
         'dependent_code',
@@ -53,6 +56,7 @@ class SparPatient extends Model
         return [
             'consent_given_at' => 'datetime',
             'consent_revoked_at' => 'datetime',
+            'captured_at' => 'datetime',
             'is_primary_member' => 'boolean',
             'is_active' => 'boolean',
             'needs_identity_review' => 'boolean',
@@ -127,6 +131,11 @@ class SparPatient extends Model
     public function pharmacy()
     {
         return $this->belongsTo(SparPharmacy::class, 'spar_pharmacy_id');
+    }
+
+    public function onboardingPharmacy()
+    {
+        return $this->belongsTo(SparPharmacy::class, 'onboarding_pharmacy_id');
     }
 
     public function journeys(): HasMany

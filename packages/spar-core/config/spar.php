@@ -111,6 +111,39 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Staff name resolver (host-supplied)
+    |--------------------------------------------------------------------------
+    |
+    | The staff patient-detail view shows "onboarded by <pharmacist>". The
+    | package stores only captured_by_id (a plain id — no host user class, AC-3).
+    | The HOST supplies a resolver (callable or a class with a name($id) method)
+    | that turns that id into a display name. Standalone binds PharmacyUser;
+    | integrated ZapMed binds User. Null => the view falls back to "Staff #<id>".
+    |
+    */
+
+    'staff_name_resolver' => null,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Group Promo Banners (mobi slider)
+    |--------------------------------------------------------------------------
+    |
+    | Per-group advertising banners shown on the patient tracker after consent.
+    | Uploads are resized to width x height and encoded as WebP (GD) for mobile.
+    |
+    */
+
+    'banners' => [
+        'disk' => env('SPAR_BANNER_DISK', 'public'),
+        'width' => (int) env('SPAR_BANNER_WIDTH', 1080),
+        'height' => (int) env('SPAR_BANNER_HEIGHT', 420),
+        'quality' => (int) env('SPAR_BANNER_QUALITY', 78),
+        'max_per_group' => (int) env('SPAR_BANNER_MAX', 5),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Messaging Channels (WhatsApp-primary, SMS-fallback)
     |--------------------------------------------------------------------------
     |

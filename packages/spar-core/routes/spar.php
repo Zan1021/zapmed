@@ -12,6 +12,7 @@ use Zapmed\SparCore\Livewire\Admin\SparGroups;
 use Zapmed\SparCore\Livewire\Admin\SparStats;
 use Zapmed\SparCore\Livewire\Admin\SparPharmacies;
 use Zapmed\SparCore\Livewire\Admin\SparImports;
+use Zapmed\SparCore\Livewire\Admin\SparBanners;
 use Zapmed\SparCore\Livewire\Admin\SparExceptions;
 use Zapmed\SparCore\Livewire\Admin\SparConsents;
 use Zapmed\SparCore\Livewire\Admin\SparReporting;
@@ -63,6 +64,15 @@ Route::middleware($publicMiddleware)->group(function () {
         ->middleware('spar.patient.session')
         ->name('my-meds.history');
 
+    // Banner click tracking — increments clicks then redirects to the target.
+    Route::get('b/{banner}', function (\Zapmed\SparCore\Models\SparBanner $banner) {
+        $banner->increment('clicks');
+
+        return $banner->link_url
+            ? redirect()->away($banner->link_url)
+            : redirect()->route('my-meds.track');
+    })->name('spar.banner.click');
+
     // Renewal -> ZapMed teleconsult handoff (signed, integrated only, spec FR-13).
     // Standalone binds NullTelehealthBridge so no handoff link is ever issued.
     Route::get('spar/renewal-handoff/{journey}', function (SparPrescriptionJourney $journey) {
@@ -79,6 +89,7 @@ Route::middleware($publicMiddleware)->group(function () {
 Route::middleware($staffMiddleware)->prefix('spar')->group(function () {
     Route::get('/dashboard', PharmacyDashboard::class)->name('spar.dashboard');
     Route::get('/patients', PatientList::class)->name('spar.patients');
+    Route::get('/patients/{patient}', \Zapmed\SparCore\Livewire\PatientDetail::class)->name('spar.patients.show');
     Route::get('/capture', PharmacistCapture::class)->name('spar.capture');
 });
 
@@ -90,6 +101,7 @@ Route::middleware($adminMiddleware)->prefix('admin/spar')->group(function () {
     Route::get('/groups', SparGroups::class)->name('admin.spar.groups');
     Route::get('/pharmacies', SparPharmacies::class)->name('admin.spar.pharmacies');
     Route::get('/imports', SparImports::class)->name('admin.spar.imports');
+    Route::get('/banners', SparBanners::class)->name('admin.spar.banners');
     Route::get('/exceptions', SparExceptions::class)->name('admin.spar.exceptions');
     Route::get('/consent', SparConsents::class)->name('admin.spar.consent');
     Route::get('/reporting', SparReporting::class)->name('admin.spar.reporting');

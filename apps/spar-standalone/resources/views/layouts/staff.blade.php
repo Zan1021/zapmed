@@ -24,6 +24,10 @@
                     @if(app(\Zapmed\SparCore\Contracts\SparIdentityProvider::class)->isSuperAdmin())
                         <a href="{{ route('admin.spar.groups') }}" class="hover:underline">Groups</a>
                     @endif
+                    @php $sparIdentity = app(\Zapmed\SparCore\Contracts\SparIdentityProvider::class); @endphp
+                    @if($sparIdentity->isSuperAdmin() || $sparIdentity->currentRole() === 'group_admin')
+                        <a href="{{ route('admin.spar.banners') }}" class="hover:underline">Banners</a>
+                    @endif
                     @if(auth()->user()?->canManageUsers())
                         <a href="{{ route('admin.staff') }}" class="hover:underline">Staff</a>
                     @endif

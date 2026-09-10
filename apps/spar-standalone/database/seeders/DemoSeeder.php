@@ -9,7 +9,6 @@ use Zapmed\SparCore\Models\SparPharmacy;
 use Zapmed\SparCore\Models\SparPrescriptionJourney;
 use Zapmed\SparCore\Services\SparImportService;
 use Illuminate\Database\Seeder;
-
 /**
  * Full-system demo data. Runs the REAL dual-file import (so the demo mirrors a
  * live SPAR upload), then layers realistic lifecycle states on top so EVERY
@@ -43,6 +42,19 @@ class DemoSeeder extends Seeder
         config(['spar.onboarding_mode' => 'pharmacist_capture']);
         $batch = (new SparImportService())->importPair($tmpSales, $tmpDrug, null, 'manual');
         $this->command?->info("Imported demo files: {$batch->records_created} patients created.");
+
+        // Stamp onboarding provenance so the staff patient-detail view shows a
+        // real "onboarded by <pharmacist>" for the demo. Use the seeded staff.
+        $pharmacist = \App\Models\PharmacyUser::where('email', 'staff@sparmeds.test')->first();
+        if ($pharmacist) {
+            foreach (SparPatient::whereNull('captured_by_id')->get() as $sp) {
+                $sp->forceFill([
+                    'captured_by_id' => $pharmacist->id,
+                    'captured_at' => $sp->captured_at ?? now(),
+                    'onboarding_pharmacy_id' => $sp->onboarding_pharmacy_id ?? $sp->spar_pharmacy_id,
+                ])->saveQuietly();
+            }
+        }
 
         // Attach every imported pharmacy to the demo group so group-admin sees them.
         $group = \Zapmed\SparCore\Models\SparPharmacyGroup::firstOrCreate(
@@ -124,6 +136,9 @@ class DemoSeeder extends Seeder
 
         $this->command?->info('Demo lifecycle layered: consent, orders (4 statuses), overdue + upcoming dispenses, renewal-due journey.');
 
+        // Demo promo banners for the group so the mobi slider shows something.
+        $this->seedDemoBanners($group);
+
         // Multi-store demo (national identity): give the principal a journey at a
         // SECOND pharmacy so the mobi tracker shows the "Collected at: <store>"
         // multi-store view. Uses the Knysna demo pharmacy if present.
@@ -146,5 +161,58 @@ class DemoSeeder extends Seeder
             ]);
             $this->command?->info("Multi-store demo: {$principal->display_name} also has a journey at {$second->name}.");
         }
+    }
+
+    /**
+     * Seed a couple of demo promo banners (real WebP) for the group so the mobi
+     * slider shows content. Generated with GD — no upload needed.
+     */
+    private function seedDemoBanners(\Zapmed\SparCore\Models\SparPharmacyGroup $group): void
+    {
+        if (\Zapmed\SparCore\Models\SparBanner::where('group_id', $group->id)->exists()) {
+            return;
+        }
+        if (!function_exists('imagewebp') || empty(gd_info()['WebP Support'])) {
+            $this->command?->warn('Demo banners skipped — GD WebP not available.');
+            return;
+        }
+
+        $disk = config('spar.banners.disk', 'public');
+        $w = (int) config('spar.banners.width', 1080);
+        $h = (int) config('spar.banners.height', 420);
+
+        $slides = [
+            ['Winter Flu Specials — 20% off', [0, 107, 63], 'https://www.spar.co.za'],
+            ['Free BP checks this month', [200, 30, 40], null],
+        ];
+
+        foreach ($slides as $i => [$text, $rgb, $url]) {
+            $img = imagecreatetruecolor($w, $h);
+            $bg = imagecolorallocate($img, $rgb[0], $rgb[1], $rgb[2]);
+            imagefilledrectangle($img, 0, 0, $w, $h, $bg);
+            $white = imagecolorallocate($img, 255, 255, 255);
+            imagestring($img, 5, 40, (int) ($h / 2) - 10, $text, $white);
+
+            $tmp = tempnam(sys_get_temp_dir(), 'demoban') . '.webp';
+            imagewebp($img, $tmp, (int) config('spar.banners.quality', 78));
+            imagedestroy($img);
+
+            $path = 'spar-banners/demo-' . ($i + 1) . '.webp';
+            \Illuminate\Support\Facades\Storage::disk($disk)->put($path, file_get_contents($tmp));
+            @unlink($tmp);
+
+            \Zapmed\SparCore\Models\SparBanner::create([
+                'group_id' => $group->id,
+                'title' => $text,
+                'image_path' => $path,
+                'link_url' => $url,
+                'sort_order' => $i + 1,
+                'is_active' => true,
+                'impressions' => rand(120, 480),
+                'clicks' => rand(5, 40),
+            ]);
+        }
+
+        $this->command?->info('Demo promo banners seeded (2) for ' . $group->name . '.');
     }
 }

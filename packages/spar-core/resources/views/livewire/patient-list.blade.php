@@ -33,7 +33,7 @@
                     @forelse($patients as $patient)
                         <tr class="hover:bg-gray-50">
                             <td class="p-3">
-                                <p class="font-medium text-gray-900">{{ $patient->display_name }}</p>
+                                <a href="{{ route('spar.patients.show', $patient->id) }}" class="font-medium text-green-700 hover:text-green-800 hover:underline">{{ $patient->display_name }}</a>
                                 @if(!$patient->is_primary_member)
                                     <p class="text-xs text-gray-500">Dependent ({{ $patient->dependent_relation }})</p>
                                 @endif
