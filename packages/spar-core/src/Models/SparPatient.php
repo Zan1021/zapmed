@@ -26,13 +26,17 @@ class SparPatient extends Model
         'user_id',
         'spar_pharmacy_id',
         'profile_code',
+        'profile_code_hash',
         'dependent_code',
         'dependent_relation',
         'first_name',
         'last_name',
         'cellphone',
+        'cellphone_hash',
         'email',
         'onboarding_status',
+        'needs_identity_review',
+        'identity_review_reason',
         'medical_aid_name',
         'medical_aid_option',
         'consent_status',
@@ -51,8 +55,73 @@ class SparPatient extends Model
             'consent_revoked_at' => 'datetime',
             'is_primary_member' => 'boolean',
             'is_active' => 'boolean',
+            'needs_identity_review' => 'boolean',
             'metadata' => 'array',
         ];
+    }
+
+    /**
+     * Keep the blind indexes in sync whenever the encrypted identity fields
+     * change (national identity, spec FR-1). Runs for app-created patients too,
+     * not only imports. Plaintext stays encrypted via EncryptsSensitiveFields.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (self $patient) {
+            if ($patient->isDirty('profile_code') || ($patient->profile_code && empty($patient->profile_code_hash))) {
+                $patient->profile_code_hash = static::blindIndex($patient->profile_code, 'profile');
+            }
+            if ($patient->isDirty('cellphone') || ($patient->cellphone && empty($patient->cellphone_hash))) {
+                $patient->cellphone_hash = static::blindIndex($patient->cellphone, 'phone');
+            }
+        });
+    }
+
+    /**
+     * Deterministic, non-reversible keyed hash of an identity value (spec FR-1,
+     * design §2). Same normalised input → same hash → matchable in SQL without
+     * decrypting. Returns null for empty input so an absent phone isn't hashed
+     * to a constant (which would collide unrelated patients).
+     */
+    public static function blindIndex(?string $value, string $type = 'profile'): ?string
+    {
+        $normalised = static::normaliseForIndex($value, $type);
+        if ($normalised === '') {
+            return null;
+        }
+
+        return hash_hmac('sha256', $type . ':' . $normalised, (string) config('spar.blind_index_key'));
+    }
+
+    private static function normaliseForIndex(?string $value, string $type): string
+    {
+        $v = trim((string) $value);
+        if ($v === '') {
+            return '';
+        }
+
+        if ($type === 'phone') {
+            // Digits only (drops spaces, +, dashes) so 072 123 4567 == 0721234567.
+            $digits = preg_replace('/\D+/', '', $v);
+
+            return $digits ?? '';
+        }
+
+        // Profile code: case/space-insensitive.
+        return strtoupper(preg_replace('/\s+/', '', $v));
+    }
+
+    public function flagIdentityReview(string $reason): void
+    {
+        $this->update([
+            'needs_identity_review' => true,
+            'identity_review_reason' => $reason,
+        ]);
+    }
+
+    public function scopeNeedsIdentityReview($query)
+    {
+        return $query->where('needs_identity_review', true);
     }
 
     public function pharmacy()
@@ -245,14 +314,22 @@ class SparPatient extends Model
 
     public function scopeForPharmacy($query, int $pharmacyId)
     {
-        return $query->where('spar_pharmacy_id', $pharmacyId);
+        // National identity: a patient "belongs to" a pharmacy if they have a
+        // journey OR dispense there — not via the (now informational) home
+        // pharmacy column.
+        return $query->where(function ($q) use ($pharmacyId) {
+            $q->whereHas('journeys', fn ($j) => $j->where('spar_pharmacy_id', $pharmacyId))
+              ->orWhereHas('dispenseRecords', fn ($d) => $d->whereHas('journey', fn ($j) => $j->where('spar_pharmacy_id', $pharmacyId)));
+        });
     }
 
     /**
      * Restrict to patients the CURRENT actor may see (spec FR-16), scoped via
-     * the bound SparIdentityProvider. Super-admin: all. Group-admin: patients at
-     * any pharmacy in their group. Pharmacy actor: their store only.
-     * Host-agnostic — no host user class referenced (AC-3/AC-15 preserved).
+     * the bound SparIdentityProvider. Super-admin: all. Group-admin: patients
+     * with activity at any pharmacy in their group. Pharmacy actor: patients
+     * with activity at their store. National-identity aware — a patient is
+     * visible to every store they have a journey/dispense at (not a flat
+     * home-pharmacy column). Host-agnostic — no host user class (AC-3/AC-15).
      */
     public function scopeVisibleToCurrentActor($query)
     {
@@ -264,14 +341,17 @@ class SparPatient extends Model
 
         $pharmacyId = $identity->currentPharmacyId();
         if ($pharmacyId !== null) {
-            return $query->where('spar_pharmacy_id', $pharmacyId);
+            return $this->scopeForPharmacy($query, $pharmacyId);
         }
 
         $groupId = $identity->currentGroupId();
         if ($groupId !== null) {
-            $pharmacyIds = SparPharmacy::where('group_id', $groupId)->pluck('id');
+            $pharmacyIds = SparPharmacy::where('group_id', $groupId)->pluck('id')->all();
 
-            return $query->whereIn('spar_pharmacy_id', $pharmacyIds);
+            return $query->where(function ($q) use ($pharmacyIds) {
+                $q->whereHas('journeys', fn ($j) => $j->whereIn('spar_pharmacy_id', $pharmacyIds))
+                  ->orWhereHas('dispenseRecords', fn ($d) => $d->whereHas('journey', fn ($j) => $j->whereIn('spar_pharmacy_id', $pharmacyIds)));
+            });
         }
 
         return $query->whereRaw('1 = 0');

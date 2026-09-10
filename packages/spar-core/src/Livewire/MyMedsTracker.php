@@ -230,7 +230,7 @@ class MyMedsTracker extends Component
 
         return SparPrescriptionJourney::whereIn('spar_patient_id', $memberIds)
             ->whereIn('status', ['active', 'renewal_due'])
-            ->with('patient')
+            ->with(['patient', 'pharmacy'])
             ->latest()
             ->get();
     }

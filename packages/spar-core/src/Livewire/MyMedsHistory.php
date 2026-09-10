@@ -47,7 +47,7 @@ class MyMedsHistory extends Component
 
         return SparDispenseRecord::whereIn('spar_patient_id', $memberIds)
             ->whereIn('status', ['collected', 'delivered'])
-            ->with('journey')
+            ->with('journey.pharmacy')
             ->orderByDesc('completed_at')
             ->limit(50)
             ->get();

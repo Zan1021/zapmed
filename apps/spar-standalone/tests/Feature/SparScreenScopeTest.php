@@ -32,8 +32,24 @@ class SparScreenScopeTest extends TestCase
         $this->pharmA = SparPharmacy::create(['group_id' => $groupA->id, 'name' => 'A1', 'spar_store_id' => 'A1', 'is_active' => true]);
         $this->pharmB = SparPharmacy::create(['group_id' => $groupB->id, 'name' => 'B1', 'spar_store_id' => 'B1', 'is_active' => true]);
 
-        SparPatient::create(['spar_pharmacy_id' => $this->pharmA->id, 'profile_code' => 'PA', 'first_name' => 'Alice', 'last_name' => 'Anderson', 'is_active' => true, 'consent_status' => 'opted_in']);
-        SparPatient::create(['spar_pharmacy_id' => $this->pharmB->id, 'profile_code' => 'PB', 'first_name' => 'Bob', 'last_name' => 'Baker', 'is_active' => true, 'consent_status' => 'opted_in']);
+        $this->makePatient($this->pharmA, 'PA', 'Alice', 'Anderson');
+        $this->makePatient($this->pharmB, 'PB', 'Bob', 'Baker');
+    }
+
+    private function makePatient(SparPharmacy $pharmacy, string $profile, string $first, string $last): SparPatient
+    {
+        $patient = SparPatient::create([
+            'spar_pharmacy_id' => $pharmacy->id, 'profile_code' => $profile,
+            'first_name' => $first, 'last_name' => $last, 'is_active' => true, 'consent_status' => 'opted_in',
+        ]);
+        // National model: association to a store is via a journey there.
+        \Zapmed\SparCore\Models\SparPrescriptionJourney::create([
+            'spar_patient_id' => $patient->id, 'spar_pharmacy_id' => $pharmacy->id,
+            'script_number' => 'S-' . $profile, 'status' => 'active',
+            'total_dispenses' => 6, 'dispenses_completed' => 0, 'start_date' => now(), 'medications' => [],
+        ]);
+
+        return $patient;
     }
 
     private function user(string $role, ?int $pharmacyId = null, ?int $groupId = null): PharmacyUser

@@ -62,8 +62,16 @@ class SparHierarchyE2ETest extends TestCase
         // --- A patient at this pharmacy and one elsewhere ---------------------
         $otherGroup = SparPharmacyGroup::create(['name' => 'Inland']);
         $otherPharm = SparPharmacy::create(['group_id' => $otherGroup->id, 'name' => 'Inland', 'spar_store_id' => 'IN-1', 'is_active' => true]);
-        SparPatient::create(['spar_pharmacy_id' => $pharmacy->id, 'profile_code' => 'MINE', 'first_name' => 'Coastal', 'last_name' => 'Patient', 'is_active' => true, 'consent_status' => 'opted_in']);
-        SparPatient::create(['spar_pharmacy_id' => $otherPharm->id, 'profile_code' => 'OTHER', 'first_name' => 'Inland', 'last_name' => 'Patient', 'is_active' => true, 'consent_status' => 'opted_in']);
+        $mine = SparPatient::create(['spar_pharmacy_id' => $pharmacy->id, 'profile_code' => 'MINE', 'first_name' => 'Coastal', 'last_name' => 'Patient', 'is_active' => true, 'consent_status' => 'opted_in']);
+        $other = SparPatient::create(['spar_pharmacy_id' => $otherPharm->id, 'profile_code' => 'OTHER', 'first_name' => 'Inland', 'last_name' => 'Patient', 'is_active' => true, 'consent_status' => 'opted_in']);
+        // National model: associate each to its store via a journey.
+        foreach ([[$mine, $pharmacy], [$other, $otherPharm]] as [$pt, $ph]) {
+            \Zapmed\SparCore\Models\SparPrescriptionJourney::create([
+                'spar_patient_id' => $pt->id, 'spar_pharmacy_id' => $ph->id,
+                'script_number' => 'S-' . $pt->profile_code, 'status' => 'active',
+                'total_dispenses' => 6, 'dispenses_completed' => 0, 'start_date' => now(), 'medications' => [],
+            ]);
+        }
 
         // --- New staff logs in → scoped to their store -----------------------
         $this->actingAs($clerk);

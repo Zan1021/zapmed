@@ -37,13 +37,21 @@ class SparScopeResolutionTest extends TestCase
         $this->pharmA2 = SparPharmacy::create(['group_id' => $this->groupA->id, 'name' => 'A2', 'spar_store_id' => 'A2', 'is_active' => true]);
         $this->pharmB1 = SparPharmacy::create(['group_id' => $this->groupB->id, 'name' => 'B1', 'spar_store_id' => 'B1', 'is_active' => true]);
 
-        // One patient per pharmacy.
+        // One patient per pharmacy. Under the national model a patient is
+        // "at" a store via a journey/dispense there, so seed a journey too.
         foreach ([$this->pharmA1, $this->pharmA2, $this->pharmB1] as $i => $p) {
-            SparPatient::create([
+            $patient = SparPatient::create([
                 'spar_pharmacy_id' => $p->id,
                 'profile_code' => 'P-' . $i,
                 'is_primary_member' => true,
                 'is_active' => true,
+            ]);
+            \Zapmed\SparCore\Models\SparPrescriptionJourney::create([
+                'spar_patient_id' => $patient->id,
+                'spar_pharmacy_id' => $p->id,
+                'script_number' => 'S-' . $i,
+                'status' => 'active', 'total_dispenses' => 6, 'dispenses_completed' => 0,
+                'start_date' => now(), 'medications' => [],
             ]);
         }
     }

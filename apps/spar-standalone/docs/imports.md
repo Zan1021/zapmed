@@ -73,3 +73,20 @@ client to test the whole system.
 ## Tests
 - `tests/Feature/SparDualFileImportTest.php` — paired import links identity ↔ history.
 - `tests/Feature/SparDropIngestTest.php` — FTP-drop ingestion + skip-when-no-sales.
+
+
+## National patient identity (2026-09-11)
+
+Patients are identified **nationally by Profile Code**, not per store. On import a patient is
+matched via a blind index (keyed hash of the encrypted profile code) independent of the
+uploading pharmacy, so filling at a second SPAR store **attaches** to the existing patient
+rather than creating a duplicate. Phone number is a **secondary confirmation** — a profile
+match with a conflicting phone attaches the dispense but flags the patient for review (never a
+silent merge). Each medication on the patient's mobi page is labelled **"Collected at:
+<pharmacy>"** so a multi-store patient sees where each script came from.
+
+Ops commands:
+- `php artisan spar:backfill-blind-index [--dry-run]` — populate hashes + report duplicates.
+- `php artisan spar:merge-duplicates [--dry-run]` — collapse unambiguous cross-store duplicates.
+
+Set `SPAR_BLIND_INDEX_KEY` per environment (and back it up).

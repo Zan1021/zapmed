@@ -205,3 +205,26 @@ Substantial SPAR functionality already exists in the ZapMed monolith; the extrac
 6. **Dependants roll-up** — My Meds view does not yet aggregate dependant rows under the primary member.
 7. **Contracts + packages** — no `SparIdentityProvider` / `TelehealthBridge` / `SmsSender` / `AuditLogger`, no `packages/spar-core`; renewal message hardcodes the ZapMed-doctor option instead of routing through `TelehealthBridge`.
 8. **`config/spar.php` + `routes/spar.php`** do not exist yet (referenced by the target architecture).
+
+
+
+---
+
+## 12. Household roll-up & national patient identity (added 2026-09-11)
+
+The patient mobi tracker rolls up the whole household — the principal plus all dependants
+under the same Profile Code — onto the principal's view (`MyMedsTracker` / `MyMedsHistory`).
+
+**Earlier limitation (now resolved):** the roll-up + patient identity were originally scoped
+per pharmacy. `profile_code` is encrypted at rest, so it can't be matched with a plain SQL
+`WHERE`; the old code loaded a single store's patients and matched in PHP, and the import keyed
+a patient on `(profile_code, dependent_code, spar_pharmacy_id)`. A patient who filled at a
+second SPAR store was therefore **duplicated**, and their household view was incomplete.
+
+**Resolution — see `specs/spar-national-identity/`:** a **blind index** (keyed HMAC of the
+profile code + phone) makes identity matchable across stores without decrypting. Import now
+de-duplicates nationally on `profile_code_hash`; pharmacy moved off patient identity onto each
+journey/dispense; staff scope is now "has a journey/dispense at an in-scope pharmacy"; and the
+mobi tracker labels each medication with its originating pharmacy. Phone is a secondary
+verification signal (conflict → review flag, never a silent merge). Duplicate historical rows
+are collapsed by `spar:merge-duplicates` (unambiguous matches only).

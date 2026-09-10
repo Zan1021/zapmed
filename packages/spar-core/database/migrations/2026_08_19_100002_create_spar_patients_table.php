@@ -24,7 +24,11 @@ return new class extends Migration
             $table->id();
             // Integration-only link (no DB FK — standalone has no users table).
             $table->unsignedBigInteger('user_id')->nullable();
-            $table->foreignId('spar_pharmacy_id')->constrained('spar_pharmacies')->cascadeOnDelete();
+            // National identity (Phase 3): pharmacy is NOT part of patient
+            // identity — it's a nullable "home/most-recent" pointer. Patients are
+            // matched nationally via the profile-code blind index; the pharmacy
+            // of record lives on each journey/dispense.
+            $table->foreignId('spar_pharmacy_id')->nullable()->constrained('spar_pharmacies')->nullOnDelete();
             $table->string('profile_code')->comment('SPAR patient profile code');
             $table->string('dependent_code')->nullable();
             $table->string('dependent_relation')->nullable();
@@ -49,7 +53,10 @@ return new class extends Migration
             $table->json('metadata')->nullable()->comment('Flexible field for additional SPAR data');
             $table->timestamps();
 
-            $table->unique(['spar_pharmacy_id', 'profile_code', 'dependent_code'], 'spar_patient_unique');
+            // NOTE: no unique on (pharmacy, profile_code, dependent_code) — that
+            // was the old per-store identity and conflicts with national de-dup
+            // (a patient may appear at multiple stores). Identity is enforced in
+            // the import via the profile_code blind index instead.
         });
     }
 

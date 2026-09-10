@@ -123,5 +123,28 @@ class DemoSeeder extends Seeder
         }
 
         $this->command?->info('Demo lifecycle layered: consent, orders (4 statuses), overdue + upcoming dispenses, renewal-due journey.');
+
+        // Multi-store demo (national identity): give the principal a journey at a
+        // SECOND pharmacy so the mobi tracker shows the "Collected at: <store>"
+        // multi-store view. Uses the Knysna demo pharmacy if present.
+        $second = SparPharmacy::where('spar_store_id', 'SB-STANDALONE-02')->first()
+            ?? SparPharmacy::where('name', 'like', '%Knysna%')->first();
+        $principal = SparPatient::where('is_primary_member', true)->whereHas('journeys')->first();
+        if ($second && $principal) {
+            SparPrescriptionJourney::create([
+                'spar_patient_id' => $principal->id,
+                'spar_pharmacy_id' => $second->id,
+                'script_number' => 'DEMO-2NDSTORE',
+                'status' => 'active',
+                'total_dispenses' => 6,
+                'dispenses_completed' => 2,
+                'start_date' => now()->subMonths(2),
+                'next_dispense_date' => now()->addDays(10),
+                'renewal_due_date' => now()->addMonths(4),
+                'doctor_name' => 'Dr Second Store',
+                'medications' => [['name' => 'METFORMIN 500MG TAB 60', 'quantity' => 60]],
+            ]);
+            $this->command?->info("Multi-store demo: {$principal->display_name} also has a journey at {$second->name}.");
+        }
     }
 }

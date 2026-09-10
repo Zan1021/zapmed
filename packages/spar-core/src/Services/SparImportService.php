@@ -214,28 +214,47 @@ class SparImportService
         DB::transaction(function () use ($batch, $rows, $firstRow, $profileCode, $storeName, $bhfCode) {
             // Find or create pharmacy
             $pharmacy = $this->findOrCreatePharmacy($storeName, $bhfCode);
+            $dependentCode = trim($firstRow['dependent_code'] ?? '0');
 
-            // Find or create SPAR patient
-            $patient = SparPatient::firstOrCreate(
-                [
-                    'spar_pharmacy_id' => $pharmacy->id,
+            // NATIONAL identity resolution (spec FR-2): match by the blind index
+            // of the profile code + dependent code, INDEPENDENT of pharmacy, so a
+            // patient who fills at a second SPAR store is recognised as the SAME
+            // person rather than duplicated. profile_code is encrypted, so we
+            // match on its keyed hash.
+            $profileHash = SparPatient::blindIndex($profileCode, 'profile');
+            $patient = SparPatient::where('profile_code_hash', $profileHash)
+                ->where('dependent_code', $dependentCode)
+                ->first();
+
+            $wasCreated = false;
+            if (!$patient) {
+                $patient = SparPatient::create([
+                    'spar_pharmacy_id' => $pharmacy->id, // home / most-recent pharmacy
                     'profile_code' => $profileCode,
-                    'dependent_code' => trim($firstRow['dependent_code'] ?? '0'),
-                ],
-                [
+                    'dependent_code' => $dependentCode,
                     'dependent_relation' => trim($firstRow['dependent_relation'] ?? null),
                     'medical_aid_name' => trim($firstRow['medical_aid'] ?? null),
                     'medical_aid_option' => trim($firstRow['medical_aid_option'] ?? null),
-                    'is_primary_member' => ($firstRow['dependent_code'] ?? '0') == '0',
+                    'is_primary_member' => ($dependentCode === '0' || $dependentCode === '00'),
                     'metadata' => [
                         'age' => $firstRow['age'] ?? null,
                         'gender' => $firstRow['gender'] ?? null,
                         'client_name' => $firstRow['client_name'] ?? null,
                     ],
-                ]
-            );
+                ]);
+                $wasCreated = true;
+            } else {
+                // Existing national patient — refresh home/most-recent pharmacy.
+                if ($patient->spar_pharmacy_id !== $pharmacy->id) {
+                    $patient->update(['spar_pharmacy_id' => $pharmacy->id]);
+                }
+            }
 
-            $wasCreated = $patient->wasRecentlyCreated;
+            // Phone secondary verification (spec FR-3): the profile matched, but
+            // confirm the phone agrees. If the row carries a phone whose hash
+            // differs from a NON-EMPTY stored phone, do NOT silently merge —
+            // attach the dispense but flag the patient for human review.
+            $this->verifyPhone($patient, $firstRow, $wasCreated);
 
             // Onboarding mode A ('import'): the export carries contact details,
             // so populate the SPAR-owned identity from the file (spec FR-6.2).
@@ -315,6 +334,53 @@ class SparImportService
         if (!empty($updates)) {
             $patient->update($updates);
         }
+    }
+
+    /**
+     * Phone secondary verification (spec FR-3, national identity). The profile
+     * code already matched; confirm the incoming phone agrees. Sources the phone
+     * from the paired Drug Usage identity (where contact lives) or the sales row.
+     * If a NON-EMPTY stored phone disagrees with a non-empty incoming phone, flag
+     * the patient for review rather than silently trusting the match. A matching
+     * phone (or one side blank) is fine — no action.
+     */
+    private function verifyPhone(SparPatient $patient, array $firstRow, bool $wasCreated): void
+    {
+        if ($wasCreated) {
+            return; // brand-new patient — nothing to reconcile against
+        }
+
+        $incoming = $this->incomingPhoneFor($patient, $firstRow);
+        if ($incoming === '') {
+            return; // no incoming phone to compare
+        }
+
+        $stored = trim((string) $patient->cellphone);
+        if ($stored === '') {
+            return; // stored side blank — applyDrugUsageIdentity/applyImportedIdentity will fill it
+        }
+
+        if (SparPatient::blindIndex($incoming, 'phone') !== SparPatient::blindIndex($stored, 'phone')) {
+            $patient->flagIdentityReview(
+                'Profile matched but incoming phone differs from stored phone during import.'
+            );
+        }
+    }
+
+    /**
+     * Resolve the phone the import is bringing in for this patient — from the
+     * matched Drug Usage identity (paired import) first, then the sales row.
+     */
+    private function incomingPhoneFor(SparPatient $patient, array $firstRow): string
+    {
+        if (!empty($this->identityMap)) {
+            $identity = $this->matchIdentity($patient->profile_code, (string) $patient->dependent_code);
+            if ($identity && !empty($identity['cellphone'])) {
+                return trim((string) $identity['cellphone']);
+            }
+        }
+
+        return trim((string) ($firstRow['cellphone'] ?? ''));
     }
 
     /**
@@ -522,6 +588,11 @@ class SparImportService
         }
 
         $content = file_get_contents($filePath);
+
+        // Strip a UTF-8 BOM if present — otherwise the first header (Store Name)
+        // arrives as "\uFEFFStore Name" and fails to map. The real SPAR export
+        // is UTF-8 with a BOM, so this matters in production, not just tests.
+        $content = preg_replace('/^\xEF\xBB\xBF/', '', $content);
 
         // SECURITY: Reject files with potential injection patterns
         if (preg_match('/(<\?php|<script|eval\s*\(|exec\s*\(|system\s*\()/i', substr($content, 0, 10000))) {

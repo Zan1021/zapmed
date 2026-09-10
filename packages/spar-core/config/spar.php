@@ -92,6 +92,25 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Blind Index Key (national patient identity)
+    |--------------------------------------------------------------------------
+    |
+    | Profile Code and cellphone are encrypted at rest, so they cannot be matched
+    | with a plain SQL WHERE. We store a deterministic keyed HMAC (blind index) of
+    | each so a patient can be de-duplicated ACROSS pharmacies without decrypting
+    | and without leaking PHI. This key is SEPARATE from APP_KEY and is rotatable
+    | (rotation = re-run spar:backfill-blind-index). Set it per environment and
+    | back it up — losing it means re-hashing from the still-encrypted plaintext.
+    |
+    | Falls back to APP_KEY only so local/test never crashes with an empty key;
+    | production MUST set SPAR_BLIND_INDEX_KEY explicitly.
+    |
+    */
+
+    'blind_index_key' => env('SPAR_BLIND_INDEX_KEY', env('APP_KEY', 'spar-dev-blind-index-key')),
+
+    /*
+    |--------------------------------------------------------------------------
     | Messaging Channels (WhatsApp-primary, SMS-fallback)
     |--------------------------------------------------------------------------
     |
