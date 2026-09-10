@@ -23,6 +23,16 @@ class PharmacyWebhookController extends Controller
      */
     public function statusUpdate(Request $request)
     {
+        // Verify the webhook signature BEFORE any processing. This endpoint is
+        // public + CSRF-exempt (partner pharmacies POST to it), so a signature
+        // is the only thing standing between it and arbitrary state changes.
+        if (!$this->signatureValid($request)) {
+            Log::warning('Pharmacy webhook: invalid or missing signature', [
+                'ip' => $request->ip(),
+            ]);
+            return response()->json(['error' => 'Invalid signature'], 401);
+        }
+
         $data = $request->validate([
             'prescription_reference' => 'required|string',
             'status' => 'required|in:dispensed,dispatched,delivered,returned,out_of_stock',
@@ -82,5 +92,32 @@ class PharmacyWebhookController extends Controller
         }
 
         return response()->json(['message' => 'Status updated', 'pharmacy_status' => $pharmacyStatus]);
+    }
+
+    /**
+     * Verify the HMAC-SHA256 signature on a pharmacy webhook request.
+     * Signature = hex HMAC-SHA256 of the raw request body, keyed on the
+     * shared secret (config services.pharmacy.webhook_secret), compared in
+     * constant time against the X-Pharmacy-Signature header.
+     *
+     * If no secret is configured, the webhook is REJECTED (fail closed) rather
+     * than silently accepting unsigned requests.
+     */
+    private function signatureValid(Request $request): bool
+    {
+        $secret = config('services.pharmacy.webhook_secret');
+
+        if (empty($secret)) {
+            return false; // fail closed — never accept unsigned in the absence of a secret
+        }
+
+        $provided = (string) $request->header('X-Pharmacy-Signature', '');
+        if ($provided === '') {
+            return false;
+        }
+
+        $expected = hash_hmac('sha256', $request->getContent(), $secret);
+
+        return hash_equals($expected, $provided);
     }
 }

@@ -17,8 +17,22 @@
         "payfast/payfast-php-sdk": "^1.1",
         "sentry/sentry-laravel": "^4.27",
         "socialiteproviders/apple": "^5.10",
-        "spatie/laravel-health": "^1.40"
+        "spatie/laravel-health": "^1.40",
+        "zapmed/platform-support": "@dev",
+        "zapmed/spar-core": "@dev"
     },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "packages/platform-support",
+            "options": { "symlink": true }
+        },
+        {
+            "type": "path",
+            "url": "packages/spar-core",
+            "options": { "symlink": true }
+        }
+    ],
     "require-dev": {
         "fakerphp/faker": "^1.23",
         "laravel/breeze": "^2.4",

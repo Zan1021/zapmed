@@ -50,6 +50,9 @@ return [
         'enabled' => env('PHARMACY_API_ENABLED', false),
         'api_url' => env('PHARMACY_API_URL'),
         'api_key' => env('PHARMACY_API_KEY'),
+        // Shared secret for verifying inbound pharmacy status webhooks (HMAC-SHA256).
+        // Set per-environment in the secrets manager / env, never hardcoded.
+        'webhook_secret' => env('PHARMACY_WEBHOOK_SECRET'),
     ],
 
     'google' => [

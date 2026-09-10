@@ -228,7 +228,7 @@ class PayFastService
 
         $expectedSignature = $this->generateSignature($checkData);
 
-        if ($receivedSignature !== $expectedSignature) {
+        if (!hash_equals($expectedSignature, $receivedSignature)) {
             Log::warning('PayFast ITN: Signature mismatch', [
                 'received' => $receivedSignature,
                 'expected' => $expectedSignature,

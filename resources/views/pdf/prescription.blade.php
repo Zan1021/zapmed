@@ -217,13 +217,13 @@
         <table class="info-grid">
             <tr>
                 <td class="info-label">Name:</td>
-                <td class="info-value">Dr {{ $prescription->doctor->first_name }} {{ $prescription->doctor->last_name }}</td>
+                <td class="info-value">{{ $prescription->prescriber_name ?? ('Dr ' . $prescription->doctor->first_name . ' ' . $prescription->doctor->last_name) }}</td>
                 <td class="info-label">HPCSA No:</td>
-                <td class="info-value">{{ $prescription->doctor->doctorProfile->hpcsa_number ?? 'N/A' }}</td>
+                <td class="info-value">{{ $prescription->prescriber_hpcsa_number ?? $prescription->doctor->doctorProfile->hpcsa_number ?? 'N/A' }}</td>
             </tr>
             <tr>
                 <td class="info-label">Qualification:</td>
-                <td class="info-value" colspan="3">{{ $prescription->doctor->doctorProfile->qualification ?? 'N/A' }}</td>
+                <td class="info-value" colspan="3">{{ $prescription->prescriber_qualification ?? $prescription->doctor->doctorProfile->qualification ?? 'N/A' }}</td>
             </tr>
         </table>
     </div>
@@ -308,7 +308,7 @@
 
     <!-- Signature -->
     <div class="signature-section">
-        <div class="signature-name">Dr {{ $prescription->doctor->first_name }} {{ $prescription->doctor->last_name }}</div>
+        <div class="signature-name">{{ $prescription->prescriber_name ?? ('Dr ' . $prescription->doctor->first_name . ' ' . $prescription->doctor->last_name) }}</div>
         <div class="signature-detail">
             Digitally signed via Zapmed on {{ $prescription->signed_at ? $prescription->signed_at->format('d F Y \a\t H:i') : now()->format('d F Y \a\t H:i') }}
         </div>

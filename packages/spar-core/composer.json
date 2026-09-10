@@ -1,0 +1,27 @@
+{
+    "name": "zapmed/spar-core",
+    "description": "SPAR chronic-medication domain — models, services, Livewire, consent, onboarding. Runs inside ZapMed (integrated) and the standalone SPAR app.",
+    "type": "library",
+    "license": "proprietary",
+    "require": {
+        "php": "^8.2",
+        "illuminate/contracts": "^11.0|^12.0",
+        "illuminate/support": "^11.0|^12.0",
+        "livewire/livewire": "^3.6",
+        "phpoffice/phpspreadsheet": "^2.3 || ^3.0 || ^4.0",
+        "zapmed/platform-support": "@dev"
+    },
+    "autoload": {
+        "psr-4": {
+            "Zapmed\\SparCore\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Zapmed\\SparCore\\SparCoreServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable"
+}

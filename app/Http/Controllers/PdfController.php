@@ -4,12 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\Consultation;
 use App\Models\Prescription;
+use App\Services\ClinicalAuditLogger;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class PdfController extends Controller
 {
+    public function __construct(private ClinicalAuditLogger $audit)
+    {
+    }
+
     /**
      * Generate and download a prescription PDF.
      */
@@ -20,6 +25,8 @@ class PdfController extends Controller
         if ($user->id !== $prescription->doctor_id && $user->id !== $prescription->patient_id) {
             abort(403, 'Unauthorized access to this prescription.');
         }
+
+        $this->audit->logRead('prescription', $prescription->id, $prescription->patient_id, 'download');
 
         $prescription->load(['items', 'doctor.doctorProfile', 'patient', 'consultation']);
 
@@ -40,6 +47,8 @@ class PdfController extends Controller
         if ($user->id !== $consultation->doctor_id && $user->id !== $consultation->patient_id) {
             abort(403, 'Unauthorized access to this consultation.');
         }
+
+        $this->audit->logRead('sick_note', $consultation->id, $consultation->patient_id, 'download');
 
         $consultation->load(['doctor.doctorProfile', 'patient']);
 
@@ -63,6 +72,8 @@ class PdfController extends Controller
         if ($user->id !== $consultation->doctor_id && $user->id !== $consultation->patient_id) {
             abort(403, 'Unauthorized access to this consultation.');
         }
+
+        $this->audit->logRead('medical_certificate', $consultation->id, $consultation->patient_id, 'download');
 
         $consultation->load(['doctor.doctorProfile', 'patient']);
 

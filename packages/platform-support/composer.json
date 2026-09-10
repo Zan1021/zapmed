@@ -1,0 +1,17 @@
+{
+    "name": "zapmed/platform-support",
+    "description": "Shared cross-cutting infrastructure for ZapMed products (encryption, base contracts).",
+    "type": "library",
+    "license": "proprietary",
+    "require": {
+        "php": "^8.2",
+        "illuminate/contracts": "^11.0|^12.0",
+        "illuminate/support": "^11.0|^12.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Zapmed\\PlatformSupport\\": "src/"
+        }
+    },
+    "minimum-stability": "stable"
+}

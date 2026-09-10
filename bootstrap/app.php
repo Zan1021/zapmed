@@ -16,8 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'onboarding' => \App\Http\Middleware\EnsureOnboardingComplete::class,
             'two-factor' => \App\Http\Middleware\EnsureTwoFactorVerified::class,
             'doctor.availability' => \App\Http\Middleware\EnsureDoctorHasAvailability::class,
-            'spar.scope' => \App\Http\Middleware\EnsureSparPharmacyScope::class,
-            'spar.timeout' => \App\Http\Middleware\SparSessionTimeout::class,
+            'spar.scope' => \Zapmed\SparCore\Http\Middleware\EnsureSparPharmacyScope::class,
+            'spar.timeout' => \Zapmed\SparCore\Http\Middleware\SparSessionTimeout::class,
+            'spar.patient.session' => \Zapmed\SparCore\Http\Middleware\EnsureSparPatientSession::class,
         ]);
 
         // Security headers on all responses

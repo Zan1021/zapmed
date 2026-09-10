@@ -24,8 +24,10 @@ Route::get('doctors/apply', \App\Livewire\DoctorApply::class)->name('doctors.app
 Route::get('blog', \App\Livewire\Blog\BlogIndex::class)->name('blog');
 Route::get('blog/{slug}', \App\Livewire\Blog\BlogShow::class)->name('blog.show');
 
-// SPAR "My Meds" OTP Login (public)
-Route::get('my-meds/login', \App\Livewire\Spar\MyMedsLogin::class)->name('my-meds.login');
+// SPAR routes (patient tracker, pharmacy staff, admin) are shipped by the
+// spar-core package (packages/spar-core/routes/spar.php) and loaded by
+// SparCoreServiceProvider. Middleware groups are host-configured via
+// config('spar.route_middleware.*').
 
 // AI Health Assistant (public, rate-limited)
 Route::post('api/ai-assistant', [\App\Http\Controllers\AiAssistantController::class, 'ask'])
@@ -66,14 +68,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/blog', \App\Livewire\Admin\BlogManagement::class)->name('admin.blog');
         Route::get('/help-center', \App\Livewire\Admin\HelpCenter::class)->name('admin.help-center');
 
-        // SPAR Chronic Medication Module
-        Route::prefix('spar')->group(function () {
-            Route::get('/', \App\Livewire\Admin\SparDashboard::class)->name('admin.spar.dashboard');
-            Route::get('/pharmacies', \App\Livewire\Admin\SparPharmacies::class)->name('admin.spar.pharmacies');
-            Route::get('/imports', \App\Livewire\Admin\SparImports::class)->name('admin.spar.imports');
-            Route::get('/exceptions', \App\Livewire\Admin\SparExceptions::class)->name('admin.spar.exceptions');
-            Route::get('/reporting', \App\Livewire\Admin\SparReporting::class)->name('admin.spar.reporting');
-        });
+        // SPAR Chronic Medication Module admin routes are shipped by the
+        // spar-core package (admin.spar.* names, prefix admin/spar), gated by
+        // config('spar.route_middleware.admin').
     });
 
     // Doctor dashboard (Livewire - real data)
@@ -81,17 +78,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware(['role:doctor', 'doctor.availability'])
         ->name('doctor.dashboard');
 
-    // SPAR Pharmacy Staff Dashboard
-    Route::middleware(['role:pharmacy_staff', 'spar.scope', 'spar.timeout'])->prefix('spar')->group(function () {
-        Route::get('/dashboard', \App\Livewire\Spar\PharmacyDashboard::class)->name('spar.dashboard');
-        Route::get('/patients', \App\Livewire\Spar\PatientList::class)->name('spar.patients');
-    });
+    // SPAR Pharmacy Staff routes (spar.dashboard/patients/capture) are shipped
+    // by the spar-core package, gated by config('spar.route_middleware.staff').
 
-    // SPAR Patient "My Meds" Portal (authenticated)
-    Route::middleware('role:patient')->prefix('my-meds')->group(function () {
-        Route::get('/', \App\Livewire\Spar\MyMedsDashboard::class)->name('my-meds.dashboard');
-        Route::get('/history', \App\Livewire\Spar\MyMedsHistory::class)->name('my-meds.history');
-    });
+    // SPAR Patient "My Meds" — NO User login (spec FR-9). The patient surface is
+    // the tokenised tracker (route 'my-meds.track', public, defined at top) which
+    // establishes a scoped SPAR patient session via signed link + OTP re-verify.
+    // The old authenticated role:patient My Meds routes are retired.
 
     // Doctor my patients
     Route::get('doctor/patients', \App\Livewire\Doctor\MyPatients::class)

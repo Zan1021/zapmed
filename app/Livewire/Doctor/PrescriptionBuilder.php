@@ -197,10 +197,19 @@ class PrescriptionBuilder extends Component
         // Pre-fill delivery from patient's address
         $patient = $this->consultation->patient;
 
+        // Snapshot the prescribing doctor's legal identity AT ISSUE TIME.
+        // The doctor's profile can change or be removed later; a legal script
+        // must carry the prescriber details as they were when signed.
+        $doctor = Auth::user();
+        $doctorProfile = $doctor->doctorProfile;
+
         $prescription = Prescription::create([
             'consultation_id' => $this->consultation->id,
             'patient_id' => $this->consultation->patient_id,
             'doctor_id' => Auth::id(),
+            'prescriber_name' => 'Dr ' . trim($doctor->first_name . ' ' . $doctor->last_name),
+            'prescriber_hpcsa_number' => $doctorProfile?->hpcsa_number,
+            'prescriber_qualification' => $doctorProfile?->qualification,
             'status' => 'signed',
             'diagnosis' => $this->consultation->diagnosis,
             'notes' => $this->pharmacistNotes ?: null,

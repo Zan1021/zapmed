@@ -49,6 +49,51 @@ class Consultation extends Model
         ];
     }
 
+    /**
+     * Clinical fields that are INTERNAL — staff/doctor-only, never exposed to the patient.
+     * (Maps to the build-spec's clinical_note.is_internal concept.)
+     */
+    public const INTERNAL_FIELDS = [
+        'history_of_presenting_illness',
+        'examination_findings',
+        'doctor_notes',
+        'follow_up_notes',
+    ];
+
+    /**
+     * Clinical fields that ARE safe to show the patient.
+     */
+    public const PATIENT_VISIBLE_FIELDS = [
+        'presenting_complaint',
+        'diagnosis',
+        'icd10_code',
+        'treatment_plan',
+        'follow_up_required',
+        'follow_up_date',
+        'status',
+    ];
+
+    /**
+     * Return only the patient-visible clinical data for this consultation.
+     * Patient-facing endpoints MUST use this instead of exposing the model
+     * directly, so internal notes can never leak by accident. Never trust a
+     * client-side filter for this — enforce it here at the source.
+     */
+    public function patientVisibleData(): array
+    {
+        return collect(self::PATIENT_VISIBLE_FIELDS)
+            ->mapWithKeys(fn (string $field) => [$field => $this->{$field}])
+            ->all();
+    }
+
+    /**
+     * True if the given attribute name is an internal (staff-only) clinical field.
+     */
+    public static function isInternalField(string $field): bool
+    {
+        return in_array($field, self::INTERNAL_FIELDS, true);
+    }
+
     public function appointment(): BelongsTo
     {
         return $this->belongsTo(Appointment::class);

@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Services\SparReminderService;
+use Zapmed\SparCore\Services\SparReminderService;
 use Illuminate\Console\Command;
 
 class SparProcessReminders extends Command
