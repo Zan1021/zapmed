@@ -7,6 +7,9 @@
         </div>
     @endif
 
+    <div class="grid gap-6 lg:grid-cols-3">
+        {{-- ============ LEFT: management ============ --}}
+        <div class="lg:col-span-2 space-y-8">
     {{-- Group switcher (super-admin) --}}
     @if($this->groups->count() > 1)
         <div class="mb-4">
@@ -101,4 +104,93 @@
             @endforelse
         </div>
     </div>
+        </div>{{-- /left column --}}
+
+        {{-- ============ RIGHT: live mobi preview ============ --}}
+        <div class="lg:col-span-1">
+            <div class="lg:sticky lg:top-6">
+                <div class="mb-3 flex items-center justify-between">
+                    <h3 class="text-sm font-semibold text-gray-700">Mobi preview</h3>
+                    <span class="text-xs text-gray-400">what patients see</span>
+                </div>
+
+                {{-- Phone frame --}}
+                <div class="mx-auto w-full max-w-[320px] rounded-[2.5rem] border-[10px] border-gray-900 bg-gray-900 shadow-xl">
+                    <div class="overflow-hidden rounded-[1.8rem] bg-gray-50">
+                        {{-- notch --}}
+                        <div class="flex items-center justify-center bg-gray-900 py-1.5">
+                            <div class="h-1.5 w-16 rounded-full bg-gray-700"></div>
+                        </div>
+
+                        {{-- app chrome: logo --}}
+                        <div class="flex items-center justify-center border-b border-gray-100 bg-white py-3">
+                            <img src="{{ asset(config('spar.branding.logo_path', 'img/pharmacy-at-spar-logo.jpg')) }}"
+                                 alt="{{ config('spar.branding.name', 'Pharmacy at SPAR') }}" class="h-8 w-auto" />
+                        </div>
+
+                        <div class="p-3">
+                            {{-- Banner carousel — mirrors the real tracker (1080x420, auto-rotate). --}}
+                            @php
+                                $pendingUrl = $image ? $image->temporaryUrl() : null;
+                                $previewBanners = $this->previewBanners;
+                                $slideCount = ($pendingUrl ? 1 : 0) + $previewBanners->count();
+                            @endphp
+
+                            @if($slideCount > 0)
+                                <div x-data="{ i: 0, n: {{ $slideCount }} }"
+                                     x-init="if (n > 1) setInterval(() => i = (i + 1) % n, 3000)"
+                                     wire:key="preview-{{ $slideCount }}-{{ $pendingUrl ? 'p' : 'n' }}">
+                                    <div class="relative overflow-hidden rounded-2xl bg-gray-100" style="aspect-ratio: 1080 / 420;">
+                                        @php $slide = 0; @endphp
+                                        @if($pendingUrl)
+                                            <div x-show="i === {{ $slide }}" x-transition.opacity class="absolute inset-0">
+                                                <img src="{{ $pendingUrl }}" alt="New banner preview" class="h-full w-full object-cover" />
+                                                <span class="absolute left-2 top-2 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-semibold text-white shadow">New — not saved</span>
+                                            </div>
+                                            @php $slide++; @endphp
+                                        @endif
+                                        @foreach($previewBanners as $banner)
+                                            <div x-show="i === {{ $slide }}" x-transition.opacity class="absolute inset-0">
+                                                <img src="{{ $banner->image_url }}" alt="{{ $banner->title }}" class="h-full w-full object-cover" />
+                                            </div>
+                                            @php $slide++; @endphp
+                                        @endforeach
+
+                                        @if($slideCount > 1)
+                                            <div class="absolute inset-x-0 bottom-2 flex justify-center gap-1.5">
+                                                @for($d = 0; $d < $slideCount; $d++)
+                                                    <button type="button" @click="i = {{ $d }}" class="h-1.5 w-1.5 rounded-full"
+                                                            :class="i === {{ $d }} ? 'bg-white' : 'bg-white/50'"></button>
+                                                @endfor
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            @else
+                                <div class="flex items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 bg-white text-center"
+                                     style="aspect-ratio: 1080 / 420;">
+                                    <p class="px-4 text-xs text-gray-400">No active banners. Upload one, or click “Show” on a hidden banner — it appears here instantly.</p>
+                                </div>
+                            @endif
+
+                            {{-- faux content below the slider so it reads like the tracker --}}
+                            <div class="mt-3 space-y-2">
+                                <div class="rounded-xl bg-white p-3 shadow-sm">
+                                    <div class="h-2.5 w-24 rounded bg-gray-200"></div>
+                                    <div class="mt-2 h-2 w-32 rounded bg-gray-100"></div>
+                                </div>
+                                <div class="rounded-xl bg-white p-3 shadow-sm">
+                                    <div class="h-2.5 w-20 rounded bg-gray-200"></div>
+                                    <div class="mt-2 h-2 w-28 rounded bg-gray-100"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p class="mt-3 text-center text-xs text-gray-400">
+                    Shows active banners in order. A pending upload previews first, tagged “New”.
+                </p>
+            </div>
+        </div>
+    </div>{{-- /grid --}}
 </div>

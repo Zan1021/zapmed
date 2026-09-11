@@ -34,6 +34,20 @@ class StaffManagement extends Component
     public bool $showForm = false;
     public ?int $editingId = null;
 
+    /** List filters. */
+    public string $search = '';
+    public string $roleFilter = '';
+
+    public function updatingSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingRoleFilter(): void
+    {
+        $this->resetPage();
+    }
+
     public string $name = '';
     public string $email = '';
     public string $password = '';
@@ -248,9 +262,24 @@ class StaffManagement extends Component
             }
         }
 
+        // Open search across name + email.
+        if (trim($this->search) !== '') {
+            $term = '%' . trim($this->search) . '%';
+            $query->where(function ($q) use ($term) {
+                $q->where('name', 'like', $term)
+                    ->orWhere('email', 'like', $term);
+            });
+        }
+
+        // Role/type filter.
+        if ($this->roleFilter !== '') {
+            $query->where('role', $this->roleFilter);
+        }
+
         return view('livewire.admin.staff-management', [
-            'staff' => $query->paginate(15),
+            'staff' => $query->paginate(15)->withQueryString(),
             'roles' => $this->assignableRoles(),
+            'filterRoles' => ['super_admin', 'group_admin', 'pharmacy_admin', 'pharmacy_staff'],
             'pharmacies' => $this->assignablePharmacies(),
             'groups' => $this->assignableGroups(),
         ])->layout(config('spar.layouts.staff', 'layouts.staff'));

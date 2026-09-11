@@ -15,7 +15,6 @@ use Zapmed\SparCore\Livewire\Admin\SparImports;
 use Zapmed\SparCore\Livewire\Admin\SparBanners;
 use Zapmed\SparCore\Livewire\Admin\SparExceptions;
 use Zapmed\SparCore\Livewire\Admin\SparConsents;
-use Zapmed\SparCore\Livewire\Admin\SparReporting;
 use Zapmed\SparCore\Models\SparPatient;
 use Zapmed\SparCore\Models\SparPrescriptionJourney;
 use Zapmed\SparCore\Services\SparPatientSession;
@@ -98,11 +97,13 @@ Route::middleware($staffMiddleware)->prefix('spar')->group(function () {
 Route::middleware($adminMiddleware)->prefix('admin/spar')->group(function () {
     Route::get('/', SparDashboard::class)->name('admin.spar.dashboard');
     Route::get('/stats', SparStats::class)->name('admin.spar.stats');
+    // Reporting merged into the unified Insights page (Phase 8.3). Keep the
+    // route name so existing links/bookmarks resolve; it now renders Insights.
+    Route::get('/reporting', SparStats::class)->name('admin.spar.reporting');
     Route::get('/groups', SparGroups::class)->name('admin.spar.groups');
     Route::get('/pharmacies', SparPharmacies::class)->name('admin.spar.pharmacies');
     Route::get('/imports', SparImports::class)->name('admin.spar.imports');
     Route::get('/banners', SparBanners::class)->name('admin.spar.banners');
     Route::get('/exceptions', SparExceptions::class)->name('admin.spar.exceptions');
     Route::get('/consent', SparConsents::class)->name('admin.spar.consent');
-    Route::get('/reporting', SparReporting::class)->name('admin.spar.reporting');
 });

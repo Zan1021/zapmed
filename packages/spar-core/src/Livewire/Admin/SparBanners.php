@@ -135,6 +135,19 @@ class SparBanners extends Component
             ->orderBy('sort_order')->orderBy('id')->get();
     }
 
+    /**
+     * Banners as the PATIENT would actually see them in the mobi tracker:
+     * active only, in display order. Drives the live phone preview.
+     */
+    public function getPreviewBannersProperty()
+    {
+        return SparBanner::forGroup($this->groupId)
+            ->active()
+            ->orderBy('sort_order')->orderBy('id')
+            ->limit((int) config('spar.banners.max_per_group', 5))
+            ->get();
+    }
+
     public function getGroupsProperty()
     {
         // Super-admin may switch groups; group-admin sees only their own.

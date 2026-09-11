@@ -7,11 +7,30 @@
         </div>
     @endif
 
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
         <h2 class="text-lg font-semibold text-gray-900">Staff accounts</h2>
-        <button wire:click="create" class="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition">
+        <button wire:click="create" class="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition self-start sm:self-auto">
             + Add Staff
         </button>
+    </div>
+
+    {{-- Filters: open search + role/type filter --}}
+    <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div class="relative flex-1">
+            <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </span>
+            <input type="search" wire:model.live.debounce.300ms="search"
+                   placeholder="Search name or email…"
+                   class="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-3 text-sm focus:border-green-500 focus:ring-green-500" />
+        </div>
+        <select wire:model.live="roleFilter"
+                class="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-green-500 focus:ring-green-500">
+            <option value="">All roles</option>
+            @foreach($filterRoles as $r)
+                <option value="{{ $r }}">{{ ucwords(str_replace('_', ' ', $r)) }}</option>
+            @endforeach
+        </select>
     </div>
 
     @if($showForm)
@@ -110,7 +129,13 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="5" class="p-8 text-center text-gray-500">No staff yet.</td></tr>
+                        <tr><td colspan="5" class="p-8 text-center text-gray-500">
+                            @if($search !== '' || $roleFilter !== '')
+                                No staff match your filters.
+                            @else
+                                No staff yet.
+                            @endif
+                        </td></tr>
                     @endforelse
                 </tbody>
             </table>

@@ -28,6 +28,14 @@ return [
         'patient' => 'layouts.patient',
     ],
 
+    // Standalone brand chrome. The updated "Pharmacy at SPAR" lockup lives in
+    // this host's public/img; the staff/patient layouts read branding.logo_path.
+    'branding' => [
+        'name' => env('SPAR_BRAND_NAME', 'Pharmacy at SPAR'),
+        'primary_color' => env('SPAR_BRAND_COLOR', '#006B3F'),
+        'logo_path' => env('SPAR_BRAND_LOGO', 'img/pharmacy-at-spar-logo.jpg'),
+    ],
+
     // Renewal handoff has no target in standalone (NullTelehealthBridge never
     // issues a handoff link); point at the tracker as a safe fallback.
     'renewal_handoff_route' => 'my-meds.track',

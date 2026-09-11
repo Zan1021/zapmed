@@ -12,48 +12,11 @@
         </div>
     @endif
 
-    {{-- ===================== TABS ===================== --}}
-    <div class="flex items-center gap-1 border-b border-gray-200 mb-6">
-        <button wire:click="setTab('overview')"
-                dusk="overview-tab"
-                class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition
-                    {{ $tab === 'overview' ? 'border-green-600 text-green-700' : 'border-transparent text-gray-500 hover:text-gray-700' }}">
-            Overview
-        </button>
-        <button wire:click="setTab('dependants')"
-                dusk="dependants-tab"
-                class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition
-                    {{ $tab === 'dependants' ? 'border-green-600 text-green-700' : 'border-transparent text-gray-500 hover:text-gray-700' }}">
-            Dependants ({{ $this->dependants->count() }})
-        </button>
-    </div>
+    {{-- Single nav: the mobi-style journey filter below is the ONLY control.
+         (Removed the old Overview/Dependants tab bar — it duplicated the
+         "Dependants" filter and confused the page. Dependant roster now shows
+         under the Dependants filter.) --}}
 
-    {{-- ===================== DEPENDANTS TAB ===================== --}}
-    @if($tab === 'dependants')
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-            <h3 class="font-semibold text-gray-900 mb-4">Dependants under this profile</h3>
-            @forelse($this->dependants as $dep)
-                <div class="flex items-center justify-between py-3 border-b border-gray-50 last:border-0">
-                    <div>
-                        <p class="font-medium text-gray-900">{{ $dep->display_name }}</p>
-                        <p class="text-xs text-gray-500">
-                            {{ $dep->dependent_relation ?: 'dependant' }} · code {{ $dep->dependent_code }}
-                            @if($dep->cellphone) · {{ $dep->cellphone }} @endif
-                        </p>
-                    </div>
-                    <span class="text-xs px-2 py-0.5 rounded-full
-                        {{ $dep->consent_status === 'opted_in' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600' }}">
-                        {{ ucfirst(str_replace('_',' ', $dep->consent_status)) }}
-                    </span>
-                </div>
-            @empty
-                <p class="text-sm text-gray-400">No dependants under this profile.</p>
-            @endforelse
-            <p class="text-xs text-gray-400 mt-4">Dependants roll up under the primary member — they have no separate login and are reached via the principal.</p>
-        </div>
-
-    {{-- ===================== OVERVIEW TAB ===================== --}}
-    @else
     <div class="grid gap-6 lg:grid-cols-3">
 
         {{-- PATIENT MIRROR (read-only) --}}
@@ -78,11 +41,76 @@
                     <div class="rounded-xl border border-amber-200 p-4 mb-4">
                         <h4 class="font-semibold text-gray-900 mb-1">Prescription renewal needed</h4>
                         <p class="text-sm text-gray-600">Final repeat reached — the patient is prompted to renew.</p>
+                        <dl class="mt-2 grid grid-cols-1 gap-y-1 text-xs text-gray-500">
+                            @if($this->renewalDue->renewal_due_date)
+                                <div class="flex justify-between">
+                                    <dt>Renewal due</dt>
+                                    <dd class="{{ $this->renewalDue->renewal_due_date->isPast() ? 'text-red-600 font-medium' : 'text-gray-700' }}">
+                                        {{ $this->renewalDue->renewal_due_date->format('d M Y') }}
+                                        <span class="text-gray-400">({{ $this->renewalDue->renewal_due_date->diffForHumans() }})</span>
+                                    </dd>
+                                </div>
+                            @endif
+                            @if($this->renewalDue->start_date)
+                                <div class="flex justify-between">
+                                    <dt>Original script</dt>
+                                    <dd class="text-gray-700">{{ $this->renewalDue->start_date->format('d M Y') }}</dd>
+                                </div>
+                            @endif
+                        </dl>
                     </div>
                 @endif
 
+                <div x-data="{ filter: 'mine' }">
+                    <div class="grid grid-cols-3 gap-2 mb-4">
+                        <button type="button" @click="filter = 'mine'"
+                                class="text-center font-semibold rounded-lg py-2 text-sm transition-colors"
+                                :class="filter === 'mine' ? 'bg-green-600 text-white' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'">
+                            My Prescriptions
+                        </button>
+                        <button type="button" @click="filter = 'dependants'"
+                                class="text-center font-semibold rounded-lg py-2 text-sm transition-colors"
+                                :class="filter === 'dependants' ? 'bg-green-600 text-white' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'">
+                            Dependants
+                        </button>
+                        <button type="button" @click="filter = 'renewals'"
+                                class="text-center font-semibold rounded-lg py-2 text-sm transition-colors"
+                                :class="filter === 'renewals' ? 'bg-green-600 text-white' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'">
+                            Renewals
+                        </button>
+                    </div>
+
+                    {{-- Dependant roster (people + consent) — shown under the Dependants filter. --}}
+                    <div x-show="filter === 'dependants'" class="rounded-xl border border-gray-100 bg-gray-50 p-4 mb-3">
+                        <h4 class="text-sm font-semibold text-gray-900 mb-2">Dependants under this profile</h4>
+                        @forelse($this->dependants as $dep)
+                            <div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">{{ $dep->display_name }}</p>
+                                    <p class="text-xs text-gray-500">
+                                        {{ $dep->dependent_relation ?: 'dependant' }} · code {{ $dep->dependent_code }}
+                                        @if($dep->cellphone) · {{ $dep->cellphone }} @endif
+                                    </p>
+                                </div>
+                                <span class="text-xs px-2 py-0.5 rounded-full
+                                    {{ $dep->consent_status === 'opted_in' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600' }}">
+                                    {{ ucfirst(str_replace('_',' ', $dep->consent_status)) }}
+                                </span>
+                            </div>
+                        @empty
+                            <p class="text-sm text-gray-400">No dependants under this profile.</p>
+                        @endforelse
+                        <p class="text-xs text-gray-400 mt-3">Dependants roll up under the primary member — no separate login; reached via the principal.</p>
+                    </div>
+
                 @forelse($this->journeys as $journey)
-                    <div class="rounded-xl border border-gray-100 p-4 mb-3">
+                    @php
+                        $owner = ($journey->patient && !$journey->patient->is_primary_member) ? 'dependants' : 'mine';
+                        $isRenewal = $journey->status === 'renewal_due' ? 'true' : 'false';
+                    @endphp
+                    <div data-owner="{{ $owner }}"
+                         x-show="filter === '{{ $owner }}' || (filter === 'renewals' && {{ $isRenewal }})"
+                         class="rounded-xl border border-gray-100 p-4 mb-3">
                         <div class="flex items-center justify-between mb-1">
                             <div>
                                 <p class="font-medium text-gray-900">Prescription</p>
@@ -92,6 +120,8 @@
                                 @if($journey->patient && !$journey->patient->is_primary_member)
                                     <p class="text-xs text-gray-500">For dependant:
                                         {{ $journey->patient->first_name ?: 'Dependant #'.$journey->patient->dependent_code }}</p>
+                                @else
+                                    <p class="text-xs font-medium text-gray-500">Main member</p>
                                 @endif
                             </div>
                             <span class="text-xs font-medium px-2 py-0.5 rounded-full
@@ -100,6 +130,26 @@
                             </span>
                         </div>
                         <p class="text-sm text-gray-600">Dispenses: {{ $journey->dispenses_completed }} / {{ $journey->total_dispenses }}</p>
+                        <dl class="mt-2 grid grid-cols-1 gap-y-1 text-xs text-gray-500">
+                            @if($journey->start_date)
+                                <div class="flex justify-between">
+                                    <dt>Started</dt>
+                                    <dd class="text-gray-700">{{ $journey->start_date->format('d M Y') }}</dd>
+                                </div>
+                            @endif
+                            @if($journey->next_dispense_date)
+                                <div class="flex justify-between">
+                                    <dt>Next collection</dt>
+                                    <dd class="text-gray-700">{{ $journey->next_dispense_date->format('d M Y') }}</dd>
+                                </div>
+                            @endif
+                            @if($journey->renewal_due_date)
+                                <div class="flex justify-between">
+                                    <dt>Renewal due</dt>
+                                    <dd class="{{ $journey->renewal_due_date->isPast() ? 'text-red-600 font-medium' : 'text-gray-700' }}">{{ $journey->renewal_due_date->format('d M Y') }}</dd>
+                                </div>
+                            @endif
+                        </dl>
                         @if(!empty($journey->medications))
                             <ul class="mt-2 text-sm text-gray-700 list-disc list-inside">
                                 @foreach($journey->medications as $med)
@@ -111,6 +161,28 @@
                 @empty
                     <p class="text-sm text-gray-500">No active prescription on this profile.</p>
                 @endforelse
+
+                @php
+                    $mineCount = $this->journeys->filter(fn ($j) => !($j->patient && !$j->patient->is_primary_member))->count();
+                    $depCount = $this->journeys->filter(fn ($j) => $j->patient && !$j->patient->is_primary_member)->count();
+                    $renewalCount = $this->journeys->filter(fn ($j) => $j->status === 'renewal_due')->count();
+                @endphp
+                @if($mineCount === 0)
+                    <div x-show="filter === 'mine'" class="bg-gray-50 rounded-xl p-6 text-center text-sm text-gray-600">
+                        No prescriptions on the main member's profile.
+                    </div>
+                @endif
+                @if($depCount === 0)
+                    <div x-show="filter === 'dependants'" class="bg-gray-50 rounded-xl p-6 text-center text-sm text-gray-600">
+                        No dependants have prescriptions on this profile.
+                    </div>
+                @endif
+                @if($renewalCount === 0)
+                    <div x-show="filter === 'renewals'" class="bg-gray-50 rounded-xl p-6 text-center text-sm text-gray-600">
+                        Nothing due for renewal right now.
+                    </div>
+                @endif
+                </div>{{-- /x-data filter wrapper --}}
             </div>
 
             {{-- PREVIOUS PRESCRIPTIONS (past/completed/renewed/expired journeys) --}}
@@ -134,7 +206,13 @@
                                 <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
                                     {{ ucfirst(str_replace('_',' ', $journey->status)) }}
                                 </span>
-                                <p class="text-xs text-gray-400 mt-1">{{ $journey->dispenses_completed }}/{{ $journey->total_dispenses }} · {{ optional($journey->start_date)->format('M Y') }}</p>
+                                <p class="text-xs text-gray-400 mt-1">{{ $journey->dispenses_completed }}/{{ $journey->total_dispenses }} dispenses</p>
+                                @if($journey->start_date)
+                                    <p class="text-xs text-gray-400">Started {{ $journey->start_date->format('d M Y') }}</p>
+                                @endif
+                                @if($journey->renewal_due_date)
+                                    <p class="text-xs text-gray-400">Renewal {{ $journey->renewal_due_date->format('d M Y') }}</p>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -217,5 +295,4 @@
             </div>
         </div>
     </div>
-    @endif
 </div>

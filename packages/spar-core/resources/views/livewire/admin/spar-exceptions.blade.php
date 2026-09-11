@@ -34,7 +34,8 @@
                                 <td class="p-3 text-gray-600">{{ $dispense->journey->pharmacy->name ?? '-' }}</td>
                                 <td class="p-3 text-gray-600">{{ $dispense->due_date->format('d M Y') }}</td>
                                 <td class="p-3">
-                                    <span class="text-red-600 font-medium">{{ $dispense->due_date->diffInDays(now()) }} days</span>
+                                    @php $daysOverdue = (int) floor($dispense->due_date->diffInDays(now())); @endphp
+                                    <span class="text-red-600 font-medium">{{ $daysOverdue }} {{ \Illuminate\Support\Str::plural('day', $daysOverdue) }}</span>
                                 </td>
                                 <td class="p-3">
                                     @if($dispense->reminded_at)
