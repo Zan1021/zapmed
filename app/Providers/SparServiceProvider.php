@@ -51,8 +51,12 @@ class SparServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Resolve captured_by_id → staff display name for the patient detail view.
+        // MUST be a class-string (not a closure) so `config:cache` can serialize
+        // it — a closure here breaks every host deploy with
+        // "Call to undefined method Closure::__set_state()". The package consumer
+        // (PatientDetail) resolves a class-string via app()->make()->name($id).
         config([
-            'spar.staff_name_resolver' => fn ($id) => \App\Models\User::whereKey($id)->value('name') ?? "Staff #{$id}",
+            'spar.staff_name_resolver' => \App\Services\Spar\Identity\SparStaffNameResolver::class,
         ]);
 
         // Register the host's SMS channel with the package MessagingDispatcher.
