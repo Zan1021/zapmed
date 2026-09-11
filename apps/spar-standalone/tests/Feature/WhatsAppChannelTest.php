@@ -98,11 +98,14 @@ class WhatsAppChannelTest extends TestCase
         $this->assertSame('spar_onboarding_consent', $m['template']['name'] ?? null);
         $this->assertSame('27710201481', $m['to'] ?? null); // 0710201481 → E.164
 
-        // Link is carried as a URL button parameter.
+        // Link is carried as a URL button parameter. For a Meta DYNAMIC url
+        // button, the parameter must be the PATH+QUERY only (Meta appends it to
+        // the template's base URL, e.g. "https://spar.zapmed.africa/"). Sending
+        // the full URL would double the scheme+host and break the link.
         $components = $m['template']['components'] ?? [];
         $buttonParam = collect($components)
             ->firstWhere('type', 'button')['parameters'][0]['text'] ?? null;
-        $this->assertSame('https://sparmeds.test/track/6?signature=abc', $buttonParam);
+        $this->assertSame('track/6?signature=abc', $buttonParam);
     }
 
     public function test_proactive_send_without_template_returns_false_for_sms_fallback(): void

@@ -100,6 +100,14 @@ class WhatsAppChannel implements MessagingChannel
     /**
      * Template message (proactive / outside window). Body variables are passed
      * as ordered {{1}}, {{2}}… parameters; a URL button param carries the link.
+     *
+     * HEADER: the SPAR template uses ONE STATIC image header (same banner for
+     * every send, uploaded into the approved template). A static header needs
+     * NO component here — Meta renders it automatically. We therefore never
+     * send a header component. (If a future template ever needs a per-message
+     * dynamic image, add a 'header' component with the image link — but sending
+     * a header the template doesn't expect, or omitting a required one, causes
+     * Meta error #132000 param mismatch, so keep payload + template in lockstep.)
      */
     private function templateMessage(string $to, string $templateName, array $payload): array
     {
@@ -118,7 +126,7 @@ class WhatsAppChannel implements MessagingChannel
                 'type' => 'button',
                 'sub_type' => 'url',
                 'index' => '0',
-                'parameters' => [['type' => 'text', 'text' => $payload['link']]],
+                'parameters' => [['type' => 'text', 'text' => $this->buttonUrlParam($payload['link'])]],
             ];
         }
 
@@ -256,5 +264,33 @@ class WhatsAppChannel implements MessagingChannel
         }
 
         return $digits;
+    }
+
+    /**
+     * Convert a full tracker URL into the path+query the WhatsApp dynamic URL
+     * button expects. Meta APPENDS the button parameter to the template's base
+     * URL (e.g. base "https://spar.zapmed.africa/" + param "track/42?sig=…"),
+     * so sending the full URL here would double the scheme+host and produce a
+     * broken link. We strip the scheme+host and any leading slash, keeping the
+     * path + query (+ fragment). Non-URL / relative input is returned as-is.
+     */
+    private function buttonUrlParam(string $link): string
+    {
+        $parts = parse_url($link);
+
+        // Not an absolute URL (no host) — assume it's already a relative path.
+        if ($parts === false || empty($parts['host'])) {
+            return ltrim($link, '/');
+        }
+
+        $out = ltrim($parts['path'] ?? '', '/');
+        if (!empty($parts['query'])) {
+            $out .= '?' . $parts['query'];
+        }
+        if (!empty($parts['fragment'])) {
+            $out .= '#' . $parts['fragment'];
+        }
+
+        return $out;
     }
 }
