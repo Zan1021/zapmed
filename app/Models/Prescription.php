@@ -47,9 +47,18 @@ class Prescription extends Model
         'is_chronic',
         'repeats',
         'repeats_used',
+        'repeat_cycle_days',
+        'next_repeat_date',
+        'pharmacy_script_ref',
+        'total_medication_cost_minor',
+        'service_fee_minor',
+        'delivery_method',
         'valid_until',
         'signed_at',
         'signature_hash',
+        'upstream_id',
+        'upstream_source',
+        'upstream_synced_at',
     ];
 
     protected function casts(): array
@@ -57,10 +66,15 @@ class Prescription extends Model
         return [
             'is_chronic' => 'boolean',
             'valid_until' => 'date',
+            'next_repeat_date' => 'date',
             'signed_at' => 'datetime',
             'paid_at' => 'datetime',
             'dispatched_at' => 'datetime',
+            'upstream_synced_at' => 'datetime',
             'total_amount' => 'integer',
+            'repeat_cycle_days' => 'integer',
+            'total_medication_cost_minor' => 'integer',
+            'service_fee_minor' => 'integer',
             'pharmacy_response' => 'array',
             'metadata' => 'array',
         ];

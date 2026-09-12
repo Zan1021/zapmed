@@ -23,6 +23,8 @@ class PatientProfile extends Model
         'medical_aid_name',
         'medical_aid_number',
         'medical_aid_plan',
+        'payment_type',
+        'mobile_msisdn',
         'emergency_contact_name',
         'emergency_contact_phone',
         'emergency_contact_relationship',
@@ -36,6 +38,13 @@ class PatientProfile extends Model
         'onboarding_complete',
         'consent_given',
         'consent_given_at',
+        'upstream_id',
+        'upstream_source',
+        'upstream_synced_at',
+    ];
+
+    protected $attributes = [
+        'upstream_source' => 'contro',
     ];
 
     protected function casts(): array
@@ -48,6 +57,7 @@ class PatientProfile extends Model
             'consent_given_at' => 'datetime',
             'height_cm' => 'decimal:1',
             'weight_kg' => 'decimal:1',
+            'upstream_synced_at' => 'datetime',
         ];
     }
 
@@ -64,6 +74,11 @@ class PatientProfile extends Model
     public function chronicConditions(): HasMany
     {
         return $this->hasMany(PatientChronicCondition::class);
+    }
+
+    public function addresses(): HasMany
+    {
+        return $this->hasMany(PatientAddress::class);
     }
 
     /**

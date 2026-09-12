@@ -12,18 +12,32 @@ class Payment extends Model
         'reference',
         'patient_id',
         'appointment_id',
+        'order_id',
         'provider',
         'provider_reference',
+        'idempotency_key',
         'amount',
         'currency',
         'status',
         'payment_method',
+        'payment_type',
+        'failure_reason',
+        'retry_count',
+        'is_repeat_charge',
+        'medical_aid_claim_status',
         'description',
         'provider_data',
         'paid_at',
         'refunded_at',
         'refund_amount',
         'refund_reason',
+        'upstream_id',
+        'upstream_source',
+        'upstream_synced_at',
+    ];
+
+    protected $attributes = [
+        'upstream_source' => 'contro',
     ];
 
     protected function casts(): array
@@ -31,9 +45,12 @@ class Payment extends Model
         return [
             'amount' => 'integer',
             'refund_amount' => 'integer',
+            'retry_count' => 'integer',
+            'is_repeat_charge' => 'boolean',
             'provider_data' => 'array',
             'paid_at' => 'datetime',
             'refunded_at' => 'datetime',
+            'upstream_synced_at' => 'datetime',
         ];
     }
 
@@ -66,6 +83,26 @@ class Payment extends Model
     public function appointment(): BelongsTo
     {
         return $this->belongsTo(Appointment::class);
+    }
+
+    public function order(): BelongsTo
+    {
+        return $this->belongsTo(Order::class);
+    }
+
+    public function attempts(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(PaymentAttempt::class)->orderBy('attempt_number');
+    }
+
+    public function refunds(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Refund::class);
+    }
+
+    public function webhookEvents(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(PaymentWebhookEvent::class);
     }
 
     /**

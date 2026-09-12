@@ -1,0 +1,44 @@
+{
+  "patients": [
+    {
+      "userHash": "pat_priya", "firstName": "Priya", "lastName": "Naidoo",
+      "email": "priya@example.com", "phone": "+27821112222", "paymentType": "medical_aid",
+      "medicalAidProvider": "Discovery", "medicalAidNumber": "123456", "medicalAidPlan": "Classic Saver",
+      "deliveryAddress": {"addressLine1": "1 Main Rd", "suburb": "Gardens", "city": "Cape Town", "province": "WC", "postalCode": "8001", "country": "ZA"},
+      "lastModifiedDT": "2026-02-01T08:00:00Z"
+    },
+    {
+      "userHash": "pat_johan", "firstName": "Johan", "lastName": "van Wyk",
+      "email": "johan@example.com", "phone": "+27831113333", "paymentType": "card",
+      "lastModifiedDT": "2026-02-02T08:00:00Z"
+    }
+  ],
+  "products": [
+    {"id": "1", "productName": "Metformin 500", "nappiCode": "703950001", "price": 121.00, "packQty": 30, "isMasterBundle": false, "requiresSubscription": true, "isEnabled": true, "dtCreatedModified": "2026-01-01T00:00:00Z"},
+    {"id": "2", "productName": "Amlodipine 5", "nappiCode": "703950002", "price": 85.50, "packQty": 30, "isMasterBundle": false, "requiresSubscription": true, "isEnabled": true, "dtCreatedModified": "2026-01-02T00:00:00Z"}
+  ],
+  "coupons": [
+    {"id": "coup_1", "code": "WELCOME10", "type": "percent", "value": 1000, "maxUses": 100, "numberOfUses": 5, "isCancelled": false, "lastModifiedDt": "2026-01-03T00:00:00Z",
+     "usage": [{"preValue": 100.00, "postValue": 90.00, "isRedeemed": true, "paymentReferenceId": "PMT-1"}]}
+  ],
+  "orders": [
+    {"id": "ord_1", "orderNumber": "CTRL-1001", "patientUserHash": "pat_priya", "assignedDoctorUserHash": "doc_smith", "status": "Processing", "isSubscription": true, "serviceCategory": "chronic", "paymentType": "medical_aid", "serviceFee": 50.00, "medicationFee": 206.50, "nextRepeatDate": "2026-03-01", "orderDate": "2026-02-01T09:00:00Z", "dtCreatedModified": "2026-02-01T09:00:00Z"},
+    {"id": "ord_2", "orderNumber": "CTRL-1002", "patientUserHash": "pat_johan", "status": "Delivered", "isSubscription": false, "paymentType": "card", "serviceFee": 50.00, "medicationFee": 85.50, "orderDate": "2026-02-02T09:00:00Z", "dtCreatedModified": "2026-02-02T09:00:00Z"}
+  ],
+  "order_status_history": [
+    {"id": "osh_1", "orderNumber": "CTRL-1001", "status": "PendingPayment", "changedAt": "2026-02-01T09:00:00Z"},
+    {"id": "osh_2", "orderNumber": "CTRL-1001", "status": "Processing", "changedAt": "2026-02-01T10:00:00Z"},
+    {"id": "osh_3", "orderNumber": "CTRL-1002", "status": "Delivered", "changedAt": "2026-02-02T12:00:00Z"}
+  ],
+  "payments": [
+    {"id": "pay_1", "orderNumber": "CTRL-1001", "patientUserHash": "pat_priya", "amount": 256.50, "type": "medical_aid", "status": "completed", "retryCount": 0, "isRepeatCharge": false, "paidAt": "2026-02-01T09:05:00Z", "dtCreatedModified": "2026-02-01T09:05:00Z"},
+    {"id": "pay_2", "orderNumber": "CTRL-1002", "amount": 0, "type": "card", "status": "pending", "dtCreatedModified": "2026-02-02T09:05:00Z"}
+  ],
+  "prescriptions": [
+    {"id": "rx_1", "orderNumber": "CTRL-1001", "patientUserHash": "pat_priya", "doctorUserHash": "doc_smith", "totalMedicationCost": 206.50, "serviceFee": 50.00, "repeatCycleDays": 30, "nextRepeatDate": "2026-03-01", "deliveryMethod": "courier", "pharmacyScriptReference": "PH-REF-1", "lastModifiedDt": "2026-02-01T09:10:00Z",
+     "medications": [
+       {"name": "Metformin 500", "strength": "500mg", "form": "tablet", "quantity": 30, "unitPrice": 4.03, "totalPrice": 121.00, "instructions": "Twice daily"},
+       {"name": "Amlodipine 5", "strength": "5mg", "form": "tablet", "quantity": 30, "unitPrice": 2.85, "totalPrice": 85.50, "instructions": "Once daily"}
+     ]}
+  ]
+}
