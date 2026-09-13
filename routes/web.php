@@ -74,6 +74,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/contro-import', \App\Livewire\Admin\ControImport::class)->name('admin.contro-import');
         Route::get('/crm-analytics', \App\Livewire\Admin\AnalyticsDashboard::class)->name('admin.crm-analytics');
         Route::get('/finance', \App\Livewire\Admin\FinanceReports::class)->name('admin.finance');
+        Route::get('/ai-nudges', \App\Livewire\Admin\AiNudges::class)->name('admin.ai-nudges');
 
         // SPAR Chronic Medication Module admin routes are shipped by the
         // spar-core package (admin.spar.* names, prefix admin/spar), gated by

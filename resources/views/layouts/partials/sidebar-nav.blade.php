@@ -134,6 +134,18 @@
         Finance
     </a>
 
+    <a href="{{ route('admin.ai-nudges') }}"
+       class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors border-b border-slate-700/50 {{ request()->routeIs('admin.ai-nudges') ? 'bg-sidebar-active text-white' : 'text-slate-300 hover:bg-sidebar-hover hover:text-white' }}">
+        <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+        AI Nudges
+        @php $pendingNudges = \App\Models\CrmNudge::whereIn('status', ['draft','approved'])->count(); @endphp
+        @if($pendingNudges > 0)
+            <span class="ml-auto bg-indigo-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">{{ $pendingNudges }}</span>
+        @endif
+    </a>
+
     <a href="{{ route('admin.subscriptions') }}"
        class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors border-b border-slate-700/50 {{ request()->routeIs('admin.subscriptions') ? 'bg-sidebar-active text-white' : 'text-slate-300 hover:bg-sidebar-hover hover:text-white' }}">
         <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -44,4 +44,21 @@ return [
             'churned' => 40,                    // already churned/dropped
         ],
     ],
+
+    /**
+     * AI assist (Task 8, optional layer). Uses the SAME OpenAI credentials as the health assistant
+     * (config('services.openai')). Every AI feature degrades gracefully when no key is set — the
+     * service falls back to the deterministic rules engine / templated output. The AI never sends a
+     * nudge: drafts are ops-approved before anything leaves the system.
+     */
+    'ai' => [
+        // Master switch. When false, features always use their non-AI fallback even if a key exists.
+        'enabled' => env('CRM_AI_ENABLED', true),
+
+        // Token ceiling per assist call (summaries/nudges are short).
+        'max_tokens' => 400,
+
+        // Follow-up nudge default channel when drafting.
+        'default_nudge_channel' => 'email',
+    ],
 ];

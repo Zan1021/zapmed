@@ -33,7 +33,7 @@ Legend: ✅ done · 🟡 partial (exists but not to parity / not wired to import
 | Capability | Their module | Our status | Notes |
 |---|---|---|---|
 | **Lead + funnel** (14 stages: lead→…→subscribed/churned/dropped_off) | crm | ✅ | crm_leads + crm_funnel_events (immutable); LeadFunnel service. Task 3. |
-| **Patient health/risk score** (0–100, band low/med/high/critical) | crm + ai_assist | ✅ | crm_risk_scores + RiskScorer (rules engine, rubric parity); AI scoring is the optional Layer-AI enhancement (Task 8). |
+| **Patient health/risk score** (0–100, band low/med/high/critical) | crm + ai_assist | ✅ | crm_risk_scores + RiskScorer (rules engine, rubric parity); AI scoring built as the optional layer (CrmAiService::scoreRisk → computed_by='ai', falls back to rules). Task 3 + Task 8. |
 | **Patient flags** (at_risk/vip/do_not_contact/fraud/complaint/high_value) | crm | ✅ | crm_flags + CrmFlagKind enum; raise/clear via LeadFunnel. Task 3. |
 | **Patient notes** (pinned staff notes) | crm | ✅ | crm_notes; pinned-first ordering. Task 3. |
 | **Patient 360 view** (cross-module aggregate + search) | crm | ✅ | Patient360 aggregator + cross-field search (member no./email/phone/name/order no.); SA-ID encrypted → not substring-searchable (flagged). Task 3. |
@@ -44,6 +44,7 @@ Legend: ✅ done · 🟡 partial (exists but not to parity / not wired to import
 | **Revenue / finance reports** (revenue entries, PayFast↔pharmacy recon, CSV) | finance_reports | ✅ | finance_revenue_entries (6 kinds, signed) + finance_recon_entries (5 statuses, computed delta) + FinanceService (revenue summary/series, recon match/dispute/write-off) + Finance UI + revenue CSV export. Task 7. |
 | **Order board / Kanban** (Jess's live ops view) | ops_console | ✅ | admin.order-board (Task 2) — swimlanes, filters, guarded transitions. |
 | **Health-coach role** (sub-role of ops, assigned patients only) | identity 0002 | ✅ | UserRole::HealthCoach + isHealthCoach(); coach console scoped to assigned patients only. Task 5. |
+| **AI assist** (risk, patient summary, alert next-action, nudges) | ai_assist | ✅ | CrmAiService over existing OpenAI (config services.openai); 4 features each with deterministic no-key fallback; crm_nudges draft→approve→send (AI never sends) + AI Nudges console. Task 8. |
 
 ## Cross-cutting / compliance
 
