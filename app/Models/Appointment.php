@@ -71,19 +71,39 @@ class Appointment extends Model
         return $reference;
     }
 
+    /**
+     * The patient this appointment belongs to.
+     *
+     * Uses withTrashed() so historical appointments still resolve their patient
+     * even after the patient's account is soft-deleted. Without this, admin
+     * screens render the patient as "Unknown" once the account is removed,
+     * which is data loss in the UI for records that must remain auditable.
+     */
     public function patient(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'patient_id');
+        return $this->belongsTo(User::class, 'patient_id')->withTrashed();
     }
 
+    /**
+     * The doctor assigned to this appointment.
+     *
+     * withTrashed() keeps the doctor visible on historical appointments after
+     * a doctor account is soft-deleted (e.g. off-boarded), preserving the record.
+     */
     public function doctor(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'doctor_id');
+        return $this->belongsTo(User::class, 'doctor_id')->withTrashed();
     }
 
+    /**
+     * The user who cancelled this appointment.
+     *
+     * withTrashed() so the cancelling actor remains attributable even after
+     * their account is soft-deleted.
+     */
     public function cancelledByUser(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'cancelled_by');
+        return $this->belongsTo(User::class, 'cancelled_by')->withTrashed();
     }
 
     public function consultation(): HasOne

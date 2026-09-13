@@ -97,6 +97,17 @@ class BookAppointment extends Component
         $questions = config("assessment-questions.{$this->selectedTreatment}", []);
         $questionIds = array_column($questions, 'id');
 
+        // Checkbox-type questions must be initialised as arrays so Livewire collects
+        // multiple selected values into an array (matching isQuestionVisible()'s
+        // in_array checks). Without this, a lone checkbox binds as a scalar bool and
+        // conditional show_if logic + saved answers break.
+        foreach ($questions as $question) {
+            if (($question['type'] ?? null) === 'checkbox'
+                && ! isset($this->assessmentAnswers[$question['id']])) {
+                $this->assessmentAnswers[$question['id']] = [];
+            }
+        }
+
         // Weight
         if (in_array('current_weight', $questionIds) && $profile->weight_kg) {
             $this->assessmentAnswers['current_weight'] = (string) $profile->weight_kg;

@@ -67,8 +67,10 @@ class DoctorProfile extends Model
     {
         $dayOfWeek = (int) Carbon::parse($date)->dayOfWeek; // 0=Sunday
 
-        // Check if date is blocked
-        if ($this->blockedDates()->where('blocked_date', $date)->exists()) {
+        // Check if date is blocked. Uses whereDate() because blocked_date is cast
+        // to 'date' and stored with a 00:00:00 time component, so an exact string
+        // match on 'Y-m-d' would never match.
+        if ($this->blockedDates()->whereDate('blocked_date', $date)->exists()) {
             return [];
         }
 
@@ -83,9 +85,11 @@ class DoctorProfile extends Model
             return [];
         }
 
-        // Get already-booked times for this doctor on this date
+        // Get already-booked times for this doctor on this date. whereDate() for the
+        // same date-cast reason above — otherwise booked slots leak back into
+        // availability and the doctor can be double-booked.
         $bookedTimes = Appointment::where('doctor_id', $this->user_id)
-            ->where('appointment_date', $date)
+            ->whereDate('appointment_date', $date)
             ->whereNotIn('status', ['cancelled'])
             ->pluck('start_time')
             ->map(fn ($time) => substr($time, 0, 5))
@@ -112,7 +116,7 @@ class DoctorProfile extends Model
     {
         $dayOfWeek = (int) Carbon::parse($date)->dayOfWeek;
 
-        if ($this->blockedDates()->where('blocked_date', $date)->exists()) {
+        if ($this->blockedDates()->whereDate('blocked_date', $date)->exists()) {
             return false;
         }
 
@@ -137,13 +141,13 @@ class DoctorProfile extends Model
                     ->where('start_time', $time);
             })
             ->whereDoesntHave('blockedDates', function ($query) use ($date) {
-                $query->where('blocked_date', $date);
+                $query->whereDate('blocked_date', $date);
             })
             ->get()
             ->filter(function ($profile) use ($date, $time) {
                 // Exclude doctors already booked for this slot
                 return !Appointment::where('doctor_id', $profile->user_id)
-                    ->where('appointment_date', $date)
+                    ->whereDate('appointment_date', $date)
                     ->where('start_time', $time)
                     ->whereNotIn('status', ['cancelled'])
                     ->exists();

@@ -166,8 +166,7 @@
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
                                 @foreach($question['options'] as $optionIndex => $option)
                                     <label class="inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" wire:model="assessmentAnswers.{{ $question['id'] }}.{{ $optionIndex }}" value="{{ $option }}"
-                                            x-on:change="toggleCheckbox('{{ $question['id'] }}', '{{ $option }}', $event.target.checked)"
+                                        <input type="checkbox" wire:model="assessmentAnswers.{{ $question['id'] }}" value="{{ $option }}"
                                             class="rounded text-zapmed-600 focus:ring-zapmed-500 border-gray-300">
                                         <span class="ml-2 text-sm text-gray-700">{{ $option }}</span>
                                     </label>
