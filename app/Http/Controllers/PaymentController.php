@@ -169,6 +169,16 @@ class PaymentController extends Controller
             Mail::to($payment->patient)->queue(new AppointmentConfirmed($payment->appointment));
             Mail::to($payment->appointment->doctor)->queue(new NewAppointmentForDoctor($payment->appointment));
         }
+
+        // Task 11: mirror the completed payment into the CRM Order aggregate + finance ledger. Guarded
+        // so a bridge failure can never affect the payment outcome or the notifications above.
+        try {
+            app(\App\Services\Commerce\LiveOrderBridge::class)->onPaymentCompleted($payment);
+        } catch (\Throwable $e) {
+            Log::warning('LiveOrderBridge onPaymentCompleted failed', [
+                'payment' => $payment->reference, 'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**

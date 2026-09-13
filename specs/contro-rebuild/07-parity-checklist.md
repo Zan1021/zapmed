@@ -20,9 +20,9 @@ Legend: ✅ done · 🟡 partial (exists but not to parity / not wired to import
 
 | Capability | Their module | Our status | Notes |
 |---|---|---|---|
-| Order lifecycle (25-status state machine + history) | orders | 🟡 | Model + machine built; NOT wired to live flow or UI |
+| Order lifecycle (25-status state machine + history) | orders | ✅ | Model + machine built (Task 2); wired to LIVE flow (Task 11) via LiveOrderBridge — booking/subscribe/PayFast-ITN create + advance Orders (PendingPayment→PaymentReceived), idempotent, no gateway calls. Pre-launch/sandbox. |
 | Catalog (products/bundles/pricing/coupons) | catalog | 🟡 | Tables built; admin UI + pricing logic missing |
-| Payments ledger (attempts/refunds/webhooks) | payments | 🟡 | Extended; PayFast↔pharmacy reconciliation UI now built (Task 7 finance); live capture wiring still pending live write-path (Task 11) |
+| Payments ledger (attempts/refunds/webhooks) | payments | 🟡 | Extended; PayFast↔pharmacy reconciliation UI built (Task 7); live capture now mirrored to Order + finance ledger on ITN (Task 11 LiveOrderBridge). Pre-launch (PAYFAST_TEST_MODE=true). |
 | Consultations (calendar/slots/booking) | consultations | 🟡 | Laravel already has Appointment/DoctorAvailability; parity gaps: slot model, consult types |
 | Clinical review + notes (is_internal) | clinical | 🟡 | Our Consultation has field-level internal/visible split; no clinical_review aggregate/info-request flow |
 | Pharmacy / RxHub fulfilment | pharmacy | 🔴 | Inbound webhook mirror + outbound submit (needs RxHub docs) |

@@ -402,6 +402,16 @@ class BookAppointment extends Component
                 ->update(['appointment_id' => $this->bookedAppointment->id]);
         }
 
+        // Task 11: mirror the booking into the CRM Order aggregate. Guarded so a bridge failure can
+        // never break the customer's booking.
+        try {
+            app(\App\Services\Commerce\LiveOrderBridge::class)->onAppointmentBooked($this->bookedAppointment);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('LiveOrderBridge onAppointmentBooked failed', [
+                'appointment_id' => $this->bookedAppointment->id, 'error' => $e->getMessage(),
+            ]);
+        }
+
         $this->step = 7;
     }
 

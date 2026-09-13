@@ -52,6 +52,16 @@ class MySubscription extends Component
         $paymentData = $payfast->generateSubscriptionData($user, $plan, $subscription);
         $processUrl = $payfast->getProcessUrl();
 
+        // Task 11: mirror the subscription into the CRM Order aggregate. Guarded so a bridge failure can
+        // never break the customer's subscribe flow.
+        try {
+            app(\App\Services\Commerce\LiveOrderBridge::class)->onSubscriptionStarted($subscription);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('LiveOrderBridge onSubscriptionStarted failed', [
+                'subscription_id' => $subscription->id, 'error' => $e->getMessage(),
+            ]);
+        }
+
         // Store data in session for the checkout view
         session([
             'subscription_checkout' => [

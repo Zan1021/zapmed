@@ -28,6 +28,7 @@ class Order extends Model
         'delivery_address', 'delivery_city', 'delivery_province', 'delivery_postal_code',
         'delivery_phone', 'delivery_instructions', 'ordered_at', 'metadata',
         'upstream_id', 'upstream_source', 'upstream_synced_at',
+        'source_type', 'source_ref',
     ];
 
     protected $attributes = [
