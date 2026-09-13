@@ -18,6 +18,10 @@
                 class="px-4 py-2 text-sm font-medium -mb-px border-b-2 {{ $tab === 'retention' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700' }}">
             Retention schedule
         </button>
+        <button wire:click="$set('tab', 'consent')"
+                class="px-4 py-2 text-sm font-medium -mb-px border-b-2 {{ $tab === 'consent' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700' }}">
+            Consent
+        </button>
     </div>
 
     @if($tab === 'dsars')
@@ -122,6 +126,63 @@
             </table>
         </div>
         <div class="mt-4">{{ $this->retentionItems->links() }}</div>
+    @endif
+
+    @if($tab === 'consent')
+        <div class="mb-4 flex items-end gap-3">
+            <div class="flex-1 max-w-md">
+                <label class="block text-xs text-gray-500 mb-1">Find patient (name / email)</label>
+                <input type="text" wire:model="consentQuery" wire:keydown.enter="findConsentPatient"
+                       placeholder="Search and press Enter" class="w-full text-sm border-gray-300 rounded-lg" />
+            </div>
+            <button wire:click="findConsentPatient" class="px-4 py-2 rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">Find</button>
+        </div>
+
+        @if($this->consentPatient)
+            <div class="bg-white rounded-lg border border-gray-200 p-5">
+                <h3 class="text-sm font-semibold text-gray-700 mb-1">
+                    {{ $this->consentPatient->first_name }} {{ $this->consentPatient->last_name }}
+                </h3>
+                <p class="text-xs text-gray-400 mb-4">{{ $this->consentPatient->email }} — POPIA consent purposes</p>
+
+                <div class="space-y-2">
+                    @foreach($this->consentMatrix as $purposeValue => $consent)
+                        @php $state = $consent?->state?->value ?? 'none'; @endphp
+                        <div class="flex items-center justify-between border border-gray-100 rounded-lg px-3 py-2" wire:key="consent-{{ $purposeValue }}">
+                            <div>
+                                <div class="text-sm text-gray-800">{{ \App\Enums\ConsentPurpose::from($purposeValue)->label() }}</div>
+                                <div class="text-[11px] text-gray-400">
+                                    @if($consent)
+                                        {{ $consent->state->label() }} · policy {{ $consent->policy_version }}
+                                    @else
+                                        No record
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs px-2 py-0.5 rounded-full
+                                    @class([
+                                        'bg-emerald-100 text-emerald-700' => $state === 'granted',
+                                        'bg-gray-100 text-gray-500' => in_array($state, ['withdrawn','expired','none']),
+                                        'bg-amber-100 text-amber-700' => $state === 'pending_reconsent',
+                                    ])">
+                                    {{ $consent?->state?->label() ?? '—' }}
+                                </span>
+                                @if($state !== 'granted')
+                                    <button wire:click="grantConsent('{{ $purposeValue }}')" class="text-xs text-emerald-600 hover:underline">Grant</button>
+                                @endif
+                                @if($state === 'granted')
+                                    <button wire:click="withdrawConsent('{{ $purposeValue }}')" class="text-xs text-red-600 hover:underline">Withdraw</button>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+                <p class="mt-3 text-[11px] text-gray-400">Every change is recorded immutably in the consent audit trail.</p>
+            </div>
+        @else
+            <p class="text-sm text-gray-400">Search for a patient to view and manage their consent.</p>
+        @endif
     @endif
 
     {{-- Reject modal --}}

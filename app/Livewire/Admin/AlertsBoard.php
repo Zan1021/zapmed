@@ -6,6 +6,7 @@ use App\Enums\AlertSeverity;
 use App\Enums\AlertStatus;
 use App\Models\Alert;
 use App\Services\Alerts\AlertScanner;
+use App\Services\Crm\CrmAiService;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -16,6 +17,9 @@ use Livewire\WithPagination;
  * Ops triage board: the open/acknowledged alert list (the "morning huddle" view), severity/status
  * filters, and per-alert actions — acknowledge, resolve, snooze, comment, assign to self. A manual
  * "Run scan now" button triggers the same detectors the scheduler runs.
+ *
+ * Task 8 wire-in: an on-demand AI "suggest next action" per alert (CrmAiService::suggestAlertAction) —
+ * degrades to a rule-based suggestion with no OpenAI key.
  */
 class AlertsBoard extends Component
 {
@@ -30,6 +34,10 @@ class AlertsBoard extends Component
     public ?int $selectedAlertId = null;
     public string $commentBody = '';
     public int $snoozeHours = 24;
+
+    /** AI suggested-action state for the open alert. */
+    public ?string $aiAction = null;
+    public ?string $aiActionBy = null;   // 'ai' | 'rules'
 
     public function updatedSeverities(): void
     {
@@ -50,12 +58,25 @@ class AlertsBoard extends Component
     public function select(int $id): void
     {
         $this->selectedAlertId = $id;
-        $this->reset(['commentBody']);
+        $this->reset(['commentBody', 'aiAction', 'aiActionBy']);
     }
 
     public function closeDrawer(): void
     {
-        $this->reset(['selectedAlertId', 'commentBody']);
+        $this->reset(['selectedAlertId', 'commentBody', 'aiAction', 'aiActionBy']);
+    }
+
+    /** Ask the AI (or rule-based fallback) for a suggested next action on the open alert. */
+    public function suggestAction(): void
+    {
+        $alert = Alert::find($this->selectedAlertId);
+        if (! $alert) {
+            return;
+        }
+
+        $result = app(CrmAiService::class)->suggestAlertAction($alert);
+        $this->aiAction = $result['action'];
+        $this->aiActionBy = $result['generated_by'];
     }
 
     public function acknowledge(int $id): void
