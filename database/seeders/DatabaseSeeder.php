@@ -47,5 +47,8 @@ class DatabaseSeeder extends Seeder
 
         // Seed partner pharmacies
         $this->call(PharmacySeeder::class);
+
+        // Seed the CRM alert definition catalogue (Task 4).
+        $this->call(AlertDefinitionSeeder::class);
     }
 }

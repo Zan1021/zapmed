@@ -10,3 +10,5 @@ Artisan::command('inspire', function () {
 
 Schedule::command('appointments:send-reminders')->everyFiveMinutes();
 Schedule::command('prescriptions:remind')->dailyAt('09:00');
+Schedule::command('alerts:scan')->everyFiveMinutes()->withoutOverlapping();
+Schedule::command('subscriptions:run-due')->dailyAt('03:00')->withoutOverlapping();

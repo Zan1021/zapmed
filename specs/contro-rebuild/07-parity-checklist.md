@@ -26,24 +26,24 @@ Legend: ✅ done · 🟡 partial (exists but not to parity / not wired to import
 | Consultations (calendar/slots/booking) | consultations | 🟡 | Laravel already has Appointment/DoctorAvailability; parity gaps: slot model, consult types |
 | Clinical review + notes (is_internal) | clinical | 🟡 | Our Consultation has field-level internal/visible split; no clinical_review aggregate/info-request flow |
 | Pharmacy / RxHub fulfilment | pharmacy | 🔴 | Inbound webhook mirror + outbound submit (needs RxHub docs) |
-| Subscriptions repeat lifecycle | subscriptions | 🟡 | Laravel has Subscription; missing cycle/3-strike/follow-up automation |
+| Subscriptions repeat lifecycle | subscriptions | ✅ | subscription_cycles (scheduled→attempted→placed→fulfilled/payment_failed) + 3-strike auto-cancel + followups (+180d) + pause_events + SubscriptionLifecycle + subscriptions:run-due scheduled. Import-safe (records outcomes, never charges). Task 6. |
 
 ## CRM / ops intelligence (THE rented features — mostly 🔴)
 
 | Capability | Their module | Our status | Notes |
 |---|---|---|---|
-| **Lead + funnel** (14 stages: lead→…→subscribed/churned/dropped_off) | crm | 🔴 | crm_lead + funnel_event equivalents |
-| **Patient health/risk score** (0–100, band low/med/high/critical) | crm + ai_assist | 🔴 | risk_score; AI rubric optional (Layer AI) |
-| **Patient flags** (at_risk/vip/do_not_contact/fraud/complaint/high_value) | crm | 🔴 | crm_flag |
-| **Patient notes** (pinned staff notes) | crm | 🔴 | crm_note |
-| **Patient 360 view** (cross-module aggregate + search) | crm | 🔴 | patient-view aggregator + search |
+| **Lead + funnel** (14 stages: lead→…→subscribed/churned/dropped_off) | crm | ✅ | crm_leads + crm_funnel_events (immutable); LeadFunnel service. Task 3. |
+| **Patient health/risk score** (0–100, band low/med/high/critical) | crm + ai_assist | ✅ | crm_risk_scores + RiskScorer (rules engine, rubric parity); AI scoring is the optional Layer-AI enhancement (Task 8). |
+| **Patient flags** (at_risk/vip/do_not_contact/fraud/complaint/high_value) | crm | ✅ | crm_flags + CrmFlagKind enum; raise/clear via LeadFunnel. Task 3. |
+| **Patient notes** (pinned staff notes) | crm | ✅ | crm_notes; pinned-first ordering. Task 3. |
+| **Patient 360 view** (cross-module aggregate + search) | crm | ✅ | Patient360 aggregator + cross-field search (member no./email/phone/name/order no.); SA-ID encrypted → not substring-searchable (flagged). Task 3. |
 | **AI nudges** (stall_signup/intake/consult/payment/cold/churn) | crm + ai_assist | 🔴 | crm_nudge draft→approve→send |
-| **Coaching** (assignment, touchpoints, cross-sell offers) | coaching | 🔴 | health_coach role + coaching tables |
-| **Alerts / SLA** (order stale, payments failed, no-show → morning list) | alerts | 🔴 | definitions + scanner + workflow |
+| **Coaching** (assignment, touchpoints, cross-sell offers) | coaching | ✅ | coaching_assignments (one-active-per-patient) + touchpoints + offers + CoachingService + coach console (role-scoped). Task 5. |
+| **Alerts / SLA** (order stale, payments failed, no-show → morning list) | alerts | ✅ | alerts_definitions (10 seeded) + alerts_alerts (dedupe/re-raise/auto-close) + comments + AlertScanner (8 detectors) + alerts:scan scheduled + morning-list UI. Task 4. |
 | **Analytics** (funnel counts, attribution, ad-spend/CAC, KPI snapshots) | analytics | 🔴 | analytics tables + dashboards |
 | **Revenue / finance reports** (revenue entries, PayFast↔pharmacy recon, CSV) | finance_reports | 🔴 | finance module |
-| **Order board / Kanban** (Jess's live ops view) | ops_console | 🔴 | the headline ops screen |
-| **Health-coach role** (sub-role of ops, assigned patients only) | identity 0002 | 🔴 | role + scoping |
+| **Order board / Kanban** (Jess's live ops view) | ops_console | ✅ | admin.order-board (Task 2) — swimlanes, filters, guarded transitions. |
+| **Health-coach role** (sub-role of ops, assigned patients only) | identity 0002 | ✅ | UserRole::HealthCoach + isHealthCoach(); coach console scoped to assigned patients only. Task 5. |
 
 ## Cross-cutting / compliance
 

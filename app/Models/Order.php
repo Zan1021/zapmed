@@ -92,6 +92,25 @@ class Order extends Model
     }
 
     /**
+     * Payments raised against this order (payments.order_id). Read surface for the ops board.
+     */
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    /**
+     * Prescriptions linked by the shared pharmacy script reference. Contro does not FK a prescription
+     * to an order; the common thread is orders.pharmacy_script_ref == prescriptions.pharmacy_script_ref.
+     * Returns an empty relation (never all rows) when this order has no script ref.
+     */
+    public function prescriptions(): HasMany
+    {
+        return $this->hasMany(Prescription::class, 'pharmacy_script_ref', 'pharmacy_script_ref')
+            ->when(blank($this->pharmacy_script_ref), fn ($q) => $q->whereRaw('1 = 0'));
+    }
+
+    /**
      * Guarded status transition. Validates against the seeded state machine, applies it, and records
      * an immutable history row. Throws on a disallowed transition — callers that import Contro data
      * should check isTransitionAllowed() first and quarantine anomalies instead of calling this.

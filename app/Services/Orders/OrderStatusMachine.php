@@ -71,4 +71,25 @@ class OrderStatusMachine
     {
         return config("orders.rxhub_event_map.{$eventCode}");
     }
+
+    /**
+     * Board swimlane definitions (presentation grouping of the 25 statuses).
+     * @return array<string,array{label:string,colour:string,statuses:array<int,string>}>
+     */
+    public static function boardLanes(): array
+    {
+        return config('orders.board_lanes', []);
+    }
+
+    /** The lane key a status belongs to, or null if it is unmapped. */
+    public static function laneForStatus(string $status): ?string
+    {
+        foreach (self::boardLanes() as $key => $lane) {
+            if (in_array($status, $lane['statuses'], true)) {
+                return $key;
+            }
+        }
+
+        return null;
+    }
 }

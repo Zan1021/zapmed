@@ -54,6 +54,18 @@ class Subscription extends Model
         return $this->belongsTo(SubscriptionPlan::class, 'subscription_plan_id');
     }
 
+    // ---- repeat lifecycle (Task 6) -------------------------------------------------------------
+
+    public function cycles(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(SubscriptionCycle::class)->orderBy('sequence_no');
+    }
+
+    public function pauseEvents(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(SubscriptionPauseEvent::class)->latest('paused_at');
+    }
+
     /**
      * Check if subscription is active.
      */

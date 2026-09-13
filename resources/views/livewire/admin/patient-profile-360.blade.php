@@ -1,0 +1,136 @@
+<div>
+    <x-slot name="header">Patient 360</x-slot>
+
+    {{-- Search --}}
+    <div class="mb-6">
+        <div class="flex gap-2">
+            <input type="text" wire:model.live.debounce.300ms="q"
+                   placeholder="Search by member no. / email / phone / name / order number"
+                   class="flex-1 text-sm border-gray-300 rounded-lg" />
+            @if($this->dossier)
+                <button wire:click="clear" class="text-sm text-gray-500 hover:underline px-3">New search</button>
+            @endif
+        </div>
+        <p class="text-[11px] text-gray-400 mt-1">
+            Note: SA-ID is stored encrypted and is not substring-searchable here.
+        </p>
+    </div>
+
+    {{-- Search results --}}
+    @if(! $this->dossier && $this->results->isNotEmpty())
+        <div class="border border-gray-200 rounded-lg divide-y divide-gray-100 mb-6">
+            @foreach($this->results as $patient)
+                <button type="button" wire:click="view({{ $patient->id }})" wire:key="res-{{ $patient->id }}"
+                        class="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center justify-between">
+                    <span class="text-sm font-medium text-gray-800">{{ $patient->first_name }} {{ $patient->last_name }}</span>
+                    <span class="text-xs text-gray-500 font-mono">{{ $patient->member_number }}</span>
+                </button>
+            @endforeach
+        </div>
+    @elseif(! $this->dossier && trim($q) !== '')
+        <p class="text-sm text-gray-400">No matching patients.</p>
+    @endif
+
+    {{-- Dossier --}}
+    @if($this->dossier)
+        @php $d = $this->dossier; $p = $d['patient']; @endphp
+        <div class="space-y-6">
+            {{-- Header --}}
+            <div class="flex items-start justify-between border-b border-gray-200 pb-4">
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-800">{{ $p->first_name }} {{ $p->last_name }}</h2>
+                    <div class="text-sm text-gray-500">{{ $p->email }} · {{ $p->phone ?? 'no phone' }} · <span class="font-mono">{{ $p->member_number }}</span></div>
+                </div>
+                <div class="text-right">
+                    @if($d['risk'])
+                        <div class="text-3xl font-bold text-gray-800">{{ $d['risk']->score }}</div>
+                        <span class="text-xs px-2 py-0.5 rounded-full
+                            {{ $d['risk']->band->value === 'critical' ? 'bg-red-100 text-red-700' :
+                               ($d['risk']->band->value === 'high' ? 'bg-orange-100 text-orange-700' :
+                               ($d['risk']->band->value === 'medium' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700')) }}">
+                            {{ $d['risk']->band->label() }} risk
+                        </span>
+                    @else
+                        <span class="text-xs text-gray-400">No risk score</span>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Stat strip --}}
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                <div class="border border-gray-200 rounded-lg p-3">
+                    <div class="text-xs text-gray-400">Stage</div>
+                    <div class="text-sm font-medium">{{ $d['stage']?->label() ?? '—' }}</div>
+                </div>
+                <div class="border border-gray-200 rounded-lg p-3">
+                    <div class="text-xs text-gray-400">Lifetime value</div>
+                    <div class="text-sm font-medium">R{{ number_format($d['ltv_minor'] / 100, 2) }}</div>
+                </div>
+                <div class="border border-gray-200 rounded-lg p-3">
+                    <div class="text-xs text-gray-400">Orders</div>
+                    <div class="text-sm font-medium">{{ $d['counts']['orders'] }}</div>
+                </div>
+                <div class="border border-gray-200 rounded-lg p-3">
+                    <div class="text-xs text-gray-400">Consults</div>
+                    <div class="text-sm font-medium">{{ $d['counts']['consults'] }}</div>
+                </div>
+                <div class="border border-gray-200 rounded-lg p-3">
+                    <div class="text-xs text-gray-400">Active flags</div>
+                    <div class="text-sm font-medium">{{ $d['counts']['active_flags'] }}</div>
+                </div>
+            </div>
+
+            {{-- Flags --}}
+            @if($d['flags']->isNotEmpty())
+                <div class="flex flex-wrap gap-2">
+                    @foreach($d['flags'] as $flag)
+                        <span class="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700">{{ $flag->kind->label() }}</span>
+                    @endforeach
+                </div>
+            @endif
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {{-- Recent orders --}}
+                <div>
+                    <h4 class="text-sm font-semibold text-gray-700 mb-2">Recent orders</h4>
+                    @forelse($d['recent_orders'] as $order)
+                        <div class="text-sm border border-gray-100 rounded-lg px-3 py-2 mb-1 flex items-center justify-between">
+                            <span class="font-mono text-xs text-gray-500">{{ $order->reference }}</span>
+                            <span>{{ $order->status }}</span>
+                            <span>R{{ number_format($order->total_minor / 100, 2) }}</span>
+                        </div>
+                    @empty
+                        <p class="text-xs text-gray-400">No orders.</p>
+                    @endforelse
+                </div>
+
+                {{-- Recent payments --}}
+                <div>
+                    <h4 class="text-sm font-semibold text-gray-700 mb-2">Recent payments</h4>
+                    @forelse($d['recent_payments'] as $payment)
+                        <div class="text-sm border border-gray-100 rounded-lg px-3 py-2 mb-1 flex items-center justify-between">
+                            <span class="font-mono text-xs text-gray-500">{{ $payment->reference }}</span>
+                            <span>{{ $payment->status }}</span>
+                            <span>R{{ number_format($payment->amount / 100, 2) }}</span>
+                        </div>
+                    @empty
+                        <p class="text-xs text-gray-400">No payments.</p>
+                    @endforelse
+                </div>
+            </div>
+
+            {{-- Notes --}}
+            @if($d['notes']->isNotEmpty())
+                <div>
+                    <h4 class="text-sm font-semibold text-gray-700 mb-2">Notes</h4>
+                    @foreach($d['notes'] as $note)
+                        <div class="text-sm border border-gray-100 rounded-lg px-3 py-2 mb-1">
+                            @if($note->pinned) <span class="text-[10px] text-amber-600">📌</span> @endif
+                            {{ $note->body }}
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+    @endif
+</div>

@@ -151,6 +151,30 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Get the user's orders (as patient). Read surface for CRM / patient-360.
+     */
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class, 'patient_id');
+    }
+
+    /**
+     * Get the user's payments (as patient).
+     */
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class, 'patient_id');
+    }
+
+    /**
+     * Get the CRM lead (staff-internal lifecycle record) for this patient.
+     */
+    public function crmLead(): HasOne
+    {
+        return $this->hasOne(CrmLead::class, 'patient_id');
+    }
+
+    /**
      * Get the doctor profile.
      */
     public function doctorProfile(): HasOne
@@ -228,6 +252,14 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isPatient(): bool
     {
         return $this->role === UserRole::Patient;
+    }
+
+    /**
+     * Check if user is a health coach (non-clinical lifecycle/retention role).
+     */
+    public function isHealthCoach(): bool
+    {
+        return $this->role === UserRole::HealthCoach;
     }
 
     /**

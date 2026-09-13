@@ -104,4 +104,50 @@ return [
     ],
 
     'initial_status' => 'PendingPayment',
+
+    /**
+     * Ops board swimlanes (Order Board / Kanban, specs/contro-rebuild/08 §2.2).
+     *
+     * The 25 raw statuses are unusable as 25 columns, so the board groups them into ordered,
+     * ops-meaningful lanes. This is presentation DATA only — it never affects the state machine.
+     * Every status MUST appear in exactly one lane; a coverage test enforces that so a newly added
+     * status can never silently vanish from the board.
+     */
+    'board_lanes' => [
+        'awaiting_payment' => [
+            'label' => 'Awaiting payment',
+            'colour' => 'amber',
+            'statuses' => ['PendingPayment', 'PaymentFailed', 'RepeatPaymentFailed', 'TwoRepeatFailures', 'ThreeRepeatFailures'],
+        ],
+        'booking' => [
+            'label' => 'Booking & consult',
+            'colour' => 'sky',
+            'statuses' => ['PaymentReceived', 'PendingBooking', 'PendingConsulation', 'NoShow'],
+        ],
+        'clinical_review' => [
+            'label' => 'Clinical review',
+            'colour' => 'violet',
+            'statuses' => ['InReview', 'AwaitingInformation'],
+        ],
+        'pharmacy' => [
+            'label' => 'Pharmacy pipeline',
+            'colour' => 'indigo',
+            'statuses' => ['Processing', 'PharmacyProcessing', 'PreparingMedication', 'ClaimRejected'],
+        ],
+        'fulfilment' => [
+            'label' => 'Fulfilment',
+            'colour' => 'blue',
+            'statuses' => ['Despatched', 'Delivered', 'NotDelivered'],
+        ],
+        'follow_up' => [
+            'label' => 'Repeat & follow-up',
+            'colour' => 'teal',
+            'statuses' => ['Completed', 'PendingFollowUpBooking', 'PendingFollowUp'],
+        ],
+        'closed' => [
+            'label' => 'Closed & exceptions',
+            'colour' => 'slate',
+            'statuses' => ['Paused', 'Cancelled', 'RefundNeeded', 'RefundComplete'],
+        ],
+    ],
 ];

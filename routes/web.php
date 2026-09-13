@@ -61,6 +61,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/newsletters', \App\Livewire\Admin\Newsletters::class)->name('admin.newsletters');
         Route::get('/reviews', \App\Livewire\Admin\Reviews::class)->name('admin.reviews');
         Route::get('/pharmacy-orders', \App\Livewire\Admin\PharmacyOrders::class)->name('admin.pharmacy-orders');
+        Route::get('/order-board', \App\Livewire\Admin\OrderBoard::class)->name('admin.order-board');
+        Route::get('/leads-funnel', \App\Livewire\Admin\LeadsFunnel::class)->name('admin.leads-funnel');
+        Route::get('/patient-360', \App\Livewire\Admin\PatientProfile360::class)->name('admin.patient-360');
+        Route::get('/alerts', \App\Livewire\Admin\AlertsBoard::class)->name('admin.alerts');
         Route::get('/languages', \App\Livewire\Admin\LanguageSettings::class)->name('admin.languages');
         Route::get('/audit-log', \App\Livewire\Admin\AuditLog::class)->name('admin.audit-log');
         Route::get('/doctor-applications', \App\Livewire\Admin\DoctorApplications::class)->name('admin.doctor-applications');
@@ -72,6 +76,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // SPAR Chronic Medication Module admin routes are shipped by the
         // spar-core package (admin.spar.* names, prefix admin/spar), gated by
         // config('spar.route_middleware.admin').
+    });
+
+    // Coach console — accessible to admins AND health coaches (coaches see only their patients;
+    // scoping is enforced inside the component). Lives under /admin/coach-console for UI consistency
+    // but is gated on role:admin,health_coach rather than the admin-only group above.
+    Route::middleware('role:admin,health_coach')->group(function () {
+        Route::get('admin/coach-console', \App\Livewire\Admin\CoachConsole::class)->name('admin.coach-console');
     });
 
     // Doctor dashboard (Livewire - real data)
