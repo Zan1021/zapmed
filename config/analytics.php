@@ -34,4 +34,26 @@ return [
         env('APP_URL', 'https://zapmed.co.za') . '/erectile-dysfunction-treatment',
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | CRM Analytics + Finance (Task 7 — parity with Mark's AnalyticsConfig /
+    | FinanceReportsConfig). Values as DATA so they're tunable without code.
+    |--------------------------------------------------------------------------
+    */
+
+    // Default KPI window (days) when the caller doesn't supply since/until.
+    'default_lookback_days' => 30,
+
+    // Marketing channels ops can log spend against (used to seed the ad-spend form).
+    'channels' => ['google_ads', 'meta', 'tiktok', 'organic', 'referral', 'other'],
+
+    // Finance:
+    'finance' => [
+        // ± tolerance (cents) within which a recon entry auto-grades to "matched".
+        'recon_auto_match_tolerance_cents' => 100,
+
+        // Hours a payment can be non-captured before it appears on the outstanding-payments report.
+        'outstanding_payments_aged_hours' => 24,
+    ],
+
 ];

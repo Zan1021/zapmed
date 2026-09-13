@@ -22,7 +22,7 @@ Legend: ✅ done · 🟡 partial (exists but not to parity / not wired to import
 |---|---|---|---|
 | Order lifecycle (25-status state machine + history) | orders | 🟡 | Model + machine built; NOT wired to live flow or UI |
 | Catalog (products/bundles/pricing/coupons) | catalog | 🟡 | Tables built; admin UI + pricing logic missing |
-| Payments ledger (attempts/refunds/webhooks) | payments | 🟡 | Extended; reconciliation UI + finance logic missing |
+| Payments ledger (attempts/refunds/webhooks) | payments | 🟡 | Extended; PayFast↔pharmacy reconciliation UI now built (Task 7 finance); live capture wiring still pending live write-path (Task 11) |
 | Consultations (calendar/slots/booking) | consultations | 🟡 | Laravel already has Appointment/DoctorAvailability; parity gaps: slot model, consult types |
 | Clinical review + notes (is_internal) | clinical | 🟡 | Our Consultation has field-level internal/visible split; no clinical_review aggregate/info-request flow |
 | Pharmacy / RxHub fulfilment | pharmacy | 🔴 | Inbound webhook mirror + outbound submit (needs RxHub docs) |
@@ -40,8 +40,8 @@ Legend: ✅ done · 🟡 partial (exists but not to parity / not wired to import
 | **AI nudges** (stall_signup/intake/consult/payment/cold/churn) | crm + ai_assist | 🔴 | crm_nudge draft→approve→send |
 | **Coaching** (assignment, touchpoints, cross-sell offers) | coaching | ✅ | coaching_assignments (one-active-per-patient) + touchpoints + offers + CoachingService + coach console (role-scoped). Task 5. |
 | **Alerts / SLA** (order stale, payments failed, no-show → morning list) | alerts | ✅ | alerts_definitions (10 seeded) + alerts_alerts (dedupe/re-raise/auto-close) + comments + AlertScanner (8 detectors) + alerts:scan scheduled + morning-list UI. Task 4. |
-| **Analytics** (funnel counts, attribution, ad-spend/CAC, KPI snapshots) | analytics | 🔴 | analytics tables + dashboards |
-| **Revenue / finance reports** (revenue entries, PayFast↔pharmacy recon, CSV) | finance_reports | 🔴 | finance module |
+| **Analytics** (funnel counts, attribution, ad-spend/CAC, KPI snapshots) | analytics | ✅ | analytics_funnel_events + attribution (first/last-touch) + ad_spend + kpi_snapshots; AnalyticsService (funnel/conversion/CAC/kpiSummary) + analytics:snapshot nightly + CRM Analytics dashboard. Task 7. |
+| **Revenue / finance reports** (revenue entries, PayFast↔pharmacy recon, CSV) | finance_reports | ✅ | finance_revenue_entries (6 kinds, signed) + finance_recon_entries (5 statuses, computed delta) + FinanceService (revenue summary/series, recon match/dispute/write-off) + Finance UI + revenue CSV export. Task 7. |
 | **Order board / Kanban** (Jess's live ops view) | ops_console | ✅ | admin.order-board (Task 2) — swimlanes, filters, guarded transitions. |
 | **Health-coach role** (sub-role of ops, assigned patients only) | identity 0002 | ✅ | UserRole::HealthCoach + isHealthCoach(); coach console scoped to assigned patients only. Task 5. |
 
