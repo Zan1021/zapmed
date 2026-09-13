@@ -100,6 +100,15 @@ class LiveOrderBridge
 
             // Record cash in the finance ledger (idempotent per payment).
             $this->finance->recordCashFromPayment($payment, serviceLine: $order->service_category);
+
+            // Task 6: capture payment into the CRM funnel + analytics. Guarded internally so a CRM
+            // hiccup can never roll back the finance transaction that matters here.
+            if ($payment->patient_id) {
+                $patient = \App\Models\User::find($payment->patient_id);
+                if ($patient) {
+                    app(\App\Services\Crm\JourneyCapture::class)->paid($patient, $order->service_category);
+                }
+            }
         });
     }
 

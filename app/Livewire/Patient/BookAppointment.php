@@ -423,6 +423,16 @@ class BookAppointment extends Component
             ]);
         }
 
+        // Task 6: capture the journey into the CRM funnel + analytics. Booking implies intake was
+        // completed, so record both. Internally guarded — never breaks the booking.
+        $journey = app(\App\Services\Crm\JourneyCapture::class);
+        $journey->intakeComplete($this->bookedAppointment->patient, $this->appointmentType);
+        $journey->consultBooked(
+            $this->bookedAppointment->patient,
+            $this->appointmentType,
+            $this->bookedAppointment->id,
+        );
+
         $this->step = 7;
     }
 

@@ -260,6 +260,13 @@ class PrescriptionBuilder extends Component
         // Notify patient that medication payment is required
         $prescription->loadMissing(['items', 'doctor', 'patient']);
         Mail::to($prescription->patient)->queue(new PrescriptionReady($prescription));
+
+        // Task 6: capture script issuance into the CRM funnel + analytics (guarded internally).
+        app(\App\Services\Crm\JourneyCapture::class)->scriptIssued(
+            $this->consultation->patient,
+            $this->consultation->appointment?->type,
+            $prescription->id,
+        );
     }
 
     /**

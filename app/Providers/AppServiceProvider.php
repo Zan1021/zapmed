@@ -24,6 +24,13 @@ class AppServiceProvider extends ServiceProvider
             [\SocialiteProviders\Apple\AppleExtendSocialite::class, 'handle']
         );
 
+        // Task 6 (CRM capture): create a CRM lead + record the sign-up funnel event when a patient
+        // registers. Registered explicitly here (this app does not rely on event auto-discovery).
+        \Illuminate\Support\Facades\Event::listen(
+            \Illuminate\Auth\Events\Registered::class,
+            \App\Listeners\CaptureSignupInFunnel::class,
+        );
+
         // Rate limiting for security-sensitive endpoints
         \Illuminate\Support\Facades\RateLimiter::for('login', function (\Illuminate\Http\Request $request) {
             return \Illuminate\Cache\RateLimiting\Limit::perMinute(5)->by($request->ip());

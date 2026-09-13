@@ -223,6 +223,13 @@ class ConsultationScreen extends Component
             'status' => 'completed',
         ]);
 
+        // Task 6: capture consult completion into the CRM funnel + analytics (guarded internally).
+        app(\App\Services\Crm\JourneyCapture::class)->consultComplete(
+            $this->appointment->patient,
+            $this->appointment->type,
+            $this->appointment->id,
+        );
+
         $this->redirect(route('doctor.dashboard'), navigate: true);
     }
 
