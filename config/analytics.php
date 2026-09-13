@@ -56,4 +56,11 @@ return [
         'outstanding_payments_aged_hours' => 24,
     ],
 
+    // Subscriptions (parity with Craig's AnalyticsConfig active-sub rule): a subscription counts as
+    // "active" if its last payment was within N days; after N + grace days it is treated as churned.
+    'subscriptions' => [
+        'active_inactivity_days' => 35,
+        'active_grace_days' => 5,
+    ],
+
 ];

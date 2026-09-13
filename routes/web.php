@@ -58,6 +58,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/ai', \App\Livewire\Admin\AiManagement::class)->name('admin.ai');
         Route::get('/partners', \App\Livewire\Admin\Partners::class)->name('admin.partners');
         Route::get('/analytics', \App\Livewire\Admin\Analytics::class)->name('admin.analytics');
+        Route::get('/stats', \App\Livewire\Admin\Stats::class)->name('admin.stats');
         Route::get('/newsletters', \App\Livewire\Admin\Newsletters::class)->name('admin.newsletters');
         Route::get('/reviews', \App\Livewire\Admin\Reviews::class)->name('admin.reviews');
         Route::get('/pharmacy-orders', \App\Livewire\Admin\PharmacyOrders::class)->name('admin.pharmacy-orders');
