@@ -50,8 +50,8 @@ Legend: ✅ done · 🟡 partial (exists but not to parity / not wired to import
 
 | Capability | Their module | Our status | Notes |
 |---|---|---|---|
-| POPIA consent purposes + DSAR + retention | compliance | 🟡 | Laravel has ConsentRecord; DSAR/retention/purposes missing |
-| Append-only audit trail (partitioned, 7yr) | audit | 🟡 | Laravel has audit_logs; not partitioned/retention-policied |
+| POPIA consent purposes + DSAR + retention | compliance | ✅ | compliance_consents (8 purposes, versioned) + immutable consent_records + compliance_dsars (6 kinds, guarded status machine, 30-day SLA + overdue) + dsar_artifacts + retention_policies (10 seeded) + retention_schedule (legal hold) + ComplianceService + compliance:scan + Compliance console. Task 9. |
+| Append-only audit trail (partitioned, 7yr) | audit | ✅ | crm_audit_events (append-only: model blocks update/delete) + tamper-evident sha256 hash chain + AuditTrail::verifyChain; complements ClinicalAuditLogger (clinical reads). 7yr retention policy seeded. Partitioning is a Postgres-prod deployment detail. Task 9. |
 | RBAC scopes + MFA + partner API keys | identity | 🟡 | Laravel roles + 2FA; scopes/partner keys thinner |
 | Event-driven domain events (55) | contracts/events | 🔴 | Laravel events for the new domains |
 
