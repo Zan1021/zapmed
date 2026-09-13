@@ -3,9 +3,9 @@
 namespace App\Console\Commands;
 
 use App\Models\Prescription;
-use App\Services\SmsService;
+use App\Services\Notifications\NotificationDispatcher;
+use App\Services\Notifications\OutboundMessage;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Mail;
 
 class SendPrescriptionReminders extends Command
 {
@@ -13,7 +13,7 @@ class SendPrescriptionReminders extends Command
 
     protected $description = 'Remind patients with chronic prescriptions to refill before they run out';
 
-    public function handle(): int
+    public function handle(NotificationDispatcher $dispatcher): int
     {
         $sent = 0;
 
@@ -33,34 +33,46 @@ class SendPrescriptionReminders extends Command
             ->with(['patient', 'items'])
             ->get();
 
-        $sms = app(SmsService::class);
-
         foreach ($prescriptions as $prescription) {
             $patient = $prescription->patient;
             $remaining = $prescription->refills_remaining;
             $medNames = $prescription->items->pluck('medication_name')->implode(', ');
 
-            // Send SMS
+            $smsBody = "Hi {$patient->first_name}, your medication ({$medNames}) may be running low. "
+                . "You have {$remaining} refill(s) remaining. Log in to Zapmed to request a refill. — Zapmed";
+
+            $emailBody = "Hi {$patient->first_name},\n\nYour medication may be running low:\n\n{$medNames}\n\n"
+                . "You have {$remaining} refill(s) remaining on prescription {$prescription->reference}.\n\n"
+                . "Log in to request your refill: " . url('/prescriptions') . "\n\n— Zapmed";
+
+            // SMS (only if we have a number).
             if ($patient->phone) {
-                $sms->send(
-                    $patient->phone,
-                    "Hi {$patient->first_name}, your medication ({$medNames}) may be running low. You have {$remaining} refill(s) remaining. Log in to Zapmed to request a refill. — Zapmed"
-                );
+                $dispatcher->sendVia(new OutboundMessage(
+                    templateKey: 'prescription.refill_reminder',
+                    category: 'transactional',
+                    user: $patient,
+                    phone: $patient->phone,
+                    body: $smsBody,
+                    meta: ['prescription_id' => $prescription->id],
+                ), 'sms');
                 $sent++;
             }
 
-            // Send email
-            Mail::raw(
-                "Hi {$patient->first_name},\n\nYour medication may be running low:\n\n{$medNames}\n\nYou have {$remaining} refill(s) remaining on prescription {$prescription->reference}.\n\nLog in to request your refill: " . url('/prescriptions') . "\n\n— Zapmed",
-                function ($message) use ($patient) {
-                    $message->to($patient->email)
-                        ->subject('Time to refill your medication — Zapmed');
-                }
-            );
+            // Email.
+            $dispatcher->sendVia(new OutboundMessage(
+                templateKey: 'prescription.refill_reminder',
+                category: 'transactional',
+                user: $patient,
+                email: $patient->email,
+                subject: 'Time to refill your medication — Zapmed',
+                body: $emailBody,
+                meta: ['prescription_id' => $prescription->id],
+            ), 'email');
             $sent++;
         }
 
         $this->info("Sent {$sent} refill reminder(s).");
+
         return self::SUCCESS;
     }
 }

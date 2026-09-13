@@ -7,10 +7,11 @@ use App\Mail\NewAppointmentForDoctor;
 use App\Mail\PaymentReceived;
 use App\Models\Appointment;
 use App\Models\Payment;
+use App\Services\Notifications\NotificationDispatcher;
+use App\Services\Notifications\OutboundMessage;
 use App\Services\PayFastService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 
 class PaymentController extends Controller
 {
@@ -160,14 +161,38 @@ class PaymentController extends Controller
             $payoutService->recordMedicationPayout($payment);
         }
 
-        // Send email notifications
+        // Send email notifications (queued for fast webhook return; each hand-off is logged).
         $payment->loadMissing(['appointment.doctor', 'appointment.patient', 'patient']);
 
-        Mail::to($payment->patient)->queue(new PaymentReceived($payment));
+        $dispatcher = app(NotificationDispatcher::class);
+
+        $dispatcher->queueMailable(new OutboundMessage(
+            templateKey: 'payment.received',
+            category: 'transactional',
+            user: $payment->patient,
+            email: $payment->patient->email,
+            mailable: new PaymentReceived($payment),
+            meta: ['payment_reference' => $payment->reference],
+        ));
 
         if ($payment->appointment) {
-            Mail::to($payment->patient)->queue(new AppointmentConfirmed($payment->appointment));
-            Mail::to($payment->appointment->doctor)->queue(new NewAppointmentForDoctor($payment->appointment));
+            $dispatcher->queueMailable(new OutboundMessage(
+                templateKey: 'appointment.confirmed',
+                category: 'transactional',
+                user: $payment->patient,
+                email: $payment->patient->email,
+                mailable: new AppointmentConfirmed($payment->appointment),
+                meta: ['appointment_id' => $payment->appointment->id],
+            ));
+
+            $dispatcher->queueMailable(new OutboundMessage(
+                templateKey: 'appointment.new_for_doctor',
+                category: 'transactional',
+                user: $payment->appointment->doctor,
+                email: $payment->appointment->doctor->email,
+                mailable: new NewAppointmentForDoctor($payment->appointment),
+                meta: ['appointment_id' => $payment->appointment->id],
+            ));
         }
 
         // Task 11: mirror the completed payment into the CRM Order aggregate + finance ledger. Guarded

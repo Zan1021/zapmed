@@ -46,6 +46,16 @@ return [
         'sender_id' => env('SMS_SENDER_ID', 'Zapmed'),
     ],
 
+    // WhatsApp via Meta WhatsApp Business Cloud API. Until token + phone_number_id
+    // are set, WhatsAppChannel runs in dev-mode (logs instead of sending).
+    // DEPENDENCY: Meta WhatsApp Business account -> permanent token, phone number id,
+    // and APPROVED message templates before live sending.
+    'whatsapp' => [
+        'token' => env('WHATSAPP_TOKEN'),
+        'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
+        'api_version' => env('WHATSAPP_API_VERSION', 'v21.0'),
+    ],
+
     'pharmacy' => [
         'enabled' => env('PHARMACY_API_ENABLED', false),
         'api_url' => env('PHARMACY_API_URL'),

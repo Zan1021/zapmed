@@ -4,7 +4,8 @@ namespace App\Console\Commands;
 
 use App\Models\Appointment;
 use App\Notifications\AppointmentReminderNotification;
-use App\Services\SmsService;
+use App\Services\Notifications\NotificationDispatcher;
+use App\Services\Notifications\OutboundMessage;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 
@@ -67,7 +68,7 @@ class SendAppointmentReminders extends Command
     private function send1hReminders(Carbon $now): int
     {
         $appointments = $this->getAppointmentsWithinWindow($now, 60, 'reminder_1h_sent_at');
-        $sms = app(SmsService::class);
+        $dispatcher = app(NotificationDispatcher::class);
         $count = 0;
 
         foreach ($appointments as $appointment) {
@@ -75,20 +76,28 @@ class SendAppointmentReminders extends Command
 
             // SMS to patient
             if ($appointment->patient->phone) {
-                $sms->send(
-                    $appointment->patient->phone,
-                    "Reminder: Your Zapmed consultation is in 1 hour ({$time}). Be ready! Your doctor will connect with you shortly. — Zapmed"
-                );
+                $dispatcher->sendVia(new OutboundMessage(
+                    templateKey: 'appointment.reminder_1h',
+                    category: 'transactional',
+                    user: $appointment->patient,
+                    phone: $appointment->patient->phone,
+                    body: "Reminder: Your Zapmed consultation is in 1 hour ({$time}). Be ready! Your doctor will connect with you shortly. — Zapmed",
+                    meta: ['appointment_id' => $appointment->id, 'recipient' => 'patient'],
+                ), 'sms');
                 $count++;
             }
 
             // SMS to doctor
             if ($appointment->doctor->phone) {
                 $patientName = $appointment->patient->first_name . ' ' . $appointment->patient->last_name;
-                $sms->send(
-                    $appointment->doctor->phone,
-                    "Reminder: You have a consultation with {$patientName} in 1 hour ({$time}). — Zapmed"
-                );
+                $dispatcher->sendVia(new OutboundMessage(
+                    templateKey: 'appointment.reminder_1h',
+                    category: 'transactional',
+                    user: $appointment->doctor,
+                    phone: $appointment->doctor->phone,
+                    body: "Reminder: You have a consultation with {$patientName} in 1 hour ({$time}). — Zapmed",
+                    meta: ['appointment_id' => $appointment->id, 'recipient' => 'doctor'],
+                ), 'sms');
                 $count++;
             }
 
@@ -101,16 +110,20 @@ class SendAppointmentReminders extends Command
     private function send15mReminders(Carbon $now): int
     {
         $appointments = $this->getAppointmentsWithinWindow($now, 15, 'reminder_15m_sent_at');
-        $sms = app(SmsService::class);
+        $dispatcher = app(NotificationDispatcher::class);
         $count = 0;
 
         foreach ($appointments as $appointment) {
             // SMS to patient only — doctor doesn't need another ping
             if ($appointment->patient->phone) {
-                $sms->send(
-                    $appointment->patient->phone,
-                    "Your Zapmed consultation starts in 15 minutes! Make sure you're in a quiet space with good signal. — Zapmed"
-                );
+                $dispatcher->sendVia(new OutboundMessage(
+                    templateKey: 'appointment.reminder_15m',
+                    category: 'transactional',
+                    user: $appointment->patient,
+                    phone: $appointment->patient->phone,
+                    body: "Your Zapmed consultation starts in 15 minutes! Make sure you're in a quiet space with good signal. — Zapmed",
+                    meta: ['appointment_id' => $appointment->id, 'recipient' => 'patient'],
+                ), 'sms');
                 $count++;
             }
 
