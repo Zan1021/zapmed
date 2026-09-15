@@ -11,7 +11,7 @@
 <body class="flex min-h-screen items-center justify-center bg-gray-100 text-gray-900">
     <div class="w-full max-w-sm rounded-lg bg-white p-6 shadow">
         <div class="mb-6 text-center">
-            <img src="{{ asset('img/spar-logo.jpg') }}" alt="{{ config('spar.branding.name', 'SPAR Meds') }}" class="mx-auto mb-3 h-12 w-auto">
+            <img src="{{ asset(config('spar.branding.logo_path', 'img/pharmacy-at-spar-logo.jpg')) }}" alt="{{ config('spar.branding.name', 'SPAR Meds') }}" class="mx-auto mb-3 h-12 w-auto">
             <div class="text-sm text-gray-500">Pharmacy staff sign in</div>
         </div>
         {{ $slot ?? '' }}
