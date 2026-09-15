@@ -27,6 +27,24 @@ class SparImports extends Component
     public bool $importing = false;
     public ?int $viewingBatchId = null;
 
+    /**
+     * Hard gate: bulk data import is an admin operation. Every other admin
+     * Livewire component self-authorizes in mount() (SparGroups/Pharmacies/
+     * Banners = super/group-admin; SparStats = any scoped actor), but the
+     * standalone host's `admin` route group is only [web, auth] with no role
+     * middleware — so without this guard a pharmacy_staff user could open the
+     * import + reset screen. Restrict to super-admin / admin. (The destructive
+     * reset stays additionally gated by canReset = super-admin only.)
+     */
+    public function mount(): void
+    {
+        $identity = app(SparIdentityProvider::class);
+        abort_unless(
+            $identity->isSuperAdmin() || $identity->currentRole() === 'admin',
+            403
+        );
+    }
+
     // --- Test-only "reset all patients" support ------------------------------
     // Lets an admin wipe imported patient data on a demo/staging box so the two
     // import files can be re-run from scratch. Hard-guarded (super-admin only,
