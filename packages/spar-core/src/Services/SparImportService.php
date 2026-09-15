@@ -130,6 +130,14 @@ class SparImportService
             'source' => $source,
             'imported_by' => $importedBy,
             'status' => 'pending',
+            // Initialise counters to 0 so they never render as null in the UI
+            // (incrementCounter only touches the fields that actually occur).
+            'records_total' => 0,
+            'records_processed' => 0,
+            'records_created' => 0,
+            'records_updated' => 0,
+            'records_skipped' => 0,
+            'records_failed' => 0,
         ]);
 
         try {
@@ -477,20 +485,23 @@ class SparImportService
         array $rows
     ): void {
         $firstRow = $rows[0];
-        $date = $this->parseDate($firstRow['date'] ?? '');
 
-        // Build medications array from all rows in this script
-        $medications = collect($rows)->map(function ($row) {
-            return [
-                'name' => trim($row['item_description'] ?? ''),
-                'nappi_code' => trim($row['nappi_code'] ?? ''),
-                'quantity' => (float) ($row['sales_quantity'] ?? 0),
-                'value' => (int) round((float) ($row['sales_value'] ?? 0) * 100),
-                'schedule' => $row['schedule'] ?? null,
-                'supplier' => $row['supplier'] ?? null,
-                'brand_name' => $row['brand_name'] ?? null,
-            ];
-        })->toArray();
+        // A script's rows can span MULTIPLE dispensing events (fills) over time —
+        // one per Document Number in a cumulative SPAR file. Sub-group by document
+        // so each fill becomes its own dispense record; rows sharing a document
+        // are the line-items of a single fill. (Previously only $rows[0] was used,
+        // which collapsed every fill of a script into a single dispense.)
+        $byDocument = collect($rows)->groupBy(function ($row) {
+            return trim($row['document_number'] ?? $row['date'] ?? 'unknown');
+        });
+
+        // Journey start = earliest fill date; repeats from the first row.
+        $allDates = collect($rows)
+            ->map(fn ($r) => $this->parseDate($r['date'] ?? ''))
+            ->filter()
+            ->sort()
+            ->values();
+        $startDate = $allDates->first() ?? now();
 
         // Find existing journey for this script or create new one
         $journey = SparPrescriptionJourney::where('spar_patient_id', $patient->id)
@@ -507,27 +518,64 @@ class SparImportService
                 'status' => 'active',
                 'total_dispenses' => $repeats > 0 ? $repeats : 6,
                 'dispenses_completed' => 0,
-                'start_date' => $date ?? now(),
-                'next_dispense_date' => ($date ?? now())->copy()->addMonth(),
-                'renewal_due_date' => ($date ?? now())->copy()->addMonths($repeats > 0 ? $repeats : 6),
+                'start_date' => $startDate,
+                'next_dispense_date' => $startDate->copy()->addMonth(),
+                'renewal_due_date' => $startDate->copy()->addMonths($repeats > 0 ? $repeats : 6),
                 'doctor_name' => trim($firstRow['doctor'] ?? ''),
                 'doctor_bhf' => trim($firstRow['doctor_bhf'] ?? ''),
-                'medications' => $medications,
+                'medications' => collect($byDocument->last())->map(fn ($row) => [
+                    'name' => trim($row['item_description'] ?? ''),
+                    'nappi_code' => trim($row['nappi_code'] ?? ''),
+                    'quantity' => (float) ($row['sales_quantity'] ?? 0),
+                    'value' => (int) round((float) ($row['sales_value'] ?? 0) * 100),
+                    'schedule' => $row['schedule'] ?? null,
+                    'supplier' => $row['supplier'] ?? null,
+                    'brand_name' => $row['brand_name'] ?? null,
+                ])->toArray(),
             ]);
         }
 
-        // Record this dispense event
-        $repeatNumber = (int) ($firstRow['repeat_number'] ?? ($journey->dispenses_completed + 1));
-        $totalValue = collect($rows)->sum(function ($row) {
-            return (int) round((float) ($row['sales_value'] ?? 0) * 100);
+        // Process each fill (document) as its own dispense, oldest first so the
+        // dispense_number sequence and dates line up.
+        $documents = $byDocument->sortBy(function ($docRows) {
+            $d = $this->parseDate(($docRows[0]['date'] ?? ''));
+            return $d ? $d->timestamp : 0;
         });
 
-        // Check if this dispense already exists
-        $existingDispense = SparDispenseRecord::where('journey_id', $journey->id)
-            ->where('document_number', trim($firstRow['document_number'] ?? ''))
-            ->first();
+        foreach ($documents as $docRows) {
+            $docRows = $docRows->toArray();
+            $docFirst = $docRows[0];
+            $date = $this->parseDate($docFirst['date'] ?? '');
+            if (! $date) {
+                continue;
+            }
 
-        if (!$existingDispense && $date) {
+            $medications = collect($docRows)->map(function ($row) {
+                return [
+                    'name' => trim($row['item_description'] ?? ''),
+                    'nappi_code' => trim($row['nappi_code'] ?? ''),
+                    'quantity' => (float) ($row['sales_quantity'] ?? 0),
+                    'value' => (int) round((float) ($row['sales_value'] ?? 0) * 100),
+                    'schedule' => $row['schedule'] ?? null,
+                    'supplier' => $row['supplier'] ?? null,
+                    'brand_name' => $row['brand_name'] ?? null,
+                ];
+            })->toArray();
+
+            $documentNumber = trim($docFirst['document_number'] ?? '');
+            $repeatNumber = (int) ($docFirst['repeat_number'] ?? ($journey->dispenses_completed + 1));
+            $totalValue = collect($docRows)->sum(function ($row) {
+                return (int) round((float) ($row['sales_value'] ?? 0) * 100);
+            });
+
+            // Idempotency: skip a fill we've already recorded (by document number).
+            $existingDispense = SparDispenseRecord::where('journey_id', $journey->id)
+                ->where('document_number', $documentNumber)
+                ->first();
+            if ($existingDispense) {
+                continue;
+            }
+
             SparDispenseRecord::create([
                 'journey_id' => $journey->id,
                 'spar_patient_id' => $patient->id,
@@ -536,12 +584,13 @@ class SparImportService
                 'due_date' => $date,
                 'completed_at' => $date,
                 'fulfillment_type' => 'collection',
-                'document_number' => trim($firstRow['document_number'] ?? null),
+                'document_number' => $documentNumber ?: null,
                 'sales_value' => $totalValue,
                 'items' => $medications,
             ]);
 
             $journey->increment('dispenses_completed');
+            $journey->refresh();
 
             if ($journey->isFinalDispense()) {
                 $journey->update(['status' => 'renewal_due']);
@@ -611,6 +660,17 @@ class SparImportService
         // Clean headers
         $headers = array_map('trim', $headers);
 
+        // SPAR quirk: every line (header + data) carries a trailing comma, so the
+        // final field arrives glued to it — the header becomes "Script Number,"
+        // and values become "9900100 ,". That broke COLUMN_MAP lookups for the
+        // last column (Script Number), silently falling back to document_number
+        // for journey grouping. Strip a trailing comma (+ surrounding space) from
+        // the final header so it maps correctly. The matching value fix is below.
+        if (!empty($headers)) {
+            $lastIdx = count($headers) - 1;
+            $headers[$lastIdx] = trim(rtrim(trim($headers[$lastIdx]), ','));
+        }
+
         // Validate we have expected columns
         if (count($headers) < 5) {
             throw new \RuntimeException('Invalid file format: too few columns detected.');
@@ -622,6 +682,14 @@ class SparImportService
             if (empty($line)) continue;
 
             $values = str_getcsv($line, $delimiter);
+
+            // SPAR quirk (mirror of the header fix): the final value on each line
+            // carries the row's trailing comma, e.g. "9900100 ,". Strip it so the
+            // last column (Script Number) parses to its real value.
+            if (!empty($values)) {
+                $lastVal = count($values) - 1;
+                $values[$lastVal] = rtrim(trim((string) $values[$lastVal]), ',');
+            }
 
             // Map to our internal field names
             $mapped = [];

@@ -13,6 +13,7 @@ use Zapmed\SparCore\Models\SparPatient;
 use Zapmed\SparCore\Models\SparPrescriptionJourney;
 use Zapmed\SparCore\Services\SparImportService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
@@ -47,8 +48,18 @@ class SparImports extends Component
         $this->importing = true;
 
         try {
+            // Resolve the absolute path via the disk itself. The 'local' disk
+            // root differs across Laravel versions (storage/app on L10,
+            // storage/app/private on L11+), so hand-building storage_path('app/'
+            // . $path) breaks on L11 — the file lands under private/ but is read
+            // from the wrong dir → "file not found". Storage::path() is correct
+            // regardless of the root.
             $path = $this->csvFile->store('spar-imports', 'local');
-            $fullPath = storage_path('app/' . $path);
+            $fullPath = Storage::disk('local')->path($path);
+
+            // Keep the human-friendly uploaded names for the batch/history — the
+            // stored path is an opaque hash, which is useless in the UI.
+            $originalCsvName = $this->csvFile->getClientOriginalName();
 
             $service = new SparImportService();
 
@@ -57,15 +68,26 @@ class SparImports extends Component
             // sales-only import when no report is provided.
             if ($this->drugUsageFile) {
                 $duPath = $this->drugUsageFile->store('spar-imports', 'local');
-                $duFullPath = storage_path('app/' . $duPath);
+                $duFullPath = Storage::disk('local')->path($duPath);
                 $batch = $service->importPair($fullPath, $duFullPath, auth()->id());
             } else {
                 $batch = $service->importFile($fullPath, auth()->id());
             }
 
+            // Overwrite the opaque hashed filename with the real uploaded name.
+            if ($batch->filename !== $originalCsvName) {
+                $batch->update(['filename' => $originalCsvName]);
+            }
+
             if ($batch->status === 'completed') {
                 $this->logImportEvent($batch->id, $batch->filename, 'completed');
-                session()->flash('success', "Import complete: {$batch->records_created} created, {$batch->records_updated} updated, {$batch->records_skipped} skipped, {$batch->records_failed} failed.");
+                session()->flash('success', sprintf(
+                    'Import complete: %d created, %d updated, %d skipped, %d failed.',
+                    (int) $batch->records_created,
+                    (int) $batch->records_updated,
+                    (int) $batch->records_skipped,
+                    (int) $batch->records_failed,
+                ));
             } else {
                 $this->logImportEvent($batch->id, $batch->filename, 'failed');
                 session()->flash('error', 'Import failed: ' . implode(', ', $batch->errors ?? ['Unknown error']));
