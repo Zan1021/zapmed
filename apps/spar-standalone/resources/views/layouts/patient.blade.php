@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('spar.branding.name', 'SPAR Meds') }}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="//unpkg.com/alpinejs" defer></script>
+    @vite('resources/css/app.css')
+    {{-- Alpine is provided by Livewire 3 (@livewireScripts) — no standalone CDN. --}}
     @livewireStyles
 </head>
 <body class="min-h-screen bg-gray-100 text-gray-900">

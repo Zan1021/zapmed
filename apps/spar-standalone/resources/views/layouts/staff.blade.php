@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('spar.branding.name', 'Pharmacy at SPAR') }} — Staff</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    @vite('resources/css/app.css')
+    {{-- Alpine is provided by Livewire 3 (@livewireScripts). Do NOT also load a
+         standalone Alpine CDN — it double-initialises Alpine AND violates the
+         SparSecurityHeaders CSP (external Alpine origins are not allow-listed). --}}
     <style>[x-cloak]{display:none!important;}</style>
     @livewireStyles
 </head>

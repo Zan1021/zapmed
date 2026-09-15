@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('spar.branding.name', 'SPAR Meds') }} — Sign in</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    @vite('resources/css/app.css')
     @livewireStyles
 </head>
 <body class="flex min-h-screen items-center justify-center bg-gray-100 text-gray-900">

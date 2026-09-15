@@ -114,6 +114,25 @@ class WhatsAppChannel implements MessagingChannel
         $vars = array_values($payload['vars'] ?? []);
         $components = [];
 
+        // HEADER: some approved templates (e.g. onboarding_consent) are created
+        // with an IMAGE header. Meta then REQUIRES a header component with an
+        // image on every send (else error #132012 "expected IMAGE, received
+        // UNKNOWN"). Send one when a header image is configured (per-payload
+        // override first, then the template-keyed config, then a global fallback).
+        $headerImage = $payload['header_image']
+            ?? config("spar.whatsapp.header_images.{$templateName}")
+            ?? config('spar.whatsapp.header_image');
+
+        if (!empty($headerImage)) {
+            $components[] = [
+                'type' => 'header',
+                'parameters' => [[
+                    'type' => 'image',
+                    'image' => ['link' => $headerImage],
+                ]],
+            ];
+        }
+
         if (!empty($vars)) {
             $components[] = [
                 'type' => 'body',

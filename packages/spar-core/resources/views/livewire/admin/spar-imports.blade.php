@@ -49,6 +49,31 @@
         </form>
     </div>
 
+    {{-- TEST-ONLY: reset all patients so the two import files can be re-run.
+         Rendered ONLY for super-admins on non-production environments. --}}
+    @if($this->canReset)
+        <div class="bg-red-50 border border-red-200 rounded-xl p-5 mb-8">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <h3 class="text-sm font-semibold text-red-800 flex items-center gap-2">
+                        <span class="inline-block px-2 py-0.5 rounded bg-red-600 text-white text-[11px] font-bold">TEST TOOL</span>
+                        Reset all patients
+                    </h3>
+                    <p class="text-xs text-red-700 mt-1 max-w-2xl">
+                        Deletes <strong>every</strong> imported patient plus their journeys, dispense records, orders,
+                        consents and the import history — so you can re-upload the two files and watch patients load
+                        under their pharmacies from scratch. Pharmacies, groups and staff logins are kept.
+                        This is disabled in production.
+                    </p>
+                </div>
+                <button type="button" wire:click="openResetModal"
+                        class="shrink-0 px-4 py-2 bg-red-600 text-white text-xs font-medium rounded-lg hover:bg-red-700 transition">
+                    Delete all patients
+                </button>
+            </div>
+        </div>
+    @endif
+
     <!-- Import History -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-100">
         <div class="p-5 border-b border-gray-100">
@@ -149,6 +174,39 @@
                             @endforeach
                         </div>
                     @endif
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- TEST reset confirmation modal (typed "DELETE" gate). --}}
+    @if($showResetModal && $this->canReset)
+        <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" wire:click.self="closeResetModal">
+            <div class="bg-white rounded-xl shadow-xl max-w-md w-full">
+                <div class="p-5 border-b border-gray-100 flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-red-700">Delete ALL patients?</h3>
+                    <button type="button" wire:click="closeResetModal" class="text-gray-400 hover:text-gray-600">&times;</button>
+                </div>
+                <div class="p-5 space-y-3">
+                    <p class="text-sm text-gray-700">
+                        This permanently removes every patient, journey, dispense record, order, consent and
+                        import batch on this environment. It cannot be undone. Pharmacies, groups and staff are kept.
+                    </p>
+                    <label class="block text-sm font-medium text-gray-700">Type <span class="font-mono font-bold">DELETE</span> to confirm</label>
+                    <input type="text" wire:model.live="resetConfirm" autocomplete="off"
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:ring-red-500 focus:border-red-500"
+                           placeholder="DELETE" />
+                    <div class="flex items-center justify-end gap-2 pt-2">
+                        <button type="button" wire:click="closeResetModal"
+                                class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Cancel</button>
+                        <button type="button" wire:click="resetAllPatients"
+                                wire:loading.attr="disabled" wire:target="resetAllPatients"
+                                @disabled($resetConfirm !== 'DELETE')
+                                class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed transition">
+                            <span wire:loading.remove wire:target="resetAllPatients">Delete everything</span>
+                            <span wire:loading wire:target="resetAllPatients">Deleting…</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

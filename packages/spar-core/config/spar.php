@@ -195,6 +195,15 @@ return [
         'api_version' => env('SPAR_WHATSAPP_API_VERSION', 'v21.0'),
         'language' => env('SPAR_WHATSAPP_LANG', 'en'),
 
+        // Some approved templates carry an IMAGE header (Meta then REQUIRES an
+        // image header component on every send). Global fallback header image
+        // URL (publicly reachable https). Per-template overrides go under
+        // header_images.<template_name>. Leave null for text/no-header templates.
+        'header_image' => env('SPAR_WA_HEADER_IMAGE'),
+        'header_images' => [
+            'onboarding_consent' => env('SPAR_WA_ONBOARDING_HEADER_IMAGE', env('SPAR_WA_HEADER_IMAGE')),
+        ],
+
         // Meta-approved template NAMES, keyed by the payload template key the
         // app uses. Proactive (outside-24h-window) sends MUST use one of these.
         // Author the bodies for Meta submission (see docs/whatsapp-templates.md).

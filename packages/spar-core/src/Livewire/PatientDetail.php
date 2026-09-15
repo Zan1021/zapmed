@@ -5,6 +5,7 @@ namespace Zapmed\SparCore\Livewire;
 use Zapmed\SparCore\Concerns\LogsSparActivity;
 use Zapmed\SparCore\Models\SparConsent;
 use Zapmed\SparCore\Models\SparPatient;
+use Zapmed\SparCore\Services\Channels\WhatsAppChannel;
 use Zapmed\SparCore\Services\SparPatientView;
 use Illuminate\Support\Facades\URL;
 use Livewire\Component;
@@ -129,6 +130,66 @@ class PatientDetail extends Component
             now()->addMinutes($ttl),
             ['patient' => $this->patient->id]
         );
+    }
+
+    /**
+     * Send the WhatsApp opt-in (onboarding_consent) message with the signed mobi
+     * tracker link to the primary member's cellphone.
+     *
+     * WHY THIS BYPASSES MessagingDispatcher: the dispatcher refuses to message a
+     * patient who has not consented (POPIA guard). The opt-in message is the very
+     * thing that REQUESTS consent, so it must be sent to a not-yet-consented
+     * patient. We therefore call the WhatsAppChannel directly with the approved
+     * `onboarding_consent` template — a pre-approved template send is permitted
+     * outside the 24h session window and is how consent is solicited.
+     *
+     * Delivery mode follows config: 'log' driver records the payload (safe demo);
+     * 'cloud_api' sends for real once the token is set. Either way the staff
+     * action is audit-logged (POPIA) and the outcome surfaced to the user.
+     */
+    public function sendOptIn(): void
+    {
+        $whatsapp = app(WhatsAppChannel::class);
+        $patient = $this->view()->primary($this->subject());
+
+        $phone = $patient->primaryPhone();
+        if (empty($phone)) {
+            session()->flash('optin_error', 'No cellphone on file for this patient — cannot send the WhatsApp opt-in.');
+
+            return;
+        }
+
+        if (! (bool) config('spar.whatsapp.enabled', false)) {
+            session()->flash('optin_error', 'WhatsApp channel is disabled (SPAR_WHATSAPP_ENABLED=false).');
+
+            return;
+        }
+
+        // Direct template send: onboarding_consent + signed mobi link. {{1}} is
+        // the patient's first name (per the approved template body).
+        $sent = $whatsapp->send($patient, [
+            'template' => 'onboarding_consent',
+            'vars' => [$patient->first_name ?: 'there'],
+            'body' => 'Welcome to SPAR Pharmacy — tap the link to view your medication tracker and give consent.',
+            'link' => $this->mobiUrl,
+        ]);
+
+        // POPIA: sending a patient a message is an activity on their record.
+        $this->logSparActivity('optin_sent', 'Staff sent WhatsApp opt-in', [
+            'spar_patient_id' => $patient->id,
+            'channel' => 'whatsapp',
+            'driver' => config('spar.whatsapp.driver'),
+            'result' => $sent ? 'accepted' : 'failed',
+        ]);
+
+        if ($sent) {
+            $driver = config('spar.whatsapp.driver') === 'cloud_api'
+                ? 'WhatsApp opt-in sent to ' . $phone . '.'
+                : 'WhatsApp opt-in recorded (log driver — no live send). Set SPAR_WHATSAPP_DRIVER=cloud_api to deliver.';
+            session()->flash('optin_success', $driver);
+        } else {
+            session()->flash('optin_error', 'WhatsApp opt-in was not delivered. Check storage/logs for the Meta error.');
+        }
     }
 
     public function render()

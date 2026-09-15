@@ -253,6 +253,30 @@
                     <a href="{{ $this->mobiUrl }}" target="_blank" rel="noopener"
                        class="text-xs px-2 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700">Open</a>
                 </div>
+
+                {{-- Send the onboarding_consent WhatsApp (opt-in) with this signed link. --}}
+                <div class="mt-3 border-t border-gray-100 pt-3">
+                    @if(session('optin_success'))
+                        <p class="text-xs text-green-700 mb-2">✓ {{ session('optin_success') }}</p>
+                    @endif
+                    @if(session('optin_error'))
+                        <p class="text-xs text-red-600 mb-2">⚠ {{ session('optin_error') }}</p>
+                    @endif
+                    <button type="button"
+                            wire:click="sendOptIn"
+                            wire:loading.attr="disabled"
+                            wire:target="sendOptIn"
+                            @if(empty($this->patient->cellphone)) disabled title="No cellphone on file" @endif
+                            class="w-full inline-flex items-center justify-center gap-2 text-xs font-medium px-3 py-2 rounded-lg
+                                   bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21h.01c5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2zm5.8 14.03c-.24.68-1.42 1.31-1.95 1.36-.5.05-.96.24-3.24-.68-2.73-1.08-4.47-3.86-4.6-4.04-.14-.18-1.1-1.47-1.1-2.8 0-1.33.7-1.98.95-2.25.24-.27.53-.34.71-.34.18 0 .36 0 .51.01.16.01.38-.06.6.46.24.55.79 1.9.86 2.04.07.14.12.3.02.48-.09.18-.14.29-.27.45-.14.16-.29.36-.41.48-.14.14-.28.29-.12.57.16.27.72 1.19 1.55 1.93 1.06.95 1.96 1.24 2.24 1.38.27.14.43.12.59-.07.16-.18.68-.79.86-1.06.18-.27.36-.23.6-.14.24.09 1.55.73 1.81.86.27.14.45.2.51.32.07.11.07.66-.17 1.34z"/></svg>
+                        <span wire:loading.remove wire:target="sendOptIn">Send opt-in via WhatsApp</span>
+                        <span wire:loading wire:target="sendOptIn">Sending…</span>
+                    </button>
+                    @if(config('spar.whatsapp.driver') !== 'cloud_api')
+                        <p class="text-[11px] text-amber-600 mt-1.5">Test mode: driver is <code>log</code> — records the message but does not deliver yet.</p>
+                    @endif
+                </div>
             </div>
 
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">

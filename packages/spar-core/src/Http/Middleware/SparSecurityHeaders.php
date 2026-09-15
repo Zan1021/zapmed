@@ -37,11 +37,13 @@ class SparSecurityHeaders
             $headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains';
         }
 
-        // Conservative CSP. self + the pilot CDNs; no framing by third parties.
+        // CSP is now fully self-hosted: Tailwind is compiled to a local CSS
+        // asset (Vite build) and Alpine ships with Livewire. No external script
+        // or style CDNs are loaded, so script-src/style-src stay 'self'.
         $csp = implode('; ', [
             "default-src 'self'",
-            "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.tailwindcss.com https://unpkg.com",
-            "style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com",
+            "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+            "style-src 'self' 'unsafe-inline'",
             "img-src 'self' data:",
             "font-src 'self' data:",
             "connect-src 'self'",
