@@ -63,6 +63,7 @@
                     <div class="h-full rounded-full bg-{{ $adherenceColor }}-500 transition-all duration-700" style="width: {{ $adherence }}%"></div>
                 </div>
                 <p class="mt-2 text-xs text-gray-500">{{ $data['adherence']['on_time'] }} of {{ $data['adherence']['total_due'] }} on time</p>
+                <p class="mt-1 text-[11px] leading-snug text-gray-400">Share of due collections picked up on time — higher means patients are staying on their medication.</p>
             </div>
         </div>
 
@@ -79,6 +80,7 @@
                 <div class="h-full rounded-full bg-purple-500 transition-all duration-700" style="width: {{ $data['renewals']['rate'] }}%"></div>
             </div>
             <p class="mt-2 text-xs text-gray-500">{{ $data['renewals']['renewed'] }} renewed, {{ $data['renewals']['due'] }} pending</p>
+            <p class="mt-1 text-[11px] leading-snug text-gray-400">How many due scripts were renewed vs left to lapse — low rates flag revenue and retention leaking away.</p>
         </div>
 
         <!-- Opt-in rate -->
@@ -94,6 +96,7 @@
                 <div class="h-full rounded-full bg-blue-500 transition-all duration-700" style="width: {{ $data['patients']['opt_in_rate'] }}%"></div>
             </div>
             <p class="mt-2 text-xs text-gray-500">{{ $data['patients']['consented'] }} of {{ $data['patients']['total'] }} patients</p>
+            <p class="mt-1 text-[11px] leading-snug text-gray-400">Patients who've consented to pharmacy comms — the pool we're legally allowed to remind and engage.</p>
         </div>
 
         <!-- ZapMed conversion -->
@@ -109,7 +112,7 @@
                 <div class="flex items-center gap-1"><div class="h-2 w-2 rounded-full bg-emerald-500"></div><span class="text-xs text-gray-500">ZapMed: {{ $data['renewals']['via_zapmed'] }}</span></div>
                 <div class="flex items-center gap-1"><div class="h-2 w-2 rounded-full bg-gray-300"></div><span class="text-xs text-gray-500">GP: {{ $data['renewals']['via_primary_doctor'] }}</span></div>
             </div>
-        </div>
+            <p class="mt-2 text-[11px] leading-snug text-gray-400">Renewals routed to a ZapMed online consult vs the patient's own GP — the telehealth funnel's pull-through.</p>
     </div>
 
     <!-- Charts row: trend + renewal donut -->

@@ -6,9 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
+use Zapmed\SparCore\Concerns\ResolvesActionable;
+use Zapmed\SparCore\Contracts\SparActionable;
 
-class SparOrder extends Model
+class SparOrder extends Model implements SparActionable
 {
+    use ResolvesActionable;
+
     protected $table = 'spar_orders';
 
     protected $fillable = [

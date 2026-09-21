@@ -5,9 +5,13 @@ namespace Zapmed\SparCore\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Zapmed\SparCore\Concerns\ResolvesActionable;
+use Zapmed\SparCore\Contracts\SparActionable;
 
-class SparPrescriptionJourney extends Model
+class SparPrescriptionJourney extends Model implements SparActionable
 {
+    use ResolvesActionable;
+
     protected $table = 'spar_prescription_journeys';
 
     protected $fillable = [

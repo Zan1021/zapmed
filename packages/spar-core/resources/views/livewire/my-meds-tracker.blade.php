@@ -118,6 +118,32 @@
             <p class="text-sm text-gray-500">Here's your medication status.</p>
         </div>
 
+        {{-- SCRIPTS-ON-HAND SUMMARY (Craig — quick glance of what's on the go).
+             One chip per active journey: "<med> X/Y" (dispenses done / total). --}}
+        @php
+            $onHand = $this->journeys->filter(fn ($j) => $j->status !== 'renewal_due');
+        @endphp
+        @if($onHand->isNotEmpty())
+            <div class="mb-5 rounded-2xl bg-white shadow-sm border border-gray-100 p-4">
+                <p class="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">Scripts on hand</p>
+                <div class="flex flex-wrap gap-2">
+                    @foreach($onHand as $j)
+                        @php
+                            $medName = $j->medications[0]['name'] ?? 'Prescription';
+                            $done = (int) $j->dispenses_completed;
+                            $total = (int) $j->total_dispenses;
+                            $complete = $total > 0 && $done >= $total;
+                        @endphp
+                        <span class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs
+                            {{ $complete ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-green-200 bg-green-50 text-green-700' }}">
+                            <span class="font-medium text-gray-800">{{ \Illuminate\Support\Str::title(\Illuminate\Support\Str::of($medName)->limit(22)) }}</span>
+                            <span class="font-semibold">{{ $done }}/{{ $total ?: '—' }}</span>
+                        </span>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
         {{-- Journeys across the whole profile (self + dependants, spec FR-8).
              Alpine filter toggle: "My Prescriptions" (main member) vs
              "Dependants". Cards are tagged data-owner="mine|dependant". --}}

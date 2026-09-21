@@ -2,10 +2,13 @@
 
 namespace Zapmed\SparCore\Services;
 
+use Zapmed\SparCore\Contracts\SparActionable;
 use Zapmed\SparCore\Contracts\TelehealthBridge;
 use Zapmed\SparCore\Models\SparDispenseRecord;
 use Zapmed\SparCore\Models\SparPatient;
+use Zapmed\SparCore\Models\SparPatientSignal;
 use Zapmed\SparCore\Models\SparPrescriptionJourney;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
@@ -75,6 +78,45 @@ class SparReminderService
     }
 
     /**
+     * Whether an actionable subject is currently snoozed (a staff deferral or a
+     * patient "remind me later"). The ResolvesActionable trait owns the rule:
+     * status snoozed AND snoozed_until in the future. A woken snooze (past
+     * snoozed_until) returns false so the reminder fires again.
+     */
+    private function isSnoozed(SparActionable $subject): bool
+    {
+        return $subject instanceof Model
+            && method_exists($subject, 'isSnoozed')
+            && $subject->isSnoozed();
+    }
+
+    /**
+     * Whether the patient has muted reminders for THIS subject via their latest
+     * response signal (FR-B4). Only a hard opt-out (stop_reminders / ignore_future)
+     * suppresses here; timed mutes (ignore_month / remind_*) are already enforced
+     * as a snooze by SparActionService::applyScheduleAdjustment, so they surface
+     * through isSnoozed() and must not be double-counted as a permanent opt-out.
+     *
+     * Read against the subject's true class (host subclass or package model) so
+     * the soft-polymorphic subject_type recorded at response time matches.
+     */
+    private function isSuppressedByLatestSignal(SparActionable $subject): bool
+    {
+        if (! $subject instanceof Model) {
+            return false;
+        }
+
+        $latest = SparPatientSignal::forSubject(
+            SparPatientSignal::canonicalType($subject),
+            $subject->getKey()
+        )
+            ->latestFirst()
+            ->first();
+
+        return $latest !== null && $latest->type()->isOptOut();
+    }
+
+    /**
      * Send monthly medication reminder.
      */
     private function sendMonthlyReminder(SparDispenseRecord $dispense): bool
@@ -82,6 +124,14 @@ class SparReminderService
         $patient = $dispense->patient;
 
         if (!$patient->hasConsented()) {
+            return false;
+        }
+
+        // Close-the-loop honouring (FR-B4): don't re-fire while the item is
+        // snoozed (staff deferral or a patient "remind me later"), and honour a
+        // patient's hard opt-out for this subject even if they remain consented
+        // at the account level (a "STOP"/"never" on one item mutes only that item).
+        if ($this->isSnoozed($dispense) || $this->isSuppressedByLatestSignal($dispense)) {
             return false;
         }
 
@@ -134,6 +184,12 @@ class SparReminderService
             return false;
         }
 
+        // Same close-the-loop honouring as the monthly reminder (FR-B4):
+        // skip snoozed journeys and journeys the patient has opted out of.
+        if ($this->isSnoozed($journey) || $this->isSuppressedByLatestSignal($journey)) {
+            return false;
+        }
+
         if (!$patient->isContactable()) {
             return false;
         }
@@ -174,7 +230,20 @@ class SparReminderService
     {
         $medLine = $medications ? "\nMedication: {$medications}" : '';
 
-        return "Hi {$firstName}, your medication is due for collection at {$pharmacy} by {$dueDate}.{$medLine}\n\nWould you like to:\n1. Pack my order for collection\n2. Deliver to me\n\nReply with 1 or 2, or tap the button below.";
+        return "Hi {$firstName}, your medication is due for collection at {$pharmacy} by {$dueDate}.{$medLine}\n\nWould you like to:\n1. Pack my order for collection\n2. Deliver to me\n\nReply with 1 or 2, or tap the button below." . $this->optInFooter();
+    }
+
+    /**
+     * Consent / reminder-preference footer appended to every reminder
+     * (Craig — patients must be able to dial comms down, and understand why
+     * we send them). Offers NEVER / REMIND IN A MONTH / OPT IN plus a one-line
+     * benefit explanation. The choices are wired to the response engine in
+     * Wave B; this establishes the copy now.
+     */
+    private function optInFooter(): string
+    {
+        return "\n\nPharmacy reminders help you never miss a repeat and keep your treatment on track."
+            . "\nManage reminders — reply: MONTH (remind me next month), STOP (never remind me), or OPT IN to keep them on.";
     }
 
     /**
@@ -187,10 +256,10 @@ class SparReminderService
     private function buildRenewalMessage(string $firstName, string $pharmacy): string
     {
         if ($this->bridge->offersOnlineConsult()) {
-            return "Hi {$firstName}, your prescription at {$pharmacy} is due for renewal.\n\nWould you like to:\n1. Renew with your primary doctor\n2. Consult a ZapMed doctor online\n\nReply with 1 or 2, or tap the button below.";
+            return "Hi {$firstName}, your prescription at {$pharmacy} is due for renewal.\n\nWould you like to:\n1. Renew with your primary doctor\n2. Consult a ZapMed doctor online\n\nReply with 1 or 2, or tap the button below." . $this->optInFooter();
         }
 
-        return "Hi {$firstName}, your prescription at {$pharmacy} is due for renewal.\n\nPlease arrange a new prescription with your doctor, then visit {$pharmacy} to continue your medication.\n\nTap the button below for details.";
+        return "Hi {$firstName}, your prescription at {$pharmacy} is due for renewal.\n\nPlease arrange a new prescription with your doctor, then visit {$pharmacy} to continue your medication.\n\nTap the button below for details." . $this->optInFooter();
     }
 
     /**

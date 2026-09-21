@@ -242,6 +242,39 @@ return [
         'monthly_lead_days' => (int) env('SPAR_REMINDER_LEAD_DAYS', 7),   // before dispense due
         'renewal_lead_days' => (int) env('SPAR_RENEWAL_LEAD_DAYS', 14),   // before final dispense
         'missed_followup_days' => (int) env('SPAR_MISSED_FOLLOWUP_DAYS', 7),
+        'monthly_cycle_days' => (int) env('SPAR_REMINDER_CYCLE_DAYS', 30), // "remind me next cycle" length
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Close-the-Loop Reconciler (import auto-resolve — FR-B5)
+    |--------------------------------------------------------------------------
+    |
+    | On each import, dispense FACTS from the SPAR file are reconciled against
+    | the in-app close-the-loop state (open / actioned / awaiting_patient /
+    | snoozed / resolved). 'conflict_rule' decides who wins when the file and
+    | the app disagree (decision D2):
+    |
+    |   'overlay'      (DEFAULT — Naz rec, D2 option A) The imported file is the
+    |                  historical TRUTH; in-app actions are an overlay. A newly
+    |                  imported real dispense RESOLVES the open loop it satisfies.
+    |                  In-app resolutions the file has not (yet) confirmed are
+    |                  LEFT in place ("pending our side") — the file is additive
+    |                  truth, so a mere absence is not treated as a contradiction.
+    |
+    |   'system_wins'  (D2 option B) Only file facts drive state: confirmed
+    |                  dispenses resolve their loop, AND any in-app resolution
+    |                  NOT backed by a matching dispense fact is reopened, so the
+    |                  app view is forced to match the SPAR system exactly.
+    |
+    | Both branches are built + tested; flip the rule with SPAR sign-off rather
+    | than a code change.
+    |
+    */
+
+    'reconciler' => [
+        'enabled' => env('SPAR_RECONCILER_ENABLED', true),
+        'conflict_rule' => env('SPAR_RECONCILER_CONFLICT_RULE', 'overlay'), // overlay | system_wins
     ],
 
     /*

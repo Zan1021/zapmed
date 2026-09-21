@@ -598,6 +598,12 @@ class SparImportService
                 $journey->update(['next_dispense_date' => $date->copy()->addMonth()]);
             }
         }
+
+        // Close-the-loop reconciliation (FR-B5): now that this import's real
+        // dispense facts are recorded on the journey, reconcile the in-app
+        // actionable state against them per the configured D2 conflict rule.
+        $journey->refresh();
+        (new SparReconciler())->reconcileJourney($journey);
     }
 
     /**
