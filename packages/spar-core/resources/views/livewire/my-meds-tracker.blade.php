@@ -277,6 +277,11 @@
             </div>
         @endif
 
+        {{-- HEALTH COACH — patient <-> pharmacy messenger (post-consent only). --}}
+        <div class="mb-4">
+            <livewire:spar.patient-coach-messages :key="'patient-coach-'.($patient?->id ?? 'none')" />
+        </div>
+
         <a href="{{ route('my-meds.history') }}" class="block text-center text-sm text-green-700 py-3">
             View full history
         </a>

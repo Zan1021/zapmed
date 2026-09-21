@@ -158,6 +158,11 @@ class SparPatient extends Model
         return $this->hasMany(SparOrder::class, 'spar_patient_id');
     }
 
+    public function conversations(): HasMany
+    {
+        return $this->hasMany(SparConversation::class, 'spar_patient_id');
+    }
+
     // NOTE: user() (belongsTo App\Models\User) is intentionally NOT in the
     // package (AC-3). The integrated ZapMed subclass adds it. Identity/contact
     // resolution goes through the host's SparIdentityProvider; the fallbacks

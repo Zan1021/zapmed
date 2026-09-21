@@ -267,6 +267,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Health Coach (v1 — patient <-> pharmacy messenger + suggest-to-basket)
+    |--------------------------------------------------------------------------
+    |
+    | The coach is the existing pharmacy-staff role (no dedicated coach account
+    | in v1). Patients and staff exchange messages in-thread; staff can suggest
+    | a product which the patient can add to their pending order (basket).
+    | Outward "you have a new message" nudges ride the consent-gated
+    | MessagingDispatcher and carry NO PHI.
+    |
+    */
+
+    'coach' => [
+        'enabled' => env('SPAR_COACH_ENABLED', true),
+        'max_message_len' => (int) env('SPAR_COACH_MAX_MESSAGE_LEN', 2000),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Branding (SPAR-branded pilot; white-label left possible, not built now)
     |--------------------------------------------------------------------------
     */

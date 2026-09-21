@@ -4,6 +4,7 @@ namespace Zapmed\SparCore\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class SparOrder extends Model
@@ -72,6 +73,19 @@ class SparOrder extends Model
     public function dispenseRecord(): BelongsTo
     {
         return $this->belongsTo(SparDispenseRecord::class, 'dispense_record_id');
+    }
+
+    /**
+     * Line items ("basket" lines) — coach-suggested extras (Health Coach v1).
+     */
+    public function items(): HasMany
+    {
+        return $this->hasMany(SparOrderItem::class, 'spar_order_id');
+    }
+
+    public function basketTotalCents(): int
+    {
+        return (int) $this->items->sum(fn (SparOrderItem $item) => $item->lineTotalCents());
     }
 
     public function markPreparing(): void

@@ -221,6 +221,9 @@
                 @endforelse
             </div>
 
+            {{-- HEALTH COACH — messages (the one place staff can ACT; mirror stays read-only) --}}
+            <livewire:spar.staff-coach-messages :patient-id="$this->patient->id" :key="'staff-coach-'.$this->patient->id" />
+
             {{-- COLLECTION HISTORY --}}
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
                 <h3 class="font-semibold text-gray-900 mb-3">Collection history</h3>

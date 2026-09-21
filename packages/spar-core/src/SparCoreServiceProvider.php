@@ -9,6 +9,8 @@ use Zapmed\SparCore\Livewire\MyMedsTracker;
 use Zapmed\SparCore\Livewire\MyMedsHistory;
 use Zapmed\SparCore\Livewire\PatientList;
 use Zapmed\SparCore\Livewire\PatientDetail;
+use Zapmed\SparCore\Livewire\PatientCoachMessages;
+use Zapmed\SparCore\Livewire\StaffCoachMessages;
 use Zapmed\SparCore\Livewire\PharmacistCapture;
 use Zapmed\SparCore\Livewire\PharmacyDashboard;
 use Zapmed\SparCore\Livewire\Admin\SparBanners;
@@ -86,6 +88,8 @@ class SparCoreServiceProvider extends ServiceProvider
             'spar.my-meds-history'    => MyMedsHistory::class,
             'spar.patient-list'       => PatientList::class,
             'spar.patient-detail'     => PatientDetail::class,
+            'spar.patient-coach-messages' => PatientCoachMessages::class,
+            'spar.staff-coach-messages'   => StaffCoachMessages::class,
             'spar.pharmacist-capture' => PharmacistCapture::class,
             'spar.pharmacy-dashboard' => PharmacyDashboard::class,
             'spar.admin.banners'      => SparBanners::class,
