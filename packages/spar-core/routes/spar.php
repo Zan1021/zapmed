@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Zapmed\SparCore\Livewire\MyMedsLogin;
 use Zapmed\SparCore\Livewire\MyMedsTracker;
 use Zapmed\SparCore\Livewire\MyMedsHistory;
+use Zapmed\SparCore\Livewire\PatientCoachMessages;
 use Zapmed\SparCore\Livewire\PharmacyDashboard;
 use Zapmed\SparCore\Livewire\PatientList;
 use Zapmed\SparCore\Livewire\PharmacistCapture;
@@ -62,6 +63,13 @@ Route::middleware($publicMiddleware)->group(function () {
     Route::get('my-meds/history', MyMedsHistory::class)
         ->middleware('spar.patient.session')
         ->name('my-meds.history');
+
+    // Health Coach on its own page (patient <-> pharmacy messenger). Behind the
+    // same session+consent guard as history: inherits the established signed
+    // session (no new OTP) and is unreachable before the consent gate.
+    Route::get('my-meds/coach', PatientCoachMessages::class)
+        ->middleware('spar.patient.session')
+        ->name('my-meds.coach');
 
     // Banner click tracking — increments clicks then redirects to the target.
     Route::get('b/{banner}', function (\Zapmed\SparCore\Models\SparBanner $banner) {

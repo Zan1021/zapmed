@@ -71,11 +71,22 @@ class SparMessage extends Model
 
     public function isSystem(): bool
     {
-        return $this->direction === 'system' || $this->kind === 'system';
+        return $this->direction === 'system'
+            || in_array($this->kind, ['system', 'order_event'], true);
     }
 
     public function isProductSuggestion(): bool
     {
         return $this->kind === 'product_suggestion';
+    }
+
+    /**
+     * An order-lifecycle system line (e.g. a coach suggestion attached to the
+     * patient's order). Distinct `kind` so the "My Orders" filter + count can
+     * scope by column without touching the encrypted body.
+     */
+    public function isOrderEvent(): bool
+    {
+        return $this->kind === 'order_event';
     }
 }

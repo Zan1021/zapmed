@@ -227,6 +227,32 @@ class MyMedsTracker extends Component
     }
 
     /**
+     * Unread coach messages for the badge on the Health Coach button. Resolves
+     * the conversation for the profile's primary member at their pharmacy
+     * (same binding as PatientCoachMessages) WITHOUT creating one — a null
+     * conversation (nothing sent yet) simply reads as zero.
+     */
+    public function getCoachUnreadCountProperty(): int
+    {
+        $primary = $this->sparPatient;
+        if (! $primary) {
+            return 0;
+        }
+
+        $pharmacyId = (int) ($primary->spar_pharmacy_id
+            ?? optional($this->journeys->first())->spar_pharmacy_id);
+
+        if (! $pharmacyId) {
+            return 0;
+        }
+
+        return (int) \Zapmed\SparCore\Models\SparConversation::query()
+            ->where('spar_patient_id', $primary->id)
+            ->where('spar_pharmacy_id', $pharmacyId)
+            ->value('patient_unread_count');
+    }
+
+    /**
      * Live promo banners for THIS patient's pharmacy group (spec — shown after
      * consent, under the logo). Records an impression for each rendered banner.
      */

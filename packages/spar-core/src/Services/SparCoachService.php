@@ -185,7 +185,8 @@ class SparCoachService
 
             $this->postSystemMessage(
                 $conversation,
-                'Added ' . $suggestion->product_name . ' to your order (' . $order->reference . ').'
+                'Added ' . $suggestion->product_name . ' to your order (' . $order->reference . ').',
+                'order_event'
             );
 
             $conversation->bumpUnread('staff');
@@ -271,11 +272,11 @@ class SparCoachService
         ]);
     }
 
-    private function postSystemMessage(SparConversation $conversation, string $body): SparMessage
+    private function postSystemMessage(SparConversation $conversation, string $body, string $kind = 'system'): SparMessage
     {
         return $conversation->messages()->create([
             'direction' => 'system',
-            'kind' => 'system',
+            'kind' => $kind,
             'body' => $body,
         ]);
     }

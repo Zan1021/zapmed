@@ -22,6 +22,30 @@ class PatientCoachMessages extends Component
     public string $body = '';
     public string $error = '';
 
+    /**
+     * Chip filter over the single thread (views, not separate storage):
+     *   all | recommendations | orders
+     * Reminders are NOT stored as messages (they go out via the dispatcher),
+     * so there is deliberately no "reminders" chip — it would always be empty.
+     */
+    public string $filter = 'all';
+
+    /**
+     * Windowing: render only the most recent N messages, "Load earlier" grows
+     * the window. Keeps the Livewire payload sane over a year of chat and the
+     * encrypted-body decrypts bounded.
+     */
+    public int $limit = 20;
+
+    private const PAGE = 20;
+
+    /**
+     * When true the component renders as a full page (own route, wrapped in the
+     * patient layout with a back link). When embedded elsewhere pass :page=false.
+     * Defaults to true so the routed full-page mount needs no extra wiring.
+     */
+    public bool $page = true;
+
     private function session(): SparPatientSession
     {
         return app(SparPatientSession::class);
@@ -75,13 +99,89 @@ class PatientCoachMessages extends Component
         return $this->coachService()->openConversation($primary, $pharmacyId);
     }
 
+    /**
+     * The window of messages to render: the most recent {$limit} rows of the
+     * thread (optionally narrowed by the active chip), returned oldest→newest
+     * so the newest sits at the bottom (chat style).
+     *
+     * Filtering happens at the DB level by `kind` (never the encrypted body):
+     *   recommendations -> product_suggestion
+     *   orders          -> order_event
+     */
     public function getMessagesProperty()
     {
         $conversation = $this->conversation;
+        if (! $conversation) {
+            return collect();
+        }
 
-        return $conversation
-            ? $conversation->messages()->with('productSuggestion')->chronological()->get()
-            : collect();
+        $query = $conversation->messages()->with('productSuggestion');
+
+        if ($this->filter === 'recommendations') {
+            $query->where('kind', 'product_suggestion');
+        } elseif ($this->filter === 'orders') {
+            $query->where('kind', 'order_event');
+        }
+
+        // Most-recent window, then flip to chronological for bottom-anchored display.
+        return $query->orderByDesc('id')
+            ->limit($this->limit)
+            ->get()
+            ->sortBy('id')
+            ->values();
+    }
+
+    /**
+     * Whether there are older messages beyond the current window (for the
+     * "Load earlier" control). Counts by the SAME filter, cheaply by column.
+     */
+    public function getHasMoreProperty(): bool
+    {
+        return $this->filteredTotal($this->filter) > $this->limit;
+    }
+
+    /**
+     * Chip counts across the WHOLE thread (not just the window). All by column
+     * — no encrypted body is read to produce these.
+     *
+     * @return array{all:int,recommendations:int,orders:int}
+     */
+    public function getCountsProperty(): array
+    {
+        return [
+            'all' => $this->filteredTotal('all'),
+            'recommendations' => $this->filteredTotal('recommendations'),
+            'orders' => $this->filteredTotal('orders'),
+        ];
+    }
+
+    private function filteredTotal(string $filter): int
+    {
+        $conversation = $this->conversation;
+        if (! $conversation) {
+            return 0;
+        }
+
+        $query = $conversation->messages();
+
+        if ($filter === 'recommendations') {
+            $query->where('kind', 'product_suggestion');
+        } elseif ($filter === 'orders') {
+            $query->where('kind', 'order_event');
+        }
+
+        return (int) $query->count();
+    }
+
+    public function setFilter(string $filter): void
+    {
+        $this->filter = in_array($filter, ['all', 'recommendations', 'orders'], true) ? $filter : 'all';
+        $this->limit = self::PAGE; // reset the window when switching chips
+    }
+
+    public function loadEarlier(): void
+    {
+        $this->limit += self::PAGE;
     }
 
     public function send(): void
@@ -104,6 +204,9 @@ class PatientCoachMessages extends Component
         $this->coachService()->postPatientMessage($conversation, trim($this->body));
         $this->body = '';
         $this->error = '';
+
+        // Newly sent message lands at the bottom — nudge the thread to scroll.
+        $this->dispatch('coach-scroll-bottom');
     }
 
     public function accept(int $suggestionId): void
@@ -140,6 +243,14 @@ class PatientCoachMessages extends Component
 
     public function render()
     {
-        return view('spar::livewire.patient-coach-messages');
+        $view = view('spar::livewire.patient-coach-messages');
+
+        // Full-page mount (own route) gets the patient layout; embedded mounts
+        // (:page=false) render bare so they slot into a parent view.
+        if ($this->page) {
+            $view->layout(config('spar.layouts.patient', 'layouts.spar-meds'));
+        }
+
+        return $view;
     }
 }

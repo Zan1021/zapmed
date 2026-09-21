@@ -267,6 +267,80 @@ class SparHealthCoachTest extends TestCase
         $this->assertSame('Magnesium', SparOrder::find($suggestion->spar_order_id)->items()->first()->product_name);
     }
 
+    // ---- Chat scaling: order_event kind, chip counts, windowing ------------
+
+    public function test_accept_line_is_order_event_kind_decline_stays_system(): void
+    {
+        $c = $this->coach()->openConversation($this->primary, $this->a->id);
+
+        $accept = $this->coach()->suggestProduct($c, ['id' => 1, 'name' => 'Joy', 'role' => 'pharmacy_staff'], 'Magnesium', 5900, null);
+        $this->coach()->acceptSuggestion($accept->productSuggestion);
+
+        $decline = $this->coach()->suggestProduct($c, ['id' => 1, 'name' => 'Joy', 'role' => 'pharmacy_staff'], 'Omega 3', 8000, null);
+        $this->coach()->declineSuggestion($decline->productSuggestion);
+
+        // The order-attach line is a distinct kind (drives the "My Orders" chip);
+        // the decline line stays a plain system notice.
+        $this->assertSame(1, $c->messages()->where('kind', 'order_event')->count());
+        $this->assertSame(1, $c->messages()->where('kind', 'system')->count());
+    }
+
+    public function test_chip_counts_span_whole_thread_by_kind(): void
+    {
+        $c = $this->coach()->openConversation($this->primary, $this->a->id);
+
+        // 2 recommendations; accept one -> 1 order_event; some plain text.
+        $s1 = $this->coach()->suggestProduct($c, ['id' => 1, 'name' => 'Joy', 'role' => 'pharmacy_staff'], 'Magnesium', 5900, null);
+        $this->coach()->suggestProduct($c, ['id' => 1, 'name' => 'Joy', 'role' => 'pharmacy_staff'], 'Vitamin D', 3000, null);
+        $this->coach()->acceptSuggestion($s1->productSuggestion);
+        $this->coach()->postPatientMessage($c, 'Thanks!');
+
+        $this->establishPatientSession();
+
+        $component = Livewire::test(PatientCoachMessages::class);
+        $counts = $component->get('counts');
+
+        $this->assertSame(2, $counts['recommendations']);
+        $this->assertSame(1, $counts['orders']);
+        // all = 2 suggestions + 1 order_event + 1 text = 4
+        $this->assertSame(4, $counts['all']);
+    }
+
+    public function test_thread_is_windowed_and_load_earlier_grows_it(): void
+    {
+        $c = $this->coach()->openConversation($this->primary, $this->a->id);
+        for ($i = 0; $i < 25; $i++) {
+            $this->coach()->postPatientMessage($c, "Message {$i}");
+        }
+
+        $this->establishPatientSession();
+
+        $component = Livewire::test(PatientCoachMessages::class);
+        // Default window = 20; hasMore true with 25 messages.
+        $this->assertCount(20, $component->get('messages'));
+        $this->assertTrue($component->get('hasMore'));
+
+        $component->call('loadEarlier');
+        $this->assertCount(25, $component->get('messages'));
+        $this->assertFalse($component->get('hasMore'));
+    }
+
+    public function test_filter_narrows_the_thread_to_recommendations(): void
+    {
+        $c = $this->coach()->openConversation($this->primary, $this->a->id);
+        $this->coach()->postPatientMessage($c, 'A plain message');
+        $this->coach()->suggestProduct($c, ['id' => 1, 'name' => 'Joy', 'role' => 'pharmacy_staff'], 'Magnesium', 5900, null);
+
+        $this->establishPatientSession();
+
+        $messages = Livewire::test(PatientCoachMessages::class)
+            ->call('setFilter', 'recommendations')
+            ->get('messages');
+
+        $this->assertCount(1, $messages);
+        $this->assertSame('product_suggestion', $messages->first()->kind);
+    }
+
     public function test_package_purity_no_host_classes_in_coach_code(): void
     {
         $files = [

@@ -143,6 +143,30 @@
                 </button>
             </div>
 
+            {{-- HEALTH COACH entry — distinct accent button below the tab row
+                 (not a 4th filter pill). Opens the coach on its own page,
+                 inside the same signed session (no new OTP). --}}
+            <a href="{{ route('my-meds.coach') }}"
+               class="relative flex items-center gap-3 w-full rounded-xl border border-green-200 bg-green-50 hover:bg-green-100 transition-colors p-3 mb-4">
+                <span class="w-9 h-9 rounded-full bg-green-600 flex items-center justify-center shrink-0">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.9 9.9 0 01-4-.83L3 20l1.3-3.2A7.6 7.6 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                    </svg>
+                </span>
+                <span class="flex-1 text-left">
+                    <span class="block font-semibold text-gray-900 leading-tight">Your Health Coach</span>
+                    <span class="block text-xs text-gray-500">Chat with your SPAR pharmacy — questions &amp; product tips.</span>
+                </span>
+                @if($this->coachUnreadCount > 0)
+                    <span class="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-red-600 text-white text-xs font-semibold">
+                        {{ $this->coachUnreadCount > 9 ? '9+' : $this->coachUnreadCount }}
+                    </span>
+                @endif
+                <svg class="w-5 h-5 text-green-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+
             @forelse($this->journeys as $journey)
                 @php
                     $owner = ($journey->patient && !$journey->patient->is_primary_member) ? 'dependants' : 'mine';
@@ -276,11 +300,6 @@
                 @endif
             </div>
         @endif
-
-        {{-- HEALTH COACH — patient <-> pharmacy messenger (post-consent only). --}}
-        <div class="mb-4">
-            <livewire:spar.patient-coach-messages :key="'patient-coach-'.($patient?->id ?? 'none')" />
-        </div>
 
         <a href="{{ route('my-meds.history') }}" class="block text-center text-sm text-green-700 py-3">
             View full history
