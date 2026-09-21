@@ -12,42 +12,40 @@
         $adherenceColor = $adherence >= 80 ? 'green' : ($adherence >= 60 ? 'amber' : 'red');
     @endphp
 
-    <!-- Header + filters -->
-    <div class="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-            <p class="text-xs font-semibold uppercase tracking-wide" style="color: #15803d;">Analytics &amp; reporting</p>
-            <h1 class="mt-1 text-3xl font-bold text-gray-900">Insights</h1>
-            <div class="mt-2 flex items-center gap-2">
+    <x-spar::page-header eyebrow="SPAR Group" title="Insights"
+        subtitle="Adherence, renewals and engagement analytics.">
+        <div class="flex flex-col items-start gap-2 sm:items-end">
+            <div class="flex items-center gap-2">
                 <span class="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800">{{ $scopeLabel }} view</span>
                 <span class="text-xs text-gray-400">Last {{ $data['period_days'] }} days</span>
             </div>
-        </div>
-        <div class="flex flex-wrap items-center gap-3">
-            <select wire:model.live="period"
-                    class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm focus:border-green-500 focus:ring-green-500">
-                <option value="7">Last 7 days</option>
-                <option value="30">Last 30 days</option>
-                <option value="90">Last 90 days</option>
-                <option value="180">Last 6 months</option>
-                <option value="365">Last year</option>
-            </select>
-            @if($this->pharmacies->count() > 1)
-                <select wire:model.live="pharmacyFilter"
+            <div class="flex flex-wrap items-center gap-3">
+                <select wire:model.live="period"
                         class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm focus:border-green-500 focus:ring-green-500">
-                    <option value="">All pharmacies</option>
-                    @foreach($this->pharmacies as $pharmacy)
-                        <option value="{{ $pharmacy->id }}">{{ $pharmacy->name }}</option>
-                    @endforeach
+                    <option value="7">Last 7 days</option>
+                    <option value="30">Last 30 days</option>
+                    <option value="90">Last 90 days</option>
+                    <option value="180">Last 6 months</option>
+                    <option value="365">Last year</option>
                 </select>
-            @endif
-            <button type="button" wire:click="downloadCsv"
-                    class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
-                    style="background-color: #15803d;">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M12 3v13m0 0l-4-4m4 4l4-4"/></svg>
-                Download CSV
-            </button>
+                @if($this->pharmacies->count() > 1)
+                    <select wire:model.live="pharmacyFilter"
+                            class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm focus:border-green-500 focus:ring-green-500">
+                        <option value="">All pharmacies</option>
+                        @foreach($this->pharmacies as $pharmacy)
+                            <option value="{{ $pharmacy->id }}">{{ $pharmacy->name }}</option>
+                        @endforeach
+                    </select>
+                @endif
+                <button type="button" wire:click="downloadCsv"
+                        class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+                        style="background-color: #15803d;">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M12 3v13m0 0l-4-4m4 4l4-4"/></svg>
+                    Download CSV
+                </button>
+            </div>
         </div>
-    </div>
+    </x-spar::page-header>
 
     <!-- Hero KPI cards -->
     <div class="mb-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">

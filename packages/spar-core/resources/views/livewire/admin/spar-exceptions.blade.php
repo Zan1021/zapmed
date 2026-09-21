@@ -1,6 +1,9 @@
 <div>
     <x-slot name="header">SPAR Exceptions</x-slot>
 
+    <x-spar::page-header eyebrow="SPAR Group" title="Exceptions"
+        subtitle="Overdue dispenses, missing renewals and unresponsive patients." />
+
     <!-- Filter Tabs -->
     <div class="flex gap-2 mb-6">
         <button wire:click="$set('filter', 'all')" class="px-4 py-2 text-sm rounded-lg transition {{ $filter === 'all' ? 'bg-green-600 text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50' }}">All</button>

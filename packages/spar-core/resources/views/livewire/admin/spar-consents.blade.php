@@ -1,8 +1,6 @@
 <div class="max-w-6xl mx-auto py-6">
-    <div class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-900">Consent</h1>
-        <p class="text-sm text-gray-500">POPIA consent status and audit trail across all SPAR patients.</p>
-    </div>
+    <x-spar::page-header eyebrow="SPAR Group" title="Consent"
+        subtitle="POPIA consent status and audit trail across all SPAR patients." />
 
     {{-- Summary tiles --}}
     <div class="grid grid-cols-3 gap-4 mb-6">

@@ -1,6 +1,9 @@
 <div>
     <x-slot name="header">Patients</x-slot>
 
+    <x-spar::page-header eyebrow="SPAR Pharmacy" title="Patients"
+        subtitle="Search and manage patients on your books." />
+
     <!-- Search & Filters -->
     <div class="flex items-center gap-4 mb-6">
         <div class="relative flex-1 max-w-sm">

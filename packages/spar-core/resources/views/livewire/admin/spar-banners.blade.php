@@ -1,6 +1,9 @@
 <div>
     <x-slot name="header">Promo Banners</x-slot>
 
+    <x-spar::page-header eyebrow="SPAR Group" title="Promo Banners"
+        subtitle="Group-scoped ads shown on the patient tracker." />
+
     @if($flash)
         <div class="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
             <p class="text-sm text-green-800">{{ $flash }}</p>

@@ -1,26 +1,21 @@
 <div>
     <x-slot name="header">SPAR Chronic Medication</x-slot>
 
-    <!-- Page header -->
-    <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-            <p class="text-xs font-semibold uppercase tracking-wide" style="color: #15803d;">Workspace overview</p>
-            <h1 class="mt-1 text-3xl font-bold text-gray-900">Medication dashboard</h1>
-            <p class="mt-1 text-gray-500">Manage prescriptions, orders and pharmacy coordination.</p>
+    <x-spar::page-header
+        eyebrow="SPAR Group"
+        title="Group Overview"
+        subtitle="Prescriptions, orders and pharmacy coordination across the group.">
+        <div class="text-right">
+            <p class="text-sm font-medium text-gray-700">{{ now()->format('l, j M Y') }}</p>
+            <p class="text-xs text-gray-400">Last import {{ $this->stats['last_import'] }}</p>
         </div>
-        <div class="flex items-center gap-4">
-            <div class="text-right">
-                <p class="text-sm font-medium text-gray-700">{{ now()->format('l, j M Y') }}</p>
-                <p class="text-xs text-gray-400">Last import {{ $this->stats['last_import'] }}</p>
-            </div>
-            <a href="{{ route('admin.spar.imports') }}"
-               class="inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
-               style="background-color: #15803d;">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M12 3v13m0-13l-4 4m4-4l4 4"/></svg>
-                Import data
-            </a>
-        </div>
-    </div>
+        <a href="{{ route('admin.spar.imports') }}"
+           class="inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+           style="background-color: #15803d;">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M12 3v13m0-13l-4 4m4-4l4 4"/></svg>
+            Import data
+        </a>
+    </x-spar::page-header>
 
     <!-- KPI cards -->
     <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

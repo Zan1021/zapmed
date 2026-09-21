@@ -5,6 +5,8 @@
         <a href="{{ route('spar.patients') }}" class="text-sm text-green-700 hover:text-green-800">&larr; Back to patients</a>
     </div>
 
+    <x-spar::page-header eyebrow="SPAR Pharmacy · Patient" title="{{ $this->patient->display_name }}" />
+
     @if($this->patient->needs_identity_review)
         <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
             <p class="text-sm text-amber-800"><strong>Identity review needed:</strong>

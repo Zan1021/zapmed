@@ -1,10 +1,13 @@
 <div>
-    <div class="flex items-center justify-between mb-6">
-        <h2 class="text-xl font-bold text-gray-900">Collection History</h2>
-        <a href="{{ route('my-meds.track') }}" class="text-sm text-green-600 font-medium hover:text-green-700">
-            &larr; Back
-        </a>
-    </div>
+    <a href="{{ route('my-meds.track') }}" class="inline-flex items-center gap-1 text-sm text-green-700 mb-3">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+        Back to my medication
+    </a>
+
+    <x-spar::page-header title="Collection History"
+        subtitle="Your past medication collections." />
 
     @if($this->history->isEmpty())
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">

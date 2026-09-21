@@ -1,11 +1,6 @@
 <div class="max-w-4xl mx-auto py-6">
-    <div class="flex items-center justify-between mb-6">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-900">Capture patient details</h1>
-            <p class="text-sm text-gray-500">Patients imported without contact details. Capture their name and
-                contact to onboard them and send their medication tracker.</p>
-        </div>
-    </div>
+    <x-spar::page-header eyebrow="SPAR Pharmacy" title="Capture patient details"
+        subtitle="Patients imported without contact details. Capture their name and contact to onboard them and send their medication tracker." />
 
     @if($flash)
         <div class="bg-green-50 border border-green-200 rounded-xl p-3 mb-4">

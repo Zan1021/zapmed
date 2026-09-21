@@ -1,6 +1,9 @@
 <div>
     <x-slot name="header">Pharmacy Dashboard</x-slot>
 
+    <x-spar::page-header eyebrow="SPAR Pharmacy" title="Pharmacy Dashboard"
+        subtitle="Your store's patients, orders and daily activity." />
+
     @if(!$this->pharmacy)
         <div class="bg-amber-50 border border-amber-200 rounded-lg p-6 text-center">
             <p class="text-amber-800">Your account is not linked to a SPAR pharmacy. Please contact your administrator.</p>

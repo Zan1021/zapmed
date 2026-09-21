@@ -3,6 +3,7 @@
 namespace Zapmed\SparCore;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Blade;
 use Livewire\Livewire;
 use Zapmed\SparCore\Livewire\MyMedsLogin;
 use Zapmed\SparCore\Livewire\MyMedsTracker;
@@ -57,6 +58,11 @@ class SparCoreServiceProvider extends ServiceProvider
         $views = __DIR__ . '/../resources/views';
         if (is_dir($views)) {
             $this->loadViewsFrom($views, 'spar');
+
+            // Anonymous Blade components under the 'spar' namespace, e.g.
+            // <x-spar::page-header title="…" />. Shared chrome (page headers,
+            // etc.) both hosts render identically.
+            Blade::anonymousComponentNamespace($views . '/components', 'spar');
         }
 
         // Routes (moved in during 3.3).
