@@ -1,6 +1,11 @@
 # SPAR Group Promo Banners — Task List
 
-**Status:** IN PROGRESS (2026-09-11) · **Requirements:** `requirements.md`
+**Status:** ✅ IMPLEMENTED (verified 2026-09-22) — all phases built + passing. `SparBanner` model,
+`SparBannerImageService` (GD→WebP), `Admin\SparBanners` management screen, mobi slider on the tracker
+(post-consent, click/impression tracking), route `admin.spar.banners`. Migration
+`2026_09_11_100017_create_spar_banners_table` run on both hosts + staging. Tests: `SparBannerTest`
++ `SparBannerSliderTest` (green). Checkboxes below are historical (were never flipped).
+· **Requirements:** `requirements.md`
 **Decisions:** per-group only · after consent · impressions+clicks · GD→WebP (confirmed) · 1080×420 · max 5.
 Build in order; tests green at the end.
 

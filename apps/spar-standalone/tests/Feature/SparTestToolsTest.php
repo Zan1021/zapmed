@@ -180,12 +180,13 @@ class SparTestToolsTest extends TestCase
         $before = SparPatient::count();
         $this->actingAs($this->staff());
 
-        Livewire::test(SparImports::class)
-            ->assertSet('canReset', false)
-            ->set('resetConfirm', 'DELETE')
-            ->call('resetAllPatients');
+        // SparImports is gated at mount() to super-admin/admin (commit 7f11283).
+        // A pharmacy_staff actor is 403'd outright — the strongest guard, so the
+        // reset UI is never even reachable for them.
+        Livewire::test(SparImports::class)->assertForbidden();
 
-        $this->assertSame($before, SparPatient::count()); // guard held
+        // And nothing was deleted.
+        $this->assertSame($before, SparPatient::count());
     }
 
     public function test_reset_guard_false_in_production_even_for_admin(): void

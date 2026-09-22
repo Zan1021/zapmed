@@ -1,6 +1,10 @@
 # SPAR Staff Patient Detail — Task List
 
-**Status:** IN PROGRESS (2026-09-11)
+**Status:** ✅ IMPLEMENTED (verified 2026-09-22) — all phases built + passing. Provenance migration
+`2026_09_11_100016_add_provenance_to_spar_patients_table` (onboarding_pharmacy_id/captured_by_id/
+captured_at), shared `SparPatientView` roll-up service, `PatientDetail` Livewire (scope-gated mount +
+patient_access audit), staff mirror + provenance panel, PatientList name links. Tests:
+`SparPatientDetailTest` (+ `DependantsTabTest` browser) green. Checkboxes below are historical.
 **Requirements:** `requirements.md`
 **Strategy:** Reuse the mobi tracker's data assembly (one source of truth). Read-only + scope-gated
 + audit-logged. Tests green at the end. Build in order.

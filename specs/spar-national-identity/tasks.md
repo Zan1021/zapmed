@@ -1,7 +1,11 @@
 # SPAR National Identity + Multi-Store View — Task List
 
-**Status:** ✅ IMPLEMENTED (2026-09-11) — Phases 0–6 complete. Standalone suite 65 pass,
+**Status:** ✅ IMPLEMENTED (2026-09-11; re-verified 2026-09-22) — Phases 0–6 complete. Standalone suite 65 pass,
 ZapMed SPAR subset 63 pass. AC-4 grep gate clean (no plaintext profile/phone in queries).
+**NOTE:** the `[ ]` boxes in Phases 1–6 below were never flipped — they are historical. See the
+"IMPLEMENTATION OUTCOME" section at the foot of this file (with test names) for the authoritative
+done-state. Re-verified 2026-09-22: `SparBlindIndexTest`, `SparNationalDedupTest`,
+`SparNationalScopeTest`, `SparMergeDuplicatesTest`, `SparMultiStoreViewTest` all green.
 **Requirements:** `requirements.md` · **Design:** `design.md`
 **Strategy:** Extract-in-place, tests green at every phase. Identity change is the risky
 part — do it behind the blind index with a backfill, prove no regressions, THEN switch the
