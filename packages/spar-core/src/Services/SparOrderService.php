@@ -81,6 +81,50 @@ class SparOrderService
     }
 
     /**
+     * Patient-initiated "Order next meds" (FR-C1). The patient picks a
+     * fulfilment mode (collect/deliver, pay now / pay at store); we translate it
+     * into the concrete order attributes and create a requested order against
+     * the dispense's pharmacy. Delivery details are optional here (demo-grade —
+     * the pharmacy captures/confirms address on processing); NFR-5 means we only
+     * record the payment INTENT, no gateway is wired.
+     *
+     * @param  array<string, mixed>  $delivery  optional address/city/postal/phone
+     */
+    public function placePatientOrder(SparDispenseRecord $dispense, string $mode, array $delivery = []): SparOrder
+    {
+        $patient = $dispense->patient;
+        $journey = $dispense->journey;
+
+        $attributes = SparOrder::attributesForMode($mode);
+
+        if ($attributes['type'] === 'delivery' && ! $journey->pharmacy->supports_delivery) {
+            throw new \RuntimeException('This pharmacy does not support delivery.');
+        }
+
+        $order = SparOrder::create(array_merge([
+            'spar_patient_id' => $patient->id,
+            'spar_pharmacy_id' => $journey->spar_pharmacy_id,
+            'dispense_record_id' => $dispense->id,
+            'status' => 'requested',
+            'delivery_address' => $delivery['address'] ?? null,
+            'delivery_city' => $delivery['city'] ?? null,
+            'delivery_postal_code' => $delivery['postal_code'] ?? null,
+            'delivery_phone' => $delivery['phone'] ?? null,
+        ], $attributes));
+
+        $dispense->update(['collection_requested_at' => now()]);
+
+        Log::info('SPAR patient order placed', [
+            'order' => $order->reference,
+            'patient' => $patient->display_name,
+            'pharmacy' => $journey->pharmacy->name,
+            'mode' => $order->fulfilment_mode,
+        ]);
+
+        return $order;
+    }
+
+    /**
      * Pharmacy marks order as being prepared.
      */
     public function startPreparing(SparOrder $order): void
@@ -97,10 +141,38 @@ class SparOrderService
     {
         $order->markReady();
 
-        // TODO: Send notification to patient
+        // C2b: notify the patient their order is ready. Consent-gated by the
+        // dispatcher (NFR-1) — a non-consented patient simply isn't messaged.
+        $this->notifyPatientReady($order);
+
         Log::info('SPAR order ready', [
             'order' => $order->reference,
             'type' => $order->type,
+        ]);
+    }
+
+    /**
+     * "Order processed — come collect" alert (FR-C2). Routed through the
+     * consent-gated MessagingDispatcher so it can never reach a non-consented
+     * patient. Delivery orders get an on-the-way message instead of collect.
+     */
+    private function notifyPatientReady(SparOrder $order): void
+    {
+        $patient = $order->patient;
+        if (! $patient) {
+            return;
+        }
+
+        $pharmacyName = $order->pharmacy?->name ?? 'your SPAR pharmacy';
+
+        $body = $order->isDelivery()
+            ? "Good news — your order {$order->reference} is packed and on its way from {$pharmacyName}."
+            : "Good news — your order {$order->reference} is ready to collect at {$pharmacyName}.";
+
+        app(MessagingDispatcher::class)->send($patient, [
+            'subject' => 'Your SPAR order is ready',
+            'body' => $body,
+            'link' => null,
         ]);
     }
 

@@ -329,9 +329,43 @@ class SparStatsService
             'onboarding_funnel' => $this->onboardingFunnelFor($ids),
             'consent' => $this->consentFor($ids),
             'messaging' => $this->messagingFor($ids),
+            'lost_customers' => $this->lostCustomersFor($ids),
             'monthly_trend' => $this->monthlyTrend($ids),
             'ranking' => $this->pharmacyRanking($ids, $start),
         ];
+    }
+
+    /**
+     * Lost-customer count (FR-C5): patients in scope whose LATEST response
+     * signal is an opt-out (stop_reminders / ignore_future). Reads the
+     * append-only spar_patient_signals feed. $ids === null means all pharmacies.
+     */
+    private function lostCustomersFor(?array $ids): int
+    {
+        $patientQuery = $this->applyIds(SparPatient::query(), $ids);
+        $patientIds = $patientQuery->pluck('id');
+
+        if ($patientIds->isEmpty()) {
+            return 0;
+        }
+
+        $latestPerPatient = \Zapmed\SparCore\Models\SparPatientSignal::query()
+            ->whereIn('spar_patient_id', $patientIds)
+            ->selectRaw('spar_patient_id, MAX(id) as last_id')
+            ->groupBy('spar_patient_id')
+            ->pluck('last_id');
+
+        if ($latestPerPatient->isEmpty()) {
+            return 0;
+        }
+
+        return \Zapmed\SparCore\Models\SparPatientSignal::query()
+            ->whereIn('id', $latestPerPatient)
+            ->whereIn('signal', [
+                \Zapmed\SparCore\Enums\SparPatientSignalType::StopReminders->value,
+                \Zapmed\SparCore\Enums\SparPatientSignalType::IgnoreFuture->value,
+            ])
+            ->count();
     }
 
     private function insightCounts(?array $ids): array

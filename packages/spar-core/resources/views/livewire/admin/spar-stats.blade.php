@@ -274,6 +274,30 @@
         </div>
     </div>
 
+    {{-- Lost customers / win-back (FR-C5) --}}
+    <div class="mb-6 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-bold text-gray-900">Lost customers</h3>
+                <p class="mt-1 text-sm text-gray-500">Patients who opted out of reminders — reach out with a win-back offer.</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="text-right">
+                    <p class="text-3xl font-black {{ ($data['lost_customers'] ?? 0) > 0 ? 'text-red-600' : 'text-gray-400' }}">{{ $data['lost_customers'] ?? 0 }}</p>
+                    <p class="text-xs text-gray-500">opted out</p>
+                </div>
+                @if(\Illuminate\Support\Facades\Route::has('admin.spar.winback'))
+                    <a href="{{ route('admin.spar.winback') }}"
+                       class="inline-flex items-center gap-1 rounded-lg px-4 py-2 text-sm font-semibold text-white"
+                       style="background-color: #15803d;">
+                        Win-back queue
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                    </a>
+                @endif
+            </div>
+        </div>
+    </div>
+
     <!-- Pharmacy performance ranking -->
     <div class="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
         <div class="flex items-center justify-between border-b border-gray-100 p-6">

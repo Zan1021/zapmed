@@ -41,6 +41,11 @@ class MyMedsTracker extends Component
     public string $deliveryPostalCode = '';
     public string $deliveryPhone = '';
 
+    // "Order next meds" flow (FR-C1)
+    public ?int $orderingJourneyId = null;   // which journey's order form is open
+    public string $orderMode = '';           // collect_pay_now | deliver_pay_now | collect_pay_store
+    public string $orderPlaced = '';         // reference of the last placed order (confirmation)
+
     private function session(): SparPatientSession
     {
         return app(SparPatientSession::class);
@@ -224,6 +229,95 @@ class MyMedsTracker extends Component
     public function getRenewalDueProperty()
     {
         return $this->journeys->firstWhere('status', 'renewal_due');
+    }
+
+    // ---- "Order next meds" (FR-C1) ----------------------------------------
+
+    /**
+     * Available fulfilment modes for the order dropdown. Delivery is only
+     * offered when the journey's pharmacy supports it (mirrors the service
+     * guard so the UI can't offer an impossible option).
+     *
+     * @return array<string, string>  mode => label
+     */
+    public function orderModesFor(SparPrescriptionJourney $journey): array
+    {
+        $modes = [];
+        foreach (SparOrder::MODES as $mode => $config) {
+            if ($config['type'] === 'delivery' && ! $journey->pharmacy?->supports_delivery) {
+                continue;
+            }
+            $modes[$mode] = $config['label'];
+        }
+
+        return $modes;
+    }
+
+    /**
+     * Open (or toggle) the order form for a specific active journey. Scoped:
+     * the journey must belong to this session's profile roll-up, so a tampered
+     * id can't order against someone else's script.
+     */
+    public function startOrder(int $journeyId): void
+    {
+        if (! $this->journeys->contains('id', $journeyId)) {
+            abort(403);
+        }
+
+        $this->orderingJourneyId = $this->orderingJourneyId === $journeyId ? null : $journeyId;
+        $this->orderMode = '';
+        $this->error = '';
+    }
+
+    public function cancelOrder(): void
+    {
+        $this->orderingJourneyId = null;
+        $this->orderMode = '';
+    }
+
+    /**
+     * Place a patient order for the selected journey (FR-C1). Consent is a hard
+     * gate — the dashboard step already requires it, but we re-check so this can
+     * never create an order for a non-consented patient (NFR-1). Resolves the
+     * journey's latest dispense as the order subject (demo-grade: the "next"
+     * fill the patient is asking for).
+     */
+    public function placeOrder(): void
+    {
+        $journey = $this->journeys->firstWhere('id', $this->orderingJourneyId);
+        if (! $journey) {
+            abort(403);
+        }
+
+        $patient = $this->sparPatient;
+        if (! $patient || ! $patient->hasConsented()) {
+            $this->error = 'We need your consent before placing an order.';
+            return;
+        }
+
+        if (! array_key_exists($this->orderMode, $this->orderModesFor($journey))) {
+            $this->error = 'Please choose how you would like your medication.';
+            return;
+        }
+
+        $dispense = $journey->dispenseRecords()->latest('id')->first();
+        if (! $dispense) {
+            $this->error = 'There is nothing to order on this script yet.';
+            return;
+        }
+
+        $order = app(SparOrderService::class)->placePatientOrder($dispense, $this->orderMode);
+
+        $this->logSparActivity('order_placed', 'Patient placed an order via tracker', [
+            'spar_patient_id' => $patient->id,
+            'order' => $order->reference,
+            'mode' => $order->fulfilment_mode,
+        ]);
+
+        $this->orderPlaced = $order->reference;
+        $this->orderingJourneyId = null;
+        $this->orderMode = '';
+        $this->error = '';
     }
 
     /**

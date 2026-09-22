@@ -80,6 +80,15 @@
             </div>
         @endif
 
+        @if($orderPlaced)
+            <div class="bg-green-50 border border-green-200 rounded-xl p-3 my-4 flex items-start gap-2">
+                <svg class="w-5 h-5 text-green-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                <p class="text-sm text-green-800">
+                    Order <span class="font-semibold">{{ $orderPlaced }}</span> placed. Your SPAR pharmacy will prepare it and let you know when it's ready.
+                </p>
+            </div>
+        @endif
+
         @php $patient = $this->sparPatient; @endphp
 
         {{-- ===================== PROMO BANNER SLIDER ===================== --}}
@@ -253,6 +262,40 @@
                             <li>{{ $med['name'] ?? '' }}</li>
                         @endforeach
                     </ul>
+                @endif
+
+                {{-- ORDER NEXT MEDS (FR-C1). Active journeys only; consent already
+                     granted to reach the dashboard. Collect/deliver + pay intent. --}}
+                @if($journey->status !== 'renewal_due')
+                    @php $modes = $this->orderModesFor($journey); @endphp
+                    <div class="mt-4">
+                        @if($orderingJourneyId === $journey->id)
+                            <div class="rounded-xl border border-green-200 bg-green-50 p-3">
+                                <p class="text-sm font-semibold text-gray-800 mb-2">How would you like it?</p>
+                                @if($error)<p class="text-sm text-red-600 mb-2">{{ $error }}</p>@endif
+                                <select wire:model="orderMode"
+                                        class="w-full rounded-xl border border-gray-300 bg-white py-2.5 px-3 text-sm mb-3">
+                                    <option value="">Choose an option…</option>
+                                    @foreach($modes as $value => $label)
+                                        <option value="{{ $value }}">{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                                <div class="flex gap-2">
+                                    <button type="button" wire:click="placeOrder"
+                                            class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl py-2.5 text-sm">
+                                        Confirm order
+                                    </button>
+                                    <button type="button" wire:click="cancelOrder"
+                                            class="px-4 text-gray-500 text-sm">Cancel</button>
+                                </div>
+                            </div>
+                        @else
+                            <button type="button" wire:click="startOrder({{ $journey->id }})"
+                                    class="w-full rounded-xl border border-green-600 text-green-700 hover:bg-green-50 font-semibold py-2.5 text-sm">
+                                Order next meds
+                            </button>
+                        @endif
+                    </div>
                 @endif
 
                 @if($journey->status === 'renewal_due' && config('spar.online_consult.enabled') && config('spar.online_consult.url'))

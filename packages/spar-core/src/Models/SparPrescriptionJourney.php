@@ -123,4 +123,33 @@ class SparPrescriptionJourney extends Model implements SparActionable
     {
         return $query->where('spar_pharmacy_id', $pharmacyId);
     }
+
+    /**
+     * Fail-closed actor scoping (mirrors SparOrder/SparPatient). Journeys carry
+     * spar_pharmacy_id directly:
+     *   super-admin  → all   |  pharmacy → own  |  group-admin → group's pharmacies
+     *   otherwise     → nothing (unauthenticated / out of scope)
+     */
+    public function scopeVisibleToCurrentActor($query)
+    {
+        $identity = app(\Zapmed\SparCore\Contracts\SparIdentityProvider::class);
+
+        if ($identity->isSuperAdmin()) {
+            return $query;
+        }
+
+        $pharmacyId = $identity->currentPharmacyId();
+        if ($pharmacyId !== null) {
+            return $query->where('spar_pharmacy_id', $pharmacyId);
+        }
+
+        $groupId = $identity->currentGroupId();
+        if ($groupId !== null) {
+            $pharmacyIds = SparPharmacy::where('group_id', $groupId)->pluck('id')->all();
+
+            return $query->whereIn('spar_pharmacy_id', $pharmacyIds);
+        }
+
+        return $query->whereRaw('1 = 0');
+    }
 }
