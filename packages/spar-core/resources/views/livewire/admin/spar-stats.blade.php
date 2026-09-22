@@ -113,6 +113,7 @@
                 <div class="flex items-center gap-1"><div class="h-2 w-2 rounded-full bg-gray-300"></div><span class="text-xs text-gray-500">GP: {{ $data['renewals']['via_primary_doctor'] }}</span></div>
             </div>
             <p class="mt-2 text-[11px] leading-snug text-gray-400">Renewals routed to a ZapMed online consult vs the patient's own GP — the telehealth funnel's pull-through.</p>
+        </div>
     </div>
 
     <!-- Charts row: trend + renewal donut -->
