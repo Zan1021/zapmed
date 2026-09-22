@@ -33,20 +33,26 @@ Sequencing: Wave A (now, no blockers) → Wave B (engine) → Wave C (apply). D1
       missing-renewal / unresponsive rows on SparExceptions. Browser-verify close-the-loop.
 - [ ] **B7** Browser-verify engine end-to-end; build; suite.
 
-## WAVE C — Apply the engine
-- [ ] **C1 Patient order flow** (FR-C1) — "Order next meds" + mode dropdown
+## WAVE C — Apply the engine ✅ DONE + DEPLOYED 2026-09-22 (spar.zapmed.africa)
+- [x] **C1 Patient order flow** (FR-C1) — "Order next meds" + mode dropdown
       (collect_pay_now/deliver_pay_now/collect_pay_store); fulfilment_mode + payment_status on
-      SparOrder. Tests.
-- [ ] **C2 Pharmacy orders dashboard** (FR-C2) — staff Livewire screen (list by status, process),
-      auto-drop on dispense (B5), patient "order processed" alert w/ specials/support suggestion.
-      Route + nav + page-header. Tests + browser.
-- [ ] **C3 Renewals workflow** (FR-C3) — staff filter due-this-week/month; per-patient + bulk
-      comms; patient responds via B3 widget. Tests + browser.
-- [ ] **C4 Internal broadcast** (FR-C4) — staff compose → dispatcher fan-out to their consented
-      patients (banner styling). Consent-gated. Tests.
-- [ ] **C5 Lost-customer queue** (FR-C5) — stop/ignore signals → Insights panel + personalised
-      win-back message action. Tests.
-- [ ] **C6** Browser-verify Wave C; build; suite.
+      SparOrder (migration 2026_09_22_100026). On MyMedsTracker, consent-gated. SparPatientOrderTest (5).
+- [x] **C2 Pharmacy orders dashboard** (FR-C2) — Admin\SparOrders Livewire (list by status, process
+      requested→preparing→ready→completed), scope-gated (SparOrder::visibleToCurrentActor),
+      consent-gated patient "order ready" alert (SparOrderService::markReady→MessagingDispatcher).
+      Route admin.spar.orders + nav + page-header. SparOrdersDashboardTest (4).
+- [x] **C3 Renewals workflow** (FR-C3) — Admin\SparRenewals filter due-this-week/month/all;
+      per-patient remindOne + bulk remindAll via SparActionService::nudge (consent-gated →
+      awaiting_patient); patient responds via B3 widget. SparRenewalsWorkflowTest (4).
+- [x] **C4 Internal broadcast** (FR-C4) — Admin\SparBroadcast compose → dispatcher fan-out to
+      visibleToCurrentActor+consented patients only. Consent-gated + audited. SparBroadcastTest (3).
+- [x] **C5 Lost-customer queue** (FR-C5) — SparWinBackService (latest opt-out signal = lost) +
+      Admin\SparWinBack queue + personalised win-back (consent-gated) + Insights lost-customers
+      panel (SparStatsService::lostCustomersFor). SparWinBackTest (5).
+- [x] **C6** Wave C closeout — standalone suite 121 pass / 1 pre-existing unrelated fail
+      (SparTestToolsTest, not Wave C); ZapMed SPAR subset 106 pass (no cross-host regression);
+      npm run build; browser-verified all 5 surfaces live; deployed local→GitHub→staging (247a83f).
+      All package-pure (NFR-3), consent hard-locked (NFR-1). +21 tests.
 
 ## WAVE D/E — BLOCKED on decisions
 - [ ] 🔵 **D1 Dependant visibility** (FR-D1/D2) — implement chosen model
