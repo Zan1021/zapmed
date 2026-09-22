@@ -183,8 +183,11 @@ class SparPhase53VerificationTest extends TestCase
     // AC-9 — dependant roll-up to the primary member
     // =========================================================================
 
-    public function test_ac9_primary_member_view_rolls_up_all_dependants(): void
+    public function test_ac9_primary_sees_own_meds_dependants_listed_but_private(): void
     {
+        // AC-9 SUPERSEDED by FR-D / decision D1 (2026-09-22, Craig): the primary's
+        // tracker shows ONLY their own medication. Dependants stay LISTED under the
+        // profile (name only) but their medication is private to them.
         config(['spar.link.require_otp_reverify' => false]);
 
         $pharmacy = $this->pharmacy();
@@ -219,8 +222,17 @@ class SparPhase53VerificationTest extends TestCase
 
         app(SparPatientSession::class)->establish($primary);
 
-        $journeys = Livewire::test(MyMedsTracker::class)->instance()->journeys;
-        $this->assertCount(2, $journeys, 'Primary view must roll up self + dependant journeys.');
+        $tracker = Livewire::test(MyMedsTracker::class)->instance();
+
+        // Primary sees ONLY their own journey (not the dependant's).
+        $journeys = $tracker->journeys;
+        $this->assertCount(1, $journeys, 'Primary must see only their OWN journey (D1).');
+        $this->assertSame($primary->id, $journeys->first()->spar_patient_id);
+
+        // Dependant is still LISTED (name only, medication private).
+        $dependants = $tracker->dependants;
+        $this->assertCount(1, $dependants, 'Dependant must still be listed under the profile.');
+        $this->assertSame($dependant->id, $dependants->first()->id);
     }
 
     public function test_ac9_dependant_never_gets_a_link(): void

@@ -316,8 +316,7 @@
         @endforelse
 
         @php
-            $mineCount = $this->journeys->filter(fn ($j) => !($j->patient && !$j->patient->is_primary_member))->count();
-            $depCount = $this->journeys->filter(fn ($j) => $j->patient && !$j->patient->is_primary_member)->count();
+            $mineCount = $this->journeys->count();
             $renewalCount = $this->journeys->filter(fn ($j) => $j->status === 'renewal_due')->count();
         @endphp
         @if($mineCount === 0)
@@ -325,11 +324,41 @@
                 No prescriptions on your own profile.
             </div>
         @endif
-        @if($depCount === 0)
-            <div x-show="filter === 'dependants'" class="bg-gray-50 rounded-xl p-6 text-center text-sm text-gray-600">
-                No dependants have prescriptions on your profile.
-            </div>
-        @endif
+
+        {{-- DEPENDANTS (spec FR-D / decision D1): dependants are LISTED under the
+             main member, but their medication is PRIVATE to them — the primary
+             sees the name + a masked placeholder only, never their scripts. --}}
+        <div x-show="filter === 'dependants'">
+            @forelse($this->dependants as $dependant)
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <span class="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-500">
+                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                            </span>
+                            <div>
+                                <p class="font-semibold text-gray-900">
+                                    {{ $dependant->first_name ?: 'Dependant #'.$dependant->dependent_code }}
+                                </p>
+                                <p class="text-xs text-gray-500 flex items-center gap-1">
+                                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                    {{ $dependant->first_name ? $dependant->first_name."'s" : 'This' }} medication — private
+                                </p>
+                            </div>
+                        </div>
+                        <span class="text-xs text-gray-400">Dependant</span>
+                    </div>
+                </div>
+            @empty
+                <div class="bg-gray-50 rounded-xl p-6 text-center text-sm text-gray-600">
+                    No dependants are listed on your profile.
+                </div>
+            @endforelse
+            <p class="text-xs text-gray-400 text-center mb-4">
+                For privacy, each dependant's medication is only visible to them.
+            </p>
+        </div>
+
         @if($renewalCount === 0)
             <div x-show="filter === 'renewals'" class="bg-gray-50 rounded-xl p-6 text-center text-sm text-gray-600">
                 Nothing due for renewal right now.

@@ -71,9 +71,17 @@ class SparDependantRollupTest extends TestCase
 
         $component = Livewire::test(MyMedsTracker::class);
 
-        // Roll-up: journeys across the whole profile (2), not just the primary's.
+        // FR-D / D1 (2026-09-22): the primary's tracker shows ONLY their OWN
+        // journeys — a dependant's medication is private to the dependant. The
+        // dependant is still LISTED (see below), just without medication data.
         $journeys = $component->instance()->journeys;
-        $this->assertCount(2, $journeys);
+        $this->assertCount(1, $journeys);
+        $this->assertSame($primary->id, $journeys->first()->spar_patient_id);
+
+        // Dependant remains visible as a person on the profile (name only).
+        $dependants = $component->instance()->dependants;
+        $this->assertCount(1, $dependants);
+        $this->assertSame($dependant->id, $dependants->first()->id);
     }
 
     public function test_only_primary_members_are_contactable_for_links(): void

@@ -214,7 +214,9 @@ class MyMedsTracker extends Component
     }
 
     /**
-     * Active journeys across the whole profile (self + dependants).
+     * Active journeys for the PRIMARY member ONLY (spec FR-D / D1). Dependants'
+     * medication is private to them — the primary sees their dependants listed
+     * (getDependantsProperty) but never their scripts.
      */
     public function getJourneysProperty()
     {
@@ -223,7 +225,21 @@ class MyMedsTracker extends Component
             return collect();
         }
 
-        return app(SparPatientView::class)->journeys($patient);
+        return app(SparPatientView::class)->selfJourneys($patient);
+    }
+
+    /**
+     * Dependants under this profile, for the "listed but private" panel — names
+     * only, no medication data (D1: display option (b), masked placeholder).
+     */
+    public function getDependantsProperty()
+    {
+        $patient = $this->session()->patient();
+        if (!$patient) {
+            return collect();
+        }
+
+        return app(SparPatientView::class)->dependants($patient);
     }
 
     public function getRenewalDueProperty()

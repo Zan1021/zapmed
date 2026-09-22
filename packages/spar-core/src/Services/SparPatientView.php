@@ -82,6 +82,64 @@ class SparPatientView
         return $this->journeys($patient)->firstWhere('status', 'renewal_due');
     }
 
+    /* --------------------------------------------------------------------- */
+    /* SELF-ONLY variants (spec FR-D, decision D1)                           */
+    /*                                                                       */
+    /* The primary member's tracker shows ONLY their own medication. Dependants*/
+    /* remain LISTED (see members()/dependants()) but their medical data is    */
+    /* private to them — the primary never sees a dependant's journeys /       */
+    /* dispenses / history. Staff (PatientDetail) keep the full roll-up above. */
+    /* --------------------------------------------------------------------- */
+
+    /**
+     * Active + renewal-due journeys for the PRIMARY member only (not dependants).
+     */
+    public function selfJourneys(SparPatient $patient): Collection
+    {
+        $primary = $this->primary($patient);
+
+        return SparPrescriptionJourney::where('spar_patient_id', $primary->id)
+            ->whereIn('status', ['active', 'renewal_due'])
+            ->with(['patient', 'pharmacy'])
+            ->orderByDesc('start_date')
+            ->orderByDesc('created_at')
+            ->get();
+    }
+
+    public function selfRenewalDue(SparPatient $patient): ?SparPrescriptionJourney
+    {
+        return $this->selfJourneys($patient)->firstWhere('status', 'renewal_due');
+    }
+
+    /**
+     * PAST journeys for the PRIMARY member only.
+     */
+    public function selfPastJourneys(SparPatient $patient): Collection
+    {
+        $primary = $this->primary($patient);
+
+        return SparPrescriptionJourney::where('spar_patient_id', $primary->id)
+            ->whereNotIn('status', ['active', 'renewal_due'])
+            ->with(['patient', 'pharmacy'])
+            ->latest('updated_at')
+            ->get();
+    }
+
+    /**
+     * Collection history for the PRIMARY member only.
+     */
+    public function selfHistory(SparPatient $patient, int $limit = 50): Collection
+    {
+        $primary = $this->primary($patient);
+
+        return SparDispenseRecord::where('spar_patient_id', $primary->id)
+            ->whereIn('status', ['collected', 'delivered'])
+            ->with('journey.pharmacy')
+            ->orderByDesc('completed_at')
+            ->limit($limit)
+            ->get();
+    }
+
     /**
      * PAST prescriptions across the profile — completed / renewed / expired
      * journeys (i.e. not currently active or renewal-due). Pharmacy loaded.

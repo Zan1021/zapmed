@@ -54,12 +54,20 @@ Sequencing: Wave A (now, no blockers) → Wave B (engine) → Wave C (apply). D1
       npm run build; browser-verified all 5 surfaces live; deployed local→GitHub→staging (247a83f).
       All package-pure (NFR-3), consent hard-locked (NFR-1). +21 tests.
 
-## WAVE D/E — BLOCKED on decisions
-- [ ] 🔵 **D1 Dependant visibility** (FR-D1/D2) — implement chosen model
-      (Naz rec: primary-sees-all, dependants-see-only-self). Viewer-scoped SparPatientView;
-      per-dependant reminder routing + "For <name>:" labelling. Privacy test (dependant cannot
-      load another member). BLOCKED until Captain Zan/Craig decide D1.
-- [ ] 🔵 **E1 ZapMed funnel** (FR-E1) — copy + trigger on renewal_due per D3. BLOCKED on D3.
+## WAVE D/E
+- [x] 🟢 **D1 Dependant visibility** (FR-D) — **DECIDED + BUILT + DEPLOYED 2026-09-22** (Craig via
+      Captain Zan): dependants stay LISTED under the main member, but the main member does NOT see a
+      dependant's medication — only the dependant sees their own. Display = name + masked placeholder
+      "<Name>'s medication — private" (option b). BLANKET rule, all dependants. Impl:
+      `SparPatientView::selfJourneys/selfHistory/selfPastJourneys` (primary-only); `MyMedsTracker`
+      + `MyMedsHistory` switched to self-only + a `dependants` list panel; STAFF `PatientDetail`
+      keeps the FULL roll-up for care (privacy applies to patient tracker only). Updated AC-9 tests
+      (SparDependantRollupTest + SparPhase53VerificationTest) to the new rule. New
+      `SparDependantPrivacyTest` (4). Standalone 126 pass / ZapMed SPAR 106 pass.
+      ⚠ COMPLIANCE: adult-dependant privacy sign-off still recommended before wide rollout.
+- [ ] 🔵 **E1 ZapMed funnel** (FR-E1) — copy + trigger on renewal_due per D3. **STILL BLOCKED on D3**
+      (commercial call: show "Book a ZapMed online consult" on standalone renewals vs "see your own
+      doctor"). Config flag `spar.online_consult` already exists; decision only sets copy + when.
 
 ## CROSS-CUTTING (every wave)
 - [ ] Extend package-purity grep test to all new files (NFR-3).

@@ -31,7 +31,7 @@ class MyMedsHistory extends Component
         }
 
         // History across the whole profile (self + dependants, spec FR-8).
-        return app(SparPatientView::class)->history($patient);
+        return app(SparPatientView::class)->selfHistory($patient);
     }
 
     public function render()
