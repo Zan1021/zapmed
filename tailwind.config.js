@@ -7,6 +7,11 @@ export default {
         './vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php',
         './storage/framework/views/*.php',
         './resources/views/**/*.blade.php',
+        // SPAR close-the-loop UI lives in the spar-core package, not the host
+        // app's resources/views. Without this glob Tailwind's JIT never sees the
+        // package Blade classes and purges them from the production build,
+        // leaving the SPAR admin/patient screens partially unstyled (B7 finding).
+        './packages/spar-core/resources/views/**/*.blade.php',
     ],
 
     theme: {
