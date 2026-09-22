@@ -391,7 +391,7 @@ return [
     'online_consult' => [
         'enabled' => env('SPAR_ONLINE_CONSULT_ENABLED', true),
         'url' => env('SPAR_ONLINE_CONSULT_URL', 'https://zapmed.co.za'),
-        'label' => env('SPAR_ONLINE_CONSULT_LABEL', 'Get a new prescription online'),
+        'label' => env('SPAR_ONLINE_CONSULT_LABEL', 'Book a ZapMed online consult'),
     ],
 
 ];

@@ -302,7 +302,7 @@
                     <div class="mt-4">
                         <a href="{{ config('spar.online_consult.url') }}" target="_blank" rel="noopener"
                            class="block w-full text-center bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl py-3">
-                            {{ config('spar.online_consult.label', 'Get a new prescription online') }}
+                            {{ config('spar.online_consult.label', 'Book a ZapMed online consult') }}
                         </a>
                         <p class="text-xs text-gray-400 text-center mt-1">www.zapmed.co.za</p>
                     </div>
@@ -384,10 +384,15 @@
                 @else
                     @if(config('spar.online_consult.enabled') && config('spar.online_consult.url'))
                         <a href="{{ config('spar.online_consult.url') }}" target="_blank" rel="noopener"
-                           class="block w-full text-center bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl py-3 mb-2">
-                            {{ config('spar.online_consult.label', 'Get a new prescription online') }}
+                           class="block w-full text-center bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl py-3 mb-1">
+                            {{ config('spar.online_consult.label', 'Book a ZapMed online consult') }}
                         </a>
-                        <p class="text-xs text-gray-400 text-center">or arrange a new script with your own doctor, then visit
+                        <p class="text-xs text-gray-500 text-center mb-2">
+                            Renew online in minutes at
+                            <span class="font-medium text-green-700">{{ \Illuminate\Support\Str::of(config('spar.online_consult.url'))->replace(['https://','http://','www.'], '') }}</span>
+                            — no GP visit needed.
+                        </p>
+                        <p class="text-xs text-gray-400 text-center">Prefer your own doctor? Get a new script, then visit
                             {{ $patient?->pharmacy?->name ?? 'your SPAR pharmacy' }}.</p>
                     @else
                         <div class="bg-gray-50 rounded-xl p-3 text-sm text-gray-700">

@@ -65,9 +65,12 @@ Sequencing: Wave A (now, no blockers) → Wave B (engine) → Wave C (apply). D1
       (SparDependantRollupTest + SparPhase53VerificationTest) to the new rule. New
       `SparDependantPrivacyTest` (4). Standalone 126 pass / ZapMed SPAR 106 pass.
       ⚠ COMPLIANCE: adult-dependant privacy sign-off still recommended before wide rollout.
-- [ ] 🔵 **E1 ZapMed funnel** (FR-E1) — copy + trigger on renewal_due per D3. **STILL BLOCKED on D3**
-      (commercial call: show "Book a ZapMed online consult" on standalone renewals vs "see your own
-      doctor"). Config flag `spar.online_consult` already exists; decision only sets copy + when.
+- [x] 🟢 **E1 ZapMed funnel** (FR-E1) — **DECIDED (D3=push) + BUILT + DEPLOYED 2026-09-22** (Captain Zan:
+      "the entire idea behind the platform — SPAR pushes clients to zapmed.co.za to renew"). Standalone
+      renewal card now leads with **"Book a ZapMed online consult"** → `https://zapmed.co.za` (config
+      `spar.online_consult`, label updated, `enabled` default true; config-gated so it can be turned off).
+      Per-journey + bottom renewal CTAs aligned. `SparRenewalFunnelTest` (2). Both hosts green
+      (standalone 128 / ZapMed SPAR 106).
 
 ## CROSS-CUTTING (every wave)
 - [ ] Extend package-purity grep test to all new files (NFR-3).
