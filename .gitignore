@@ -29,3 +29,5 @@ Thumbs.db
 .env.bak*
 *.bak
 *.bak.naz
+.env.predeploy*
+.env.*
