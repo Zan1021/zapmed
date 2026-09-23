@@ -5,6 +5,7 @@ use Zapmed\SparCore\Livewire\MyMedsLogin;
 use Zapmed\SparCore\Livewire\MyMedsTracker;
 use Zapmed\SparCore\Livewire\MyMedsHistory;
 use Zapmed\SparCore\Livewire\PatientCoachMessages;
+use Zapmed\SparCore\Livewire\StaffCoachInbox;
 use Zapmed\SparCore\Livewire\PharmacyDashboard;
 use Zapmed\SparCore\Livewire\PatientList;
 use Zapmed\SparCore\Livewire\PharmacistCapture;
@@ -100,6 +101,7 @@ Route::middleware($publicMiddleware)->group(function () {
 Route::middleware($staffMiddleware)->prefix('spar')->group(function () {
     Route::get('/dashboard', PharmacyDashboard::class)->name('spar.dashboard');
     Route::get('/patients', PatientList::class)->name('spar.patients');
+    Route::get('/health-coach', StaffCoachInbox::class)->name('spar.coach.inbox');
     Route::get('/patients/{patient}', \Zapmed\SparCore\Livewire\PatientDetail::class)->name('spar.patients.show');
     Route::get('/capture', PharmacistCapture::class)->name('spar.capture');
 });
