@@ -20,7 +20,16 @@ use Illuminate\Database\Seeder;
  */
 class DemoSeeder extends Seeder
 {
-    private const DEMO_DIR = 'E:\\OneDrive\\Desktop\\craig';
+    /**
+     * Directory holding the demo import files. Overridable per-environment via
+     * SPAR_DEMO_DIR so it works on Windows (local default) AND on the Linux
+     * server (set SPAR_DEMO_DIR to an uploaded path). PHI files are never
+     * committed to the repo, hence the env indirection rather than a repo path.
+     */
+    private function demoDir(): string
+    {
+        return rtrim((string) env('SPAR_DEMO_DIR', 'E:\\OneDrive\\Desktop\\craig'), "/\\");
+    }
 
     public function run(): void
     {
@@ -43,11 +52,12 @@ class DemoSeeder extends Seeder
      */
     private function runImportLayer(): void
     {
-        $sales = self::DEMO_DIR . '\\Demo SalesExtract072026-wapadrand.csv';
-        $drug = self::DEMO_DIR . '\\Demo Drug Usage 01 Sept 2026.xlsx';
+        $dir = $this->demoDir();
+        $sales = $dir . DIRECTORY_SEPARATOR . 'Demo SalesExtract072026-wapadrand.csv';
+        $drug = $dir . DIRECTORY_SEPARATOR . 'Demo Drug Usage 01 Sept 2026.xlsx';
 
         if (!is_file($sales) || !is_file($drug)) {
-            $this->command?->warn('Demo import files not found — skipping import layer (expected on servers without the local path). Lifecycle layer will run on existing data.');
+            $this->command?->warn('Demo import files not found in ' . $dir . ' — skipping import layer (set SPAR_DEMO_DIR to the upload path). Lifecycle layer will run on existing data.');
             return;
         }
 
