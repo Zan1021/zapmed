@@ -208,46 +208,44 @@ class DemoSeeder extends Seeder
     }
 
     /**
-     * Seed a couple of demo promo banners (real WebP) for the group so the mobi
-     * slider shows content. Generated with GD — no upload needed.
+     * Seed the three real SPAR Pharmacy promo banners for the group so the mobi
+     * slider shows proper branded creative (not placeholder rectangles).
+     *
+     * The WebP files ship with the repo under database/seeders/assets/banners
+     * (already sized 1080x400, cover-fit safe). They are copied verbatim onto
+     * the banners disk — no GD re-encode needed. Works identically on Windows
+     * and the Linux server since the assets travel with the codebase.
      */
     private function seedDemoBanners(\Zapmed\SparCore\Models\SparPharmacyGroup $group): void
     {
         if (\Zapmed\SparCore\Models\SparBanner::where('group_id', $group->id)->exists()) {
             return;
         }
-        if (!function_exists('imagewebp') || empty(gd_info()['WebP Support'])) {
-            $this->command?->warn('Demo banners skipped — GD WebP not available.');
-            return;
-        }
 
         $disk = config('spar.banners.disk', 'public');
-        $w = (int) config('spar.banners.width', 1080);
-        $h = (int) config('spar.banners.height', 420);
+        $assetDir = database_path('seeders/assets/banners');
 
-        $slides = [
-            ['Winter Flu Specials — 20% off', [0, 107, 63], 'https://www.spar.co.za'],
-            ['Free BP checks this month', [200, 30, 40], null],
+        // [asset filename, admin title (also used as alt text), click-through URL]
+        $banners = [
+            ['banner-wellness.webp', 'Make wellness a daily habit', 'https://www.spar.co.za/Pharmacy'],
+            ['banner-advice-care.webp', 'A little advice. A lot of care.', 'https://www.spar.co.za/Pharmacy'],
+            ['banner-whole-family.webp', 'Care for the whole family', 'https://www.spar.co.za/Pharmacy'],
         ];
 
-        foreach ($slides as $i => [$text, $rgb, $url]) {
-            $img = imagecreatetruecolor($w, $h);
-            $bg = imagecolorallocate($img, $rgb[0], $rgb[1], $rgb[2]);
-            imagefilledrectangle($img, 0, 0, $w, $h, $bg);
-            $white = imagecolorallocate($img, 255, 255, 255);
-            imagestring($img, 5, 40, (int) ($h / 2) - 10, $text, $white);
+        $seeded = 0;
+        foreach ($banners as $i => [$file, $title, $url]) {
+            $source = $assetDir . DIRECTORY_SEPARATOR . $file;
+            if (!is_file($source)) {
+                $this->command?->warn("Demo banner asset missing, skipped: {$file}");
+                continue;
+            }
 
-            $tmp = tempnam(sys_get_temp_dir(), 'demoban') . '.webp';
-            imagewebp($img, $tmp, (int) config('spar.banners.quality', 78));
-            imagedestroy($img);
-
-            $path = 'spar-banners/demo-' . ($i + 1) . '.webp';
-            \Illuminate\Support\Facades\Storage::disk($disk)->put($path, file_get_contents($tmp));
-            @unlink($tmp);
+            $path = 'spar-banners/' . $file;
+            \Illuminate\Support\Facades\Storage::disk($disk)->put($path, file_get_contents($source));
 
             \Zapmed\SparCore\Models\SparBanner::create([
                 'group_id' => $group->id,
-                'title' => $text,
+                'title' => $title,
                 'image_path' => $path,
                 'link_url' => $url,
                 'sort_order' => $i + 1,
@@ -255,8 +253,9 @@ class DemoSeeder extends Seeder
                 'impressions' => rand(120, 480),
                 'clicks' => rand(5, 40),
             ]);
+            $seeded++;
         }
 
-        $this->command?->info('Demo promo banners seeded (2) for ' . $group->name . '.');
+        $this->command?->info("Demo promo banners seeded ({$seeded}) for {$group->name}.");
     }
 }

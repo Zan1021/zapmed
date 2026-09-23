@@ -95,7 +95,7 @@
         {{-- Group-scoped ads, shown ONLY here (post-consent), under the logo.
              Lightweight Alpine carousel, lazy WebP, capped at 5. --}}
         @if($this->banners->isNotEmpty())
-            <div class="my-4" x-data="{ i: 0, n: {{ $this->banners->count() }} }"
+            <div class="mt-0 mb-4" x-data="{ i: 0, n: {{ $this->banners->count() }} }"
                  x-init="if (n > 1) setInterval(() => i = (i + 1) % n, 5000)">
                 <div class="relative overflow-hidden rounded-2xl aspect-[1080/420]">
                     @foreach($this->banners as $idx => $banner)

@@ -1,3 +1,19 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * Patient mobi scroll panel: hide the scrollbar so the desktop/laptop demo
+ * matches real mobile (where overflow scrollbars are auto-hiding overlays).
+ * Content stays fully scrollable — this only removes the visible track/thumb
+ * and reclaims the ~15px it steals from the layout width on desktop.
+ */
+.mobi-scroll {
+    scrollbar-width: none;          /* Firefox */
+    -ms-overflow-style: none;       /* legacy Edge/IE */
+}
+.mobi-scroll::-webkit-scrollbar {   /* Chrome, Edge, Safari */
+    width: 0;
+    height: 0;
+    background: transparent;
+}
