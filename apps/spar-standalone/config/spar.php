@@ -32,7 +32,7 @@ return [
     // this host's public/img; the staff/patient layouts read branding.logo_path.
     'branding' => [
         'name' => env('SPAR_BRAND_NAME', 'Pharmacy at SPAR'),
-        'primary_color' => env('SPAR_BRAND_COLOR', '#006B3F'),
+        'primary_color' => env('SPAR_BRAND_COLOR', '#038c46'),
         'logo_path' => env('SPAR_BRAND_LOGO', 'img/pharmacy-at-spar-logo.jpg'),
     ],
 

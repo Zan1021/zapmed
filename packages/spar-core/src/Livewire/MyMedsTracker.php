@@ -250,6 +250,55 @@ class MyMedsTracker extends Component
     // ---- "Order next meds" (FR-C1) ----------------------------------------
 
     /**
+     * The latest still-open order per journey, keyed by journey id. An order is
+     * "open" while it's requested / preparing / ready (not completed or
+     * cancelled). Orders link to a journey through their dispense record, so we
+     * resolve journey_id via the dispense. Drives the per-card status badge so a
+     * patient who has already ordered sees the order's progress instead of the
+     * "Order next meds" button (and can't double-order the same script).
+     *
+     * @return \Illuminate\Support\Collection<int, SparOrder>  journeyId => order
+     */
+    public function getActiveOrdersByJourneyProperty()
+    {
+        $journeyIds = $this->journeys->pluck('id')->all();
+        if (empty($journeyIds)) {
+            return collect();
+        }
+
+        // dispense_record_id -> journey_id map for this profile's journeys.
+        $dispenseToJourney = SparDispenseRecord::whereIn('journey_id', $journeyIds)
+            ->pluck('journey_id', 'id');
+
+        if ($dispenseToJourney->isEmpty()) {
+            return collect();
+        }
+
+        return SparOrder::whereIn('dispense_record_id', $dispenseToJourney->keys())
+            ->whereIn('status', ['requested', 'preparing', 'ready'])
+            ->orderByDesc('id')
+            ->get()
+            ->groupBy(fn (SparOrder $o) => (int) $dispenseToJourney[$o->dispense_record_id])
+            ->map(fn ($orders) => $orders->first()); // latest open order per journey
+    }
+
+    /**
+     * Human label + tailwind classes for an order's current status, for the
+     * per-journey badge on the tracker card.
+     *
+     * @return array{label: string, classes: string}
+     */
+    public function orderStatusBadge(SparOrder $order): array
+    {
+        return match ($order->status) {
+            'requested' => ['label' => 'Order received', 'classes' => 'border-blue-200 bg-blue-50 text-blue-700'],
+            'preparing' => ['label' => 'Being prepared', 'classes' => 'border-amber-200 bg-amber-50 text-amber-700'],
+            'ready' => ['label' => 'Ready to collect', 'classes' => 'border-green-200 bg-green-50 text-green-700'],
+            default => ['label' => ucfirst((string) $order->status), 'classes' => 'border-gray-200 bg-gray-50 text-gray-700'],
+        };
+    }
+
+    /**
      * Available fulfilment modes for the order dropdown. Delivery is only
      * offered when the journey's pharmacy supports it (mirrors the service
      * guard so the UI can't offer an impossible option).

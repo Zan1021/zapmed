@@ -265,37 +265,67 @@
                 @endif
 
                 {{-- ORDER NEXT MEDS (FR-C1). Active journeys only; consent already
-                     granted to reach the dashboard. Collect/deliver + pay intent. --}}
+                     granted to reach the dashboard. Collect/deliver + pay intent.
+                     If the patient already has an open order on this script, show
+                     its status instead of the order button (no double-ordering). --}}
                 @if($journey->status !== 'renewal_due')
-                    @php $modes = $this->orderModesFor($journey); @endphp
-                    <div class="mt-4">
-                        @if($orderingJourneyId === $journey->id)
-                            <div class="rounded-xl border border-green-200 bg-green-50 p-3">
-                                <p class="text-sm font-semibold text-gray-800 mb-2">How would you like it?</p>
-                                @if($error)<p class="text-sm text-red-600 mb-2">{{ $error }}</p>@endif
-                                <select wire:model="orderMode"
-                                        class="w-full rounded-xl border border-gray-300 bg-white py-2.5 px-3 text-sm mb-3">
-                                    <option value="">Choose an option…</option>
-                                    @foreach($modes as $value => $label)
-                                        <option value="{{ $value }}">{{ $label }}</option>
-                                    @endforeach
-                                </select>
-                                <div class="flex gap-2">
-                                    <button type="button" wire:click="placeOrder"
-                                            class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl py-2.5 text-sm">
-                                        Confirm order
-                                    </button>
-                                    <button type="button" wire:click="cancelOrder"
-                                            class="px-4 text-gray-500 text-sm">Cancel</button>
-                                </div>
+                    @php $activeOrder = $this->activeOrdersByJourney->get($journey->id); @endphp
+                    @if($activeOrder)
+                        @php $badge = $this->orderStatusBadge($activeOrder); @endphp
+                        <div class="mt-4 rounded-xl border {{ $badge['classes'] }} p-3">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-sm font-semibold">{{ $badge['label'] }}</span>
+                                <span class="inline-flex items-center rounded-full border {{ $badge['classes'] }} px-2 py-0.5 text-xs font-medium">
+                                    {{ $activeOrder->reference }}
+                                </span>
                             </div>
-                        @else
-                            <button type="button" wire:click="startOrder({{ $journey->id }})"
-                                    class="w-full rounded-xl border border-green-600 text-green-700 hover:bg-green-50 font-semibold py-2.5 text-sm">
-                                Order next meds
-                            </button>
-                        @endif
-                    </div>
+                            <p class="mt-1 text-xs text-gray-600">
+                                {{ $activeOrder->modeLabel() }} @if($activeOrder->pharmacy) &middot; {{ $activeOrder->pharmacy->name }} @endif
+                            </p>
+                            <p class="mt-1 text-xs text-gray-500">
+                                @switch($activeOrder->status)
+                                    @case('ready')
+                                        Your order is ready — pop in to your SPAR pharmacy to collect.
+                                        @break
+                                    @case('preparing')
+                                        Your SPAR pharmacy is preparing your order. We'll let you know when it's ready.
+                                        @break
+                                    @default
+                                        Your SPAR pharmacy has received your order and will prepare it shortly.
+                                @endswitch
+                            </p>
+                        </div>
+                    @else
+                        @php $modes = $this->orderModesFor($journey); @endphp
+                        <div class="mt-4">
+                            @if($orderingJourneyId === $journey->id)
+                                <div class="rounded-xl border border-green-200 bg-green-50 p-3">
+                                    <p class="text-sm font-semibold text-gray-800 mb-2">How would you like it?</p>
+                                    @if($error)<p class="text-sm text-red-600 mb-2">{{ $error }}</p>@endif
+                                    <select wire:model="orderMode"
+                                            class="w-full rounded-xl border border-gray-300 bg-white py-2.5 px-3 text-sm mb-3">
+                                        <option value="">Choose an option…</option>
+                                        @foreach($modes as $value => $label)
+                                            <option value="{{ $value }}">{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                    <div class="flex gap-2">
+                                        <button type="button" wire:click="placeOrder"
+                                                class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl py-2.5 text-sm">
+                                            Confirm order
+                                        </button>
+                                        <button type="button" wire:click="cancelOrder"
+                                                class="px-4 text-gray-500 text-sm">Cancel</button>
+                                    </div>
+                                </div>
+                            @else
+                                <button type="button" wire:click="startOrder({{ $journey->id }})"
+                                        class="w-full rounded-xl border border-green-600 text-green-700 hover:bg-green-50 font-semibold py-2.5 text-sm">
+                                    Order next meds
+                                </button>
+                            @endif
+                        </div>
+                    @endif
                 @endif
 
                 @if($journey->status === 'renewal_due' && config('spar.online_consult.enabled') && config('spar.online_consult.url'))
@@ -383,6 +413,12 @@
                     <p class="text-xs text-gray-400 text-center">or renew with your own doctor</p>
                 @else
                     @if(config('spar.online_consult.enabled') && config('spar.online_consult.url'))
+                        <div class="mb-3 flex items-center justify-center gap-2">
+                            <span class="text-xs text-gray-400">Powered by</span>
+                            <img src="{{ asset('img/zapmed-logo.png') }}" alt="ZapMed"
+                                 width="392" height="108"
+                                 class="h-6 w-auto max-w-[120px] object-contain">
+                        </div>
                         <a href="{{ config('spar.online_consult.url') }}" target="_blank" rel="noopener"
                            class="block w-full text-center bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl py-3 mb-1">
                             {{ config('spar.online_consult.label', 'Book a ZapMed online consult') }}

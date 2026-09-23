@@ -3,8 +3,10 @@
 namespace Database\Seeders;
 
 use App\Models\PharmacyUser;
+use Zapmed\SparCore\Models\SparPatient;
 use Zapmed\SparCore\Models\SparPharmacy;
 use Zapmed\SparCore\Models\SparPharmacyGroup;
+use Zapmed\SparCore\Models\SparPrescriptionJourney;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -35,43 +37,49 @@ class DatabaseSeeder extends Seeder
         $group = SparPharmacyGroup::firstOrCreate(
             ['slug' => 'spar-western-cape'],
             [
-                'name' => 'SPAR Western Cape',
-                'region' => 'Western Cape',
+                'name' => 'SPAR',
+                'region' => 'Gauteng',
                 'contact_name' => 'Regional Manager',
                 'contact_email' => 'region@sparmeds.test',
-                'contact_phone' => '0211230000',
+                'contact_phone' => '0121230000',
                 'is_active' => true,
             ]
         );
+        // Keep the group name/region current even if the row already existed.
+        $group->update(['name' => 'SPAR', 'region' => 'Gauteng']);
 
-        // --- Two pharmacies under the group ------------------------------
+        // --- Single demo pharmacy: SPAR Wapadrand (the branch we're pitching) -
+        // BHF 9900010 matches the Store/Bhf in the Wapadrand demo import so all
+        // imported patients + dispenses attach to THIS pharmacy.
         $pharmacyA = SparPharmacy::updateOrCreate(
             ['spar_store_id' => 'SB-STANDALONE-01'],
             [
                 'group_id' => $group->id,
-                'name' => 'SPAR Pharmacy — Plettenberg Bay',
-                'bhf_code' => '9900001',
-                'city' => 'Plettenberg Bay',
-                'province' => 'Western Cape',
+                'name' => 'SPAR Pharmacy — Wapadrand',
+                'bhf_code' => '9900010',
+                'city' => 'Wapadrand, Pretoria',
+                'province' => 'Gauteng',
                 'supports_delivery' => true,
                 'delivery_fee' => 5000,
                 'is_active' => true,
             ]
         );
 
-        $pharmacyB = SparPharmacy::updateOrCreate(
-            ['spar_store_id' => 'SB-STANDALONE-02'],
-            [
-                'group_id' => $group->id,
-                'name' => 'SPAR Pharmacy — Knysna',
-                'bhf_code' => '9900002',
-                'city' => 'Knysna',
-                'province' => 'Western Cape',
-                'supports_delivery' => false,
-                'delivery_fee' => 0,
-                'is_active' => true,
-            ]
-        );
+        // Remove the old demo pharmacies (Plettenberg Bay / Knysna) so Wapadrand
+        // is the only branch in the demo. Any patients/journeys they still hold
+        // are repointed to Wapadrand first so nothing is orphaned.
+        $stale = SparPharmacy::whereIn('spar_store_id', ['SB-STANDALONE-02'])
+            ->orWhere('name', 'like', '%Plettenberg%')
+            ->orWhere('name', 'like', '%Knysna%')
+            ->where('id', '!=', $pharmacyA->id)
+            ->get();
+        foreach ($stale as $old) {
+            SparPatient::where('spar_pharmacy_id', $old->id)->update(['spar_pharmacy_id' => $pharmacyA->id]);
+            SparPatient::where('onboarding_pharmacy_id', $old->id)->update(['onboarding_pharmacy_id' => $pharmacyA->id]);
+            SparPrescriptionJourney::where('spar_pharmacy_id', $old->id)->update(['spar_pharmacy_id' => $pharmacyA->id]);
+            \Zapmed\SparCore\Models\SparOrder::where('spar_pharmacy_id', $old->id)->update(['spar_pharmacy_id' => $pharmacyA->id]);
+            $old->delete();
+        }
 
         // --- Four-tier staff logins --------------------------------------
         // Tier 1: super admin (global — no group/pharmacy scope).
@@ -106,7 +114,7 @@ class DatabaseSeeder extends Seeder
         PharmacyUser::updateOrCreate(
             ['email' => 'groupadmin@sparmeds.test'],
             [
-                'name' => 'Group Admin — Western Cape',
+                'name' => 'Group Admin — SPAR',
                 'password' => Hash::make(self::PASSWORD),
                 'role' => 'group_admin',
                 'spar_pharmacy_id' => null,
@@ -120,7 +128,7 @@ class DatabaseSeeder extends Seeder
         PharmacyUser::updateOrCreate(
             ['email' => 'pharmadmin@sparmeds.test'],
             [
-                'name' => 'Pharmacy Admin — Plettenberg Bay',
+                'name' => 'Pharmacy Admin — Wapadrand',
                 'password' => Hash::make(self::PASSWORD),
                 'role' => 'pharmacy_admin',
                 'spar_pharmacy_id' => $pharmacyA->id,
@@ -150,9 +158,9 @@ class DatabaseSeeder extends Seeder
             [
                 ['super_admin', 'superadmin@sparmeds.test', 'all'],
                 ['admin (legacy super)', 'admin@sparmeds.test', 'all'],
-                ['group_admin', 'groupadmin@sparmeds.test', 'SPAR Western Cape'],
-                ['pharmacy_admin', 'pharmadmin@sparmeds.test', 'Plettenberg Bay'],
-                ['pharmacy_staff', 'staff@sparmeds.test', 'Plettenberg Bay'],
+                ['group_admin', 'groupadmin@sparmeds.test', 'SPAR'],
+                ['pharmacy_admin', 'pharmadmin@sparmeds.test', 'Wapadrand'],
+                ['pharmacy_staff', 'staff@sparmeds.test', 'Wapadrand'],
             ]
         );
 

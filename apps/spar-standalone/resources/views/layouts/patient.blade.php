@@ -14,7 +14,7 @@
     <div class="mx-auto max-w-md h-full flex flex-col">
         <header class="px-4 py-4 text-center text-white shrink-0" style="background: {{ config('spar.branding.primary_color', '#006B3F') }};">
             <div class="mx-auto mb-1 inline-block">
-                <img src="{{ asset(config('spar.branding.logo_path', 'img/pharmacy-at-spar-logo.jpg')) }}" alt="{{ config('spar.branding.name', 'SPAR Meds') }}" class="h-16 w-auto rounded">
+                <img src="{{ asset(config('spar.branding.logo_path', 'img/pharmacy-at-spar-logo.jpg')) }}" alt="{{ config('spar.branding.name', 'SPAR Meds') }}" class="h-[76.8px] w-auto rounded">
             </div>
             <div class="text-[10px] uppercase tracking-widest opacity-80">Powered by ZapMed</div>
             <div class="text-xs opacity-90">My Chronic Medication</div>

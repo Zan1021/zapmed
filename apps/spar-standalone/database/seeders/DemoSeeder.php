@@ -20,15 +20,34 @@ use Illuminate\Database\Seeder;
  */
 class DemoSeeder extends Seeder
 {
-    private const DEMO_DIR = 'C:\\Users\\zande\\Documents\\Zapmed\\Spar\\demo';
+    private const DEMO_DIR = 'E:\\OneDrive\\Desktop\\craig';
 
     public function run(): void
     {
-        $sales = self::DEMO_DIR . '\\Demo SalesExtract072026.csv';
+        $this->runImportLayer();
+
+        // The lifecycle layer (consent, orders, exceptions, renewals, banners)
+        // runs against whatever patients/journeys exist — whether they came from
+        // the import above or a prior seed. This is deliberate: on the staging
+        // server the local Windows import path does NOT exist, so the import is
+        // skipped there; the demo queue must still be populated so screens like
+        // Orders are never empty in front of the client.
+        $this->layerLifecycle();
+    }
+
+    /**
+     * Run the REAL dual-file import when the demo files are reachable, so the
+     * demo mirrors a live SPAR upload. Skipped gracefully when the files aren't
+     * present (e.g. the Forge server has no local Windows path) — the lifecycle
+     * layer then works on whatever data is already seeded.
+     */
+    private function runImportLayer(): void
+    {
+        $sales = self::DEMO_DIR . '\\Demo SalesExtract072026-wapadrand.csv';
         $drug = self::DEMO_DIR . '\\Demo Drug Usage 01 Sept 2026.xlsx';
 
         if (!is_file($sales) || !is_file($drug)) {
-            $this->command?->warn('Demo import files not found — skipping import layer. Expected in ' . self::DEMO_DIR);
+            $this->command?->warn('Demo import files not found — skipping import layer (expected on servers without the local path). Lifecycle layer will run on existing data.');
             return;
         }
 
@@ -55,8 +74,22 @@ class DemoSeeder extends Seeder
                 ])->saveQuietly();
             }
         }
+    }
 
-        // Attach every imported pharmacy to the demo group so group-admin sees them.
+    /**
+     * Layer realistic lifecycle states on top of whatever patients/journeys
+     * exist so EVERY screen has content: group attachment, consent variety,
+     * orders in each status (never-empty queue), an overdue + upcoming dispense,
+     * a renewal-due journey, demo banners, and a multi-store journey.
+     */
+    private function layerLifecycle(): void
+    {
+        if (SparPatient::query()->doesntExist()) {
+            $this->command?->warn('No SPAR patients present — lifecycle layer skipped. Run an import or the demo files first.');
+            return;
+        }
+
+        // Attach every pharmacy to the demo group so group-admin sees them.
         $group = \Zapmed\SparCore\Models\SparPharmacyGroup::firstOrCreate(
             ['slug' => 'spar-western-cape'],
             ['name' => 'SPAR Western Cape', 'region' => 'Western Cape', 'is_active' => true]
@@ -70,35 +103,54 @@ class DemoSeeder extends Seeder
             if ($i === count($principals) - 1) {
                 continue; // leave the last principal pending_consent for the demo
             }
-            $p->optIn('whatsapp', ['source' => 'pharmacist', 'ip_address' => '127.0.0.1']);
+            if (! $p->hasConsented()) {
+                $p->optIn('whatsapp', ['source' => 'pharmacist', 'ip_address' => '127.0.0.1']);
+            }
         }
 
         // --- Orders in every status (for the pharmacy dashboard queue) --------
-        $withJourney = SparPatient::whereHas('journeys')->get();
-        $statuses = ['requested', 'preparing', 'ready', 'completed'];
-        foreach ($withJourney->take(4)->values() as $idx => $patient) {
-            $journey = $patient->journeys()->first();
-            $dispense = SparDispenseRecord::where('journey_id', $journey->id)->first();
-            $status = $statuses[$idx % count($statuses)];
+        // Idempotent: only seed the demo queue when it's empty, so re-running the
+        // seeder doesn't pile up duplicate demo orders, but a fresh/empty staging
+        // DB always ends up with a populated queue (requested + preparing + ready
+        // + completed) — the fix for the empty-Orders-screen finding.
+        $existingDemoOrders = SparOrder::where('notes', 'like', 'Demo order%')->count();
+        if ($existingDemoOrders === 0) {
+            $withJourney = SparPatient::whereHas('journeys')->get();
+            $statuses = ['requested', 'preparing', 'ready', 'completed'];
+            $seeded = 0;
+            foreach ($withJourney->take(4)->values() as $idx => $patient) {
+                $journey = $patient->journeys()->first();
+                if (! $journey) {
+                    continue;
+                }
+                $dispense = SparDispenseRecord::where('journey_id', $journey->id)->first();
+                $status = $statuses[$idx % count($statuses)];
 
-            SparOrder::create([
-                'spar_patient_id' => $patient->id,
-                'spar_pharmacy_id' => $patient->spar_pharmacy_id,
-                'dispense_record_id' => $dispense?->id,
-                'type' => $idx % 2 === 0 ? 'collection' : 'delivery',
-                'status' => $status,
-                'delivery_address' => $idx % 2 === 0 ? null : ($patient->metadata['address'] ?? '1 Demo St'),
-                'delivery_phone' => $idx % 2 === 0 ? null : $patient->cellphone,
-                'notes' => 'Demo order (' . $status . ')',
-                'prepared_at' => in_array($status, ['preparing', 'ready', 'completed']) ? now()->subHours(2) : null,
-                'ready_at' => in_array($status, ['ready', 'completed']) ? now()->subHour() : null,
-                'completed_at' => $status === 'completed' ? now() : null,
-            ]);
+                SparOrder::create([
+                    'spar_patient_id' => $patient->id,
+                    'spar_pharmacy_id' => $patient->spar_pharmacy_id,
+                    'dispense_record_id' => $dispense?->id,
+                    'type' => $idx % 2 === 0 ? 'collection' : 'delivery',
+                    'fulfilment_mode' => $idx % 2 === 0 ? 'collect_pay_store' : 'deliver_pay_now',
+                    'status' => $status,
+                    'payment_status' => $idx % 2 === 0 ? 'pay_at_store' : 'paid',
+                    'delivery_address' => $idx % 2 === 0 ? null : ($patient->metadata['address'] ?? '1 Demo St'),
+                    'delivery_phone' => $idx % 2 === 0 ? null : $patient->cellphone,
+                    'notes' => 'Demo order (' . $status . ')',
+                    'prepared_at' => in_array($status, ['preparing', 'ready', 'completed']) ? now()->subHours(2) : null,
+                    'ready_at' => in_array($status, ['ready', 'completed']) ? now()->subHour() : null,
+                    'completed_at' => $status === 'completed' ? now() : null,
+                ]);
+                $seeded++;
+            }
+            $this->command?->info("Demo orders seeded ({$seeded}) across requested/preparing/ready/completed.");
+        } else {
+            $this->command?->info("Demo orders already present ({$existingDemoOrders}) — queue seed skipped (idempotent).");
         }
 
         // --- An OVERDUE upcoming dispense (exceptions screen) -----------------
         $firstJourney = SparPrescriptionJourney::first();
-        if ($firstJourney) {
+        if ($firstJourney && ! SparDispenseRecord::where('journey_id', $firstJourney->id)->where('dispense_number', 99)->exists()) {
             SparDispenseRecord::create([
                 'journey_id' => $firstJourney->id,
                 'spar_patient_id' => $firstJourney->spar_patient_id,
@@ -123,7 +175,7 @@ class DemoSeeder extends Seeder
 
         // --- An UPCOMING dispense due soon (reminder engine has work) ---------
         $activeJourney = SparPrescriptionJourney::where('status', 'active')->first();
-        if ($activeJourney) {
+        if ($activeJourney && ! SparDispenseRecord::where('journey_id', $activeJourney->id)->where('dispense_number', 50)->exists()) {
             SparDispenseRecord::create([
                 'journey_id' => $activeJourney->id,
                 'spar_patient_id' => $activeJourney->spar_patient_id,
@@ -134,33 +186,15 @@ class DemoSeeder extends Seeder
             ]);
         }
 
-        $this->command?->info('Demo lifecycle layered: consent, orders (4 statuses), overdue + upcoming dispenses, renewal-due journey.');
+        $this->command?->info('Demo lifecycle layered: consent, orders, overdue + upcoming dispenses, renewal-due journey.');
 
         // Demo promo banners for the group so the mobi slider shows something.
         $this->seedDemoBanners($group);
 
-        // Multi-store demo (national identity): give the principal a journey at a
-        // SECOND pharmacy so the mobi tracker shows the "Collected at: <store>"
-        // multi-store view. Uses the Knysna demo pharmacy if present.
-        $second = SparPharmacy::where('spar_store_id', 'SB-STANDALONE-02')->first()
-            ?? SparPharmacy::where('name', 'like', '%Knysna%')->first();
-        $principal = SparPatient::where('is_primary_member', true)->whereHas('journeys')->first();
-        if ($second && $principal) {
-            SparPrescriptionJourney::create([
-                'spar_patient_id' => $principal->id,
-                'spar_pharmacy_id' => $second->id,
-                'script_number' => 'DEMO-2NDSTORE',
-                'status' => 'active',
-                'total_dispenses' => 6,
-                'dispenses_completed' => 2,
-                'start_date' => now()->subMonths(2),
-                'next_dispense_date' => now()->addDays(10),
-                'renewal_due_date' => now()->addMonths(4),
-                'doctor_name' => 'Dr Second Store',
-                'medications' => [['name' => 'METFORMIN 500MG TAB 60', 'quantity' => 60]],
-            ]);
-            $this->command?->info("Multi-store demo: {$principal->display_name} also has a journey at {$second->name}.");
-        }
+        // NOTE: the multi-store "second pharmacy" demo was removed for the
+        // Wapadrand pitch — Wapadrand is the ONLY branch, so all journeys stay
+        // under it. (National-identity multi-store behaviour is still in the
+        // code; it just isn't exercised by this single-branch demo.)
     }
 
     /**
