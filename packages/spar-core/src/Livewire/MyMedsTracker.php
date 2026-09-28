@@ -386,6 +386,58 @@ class MyMedsTracker extends Component
     }
 
     /**
+     * Patient responds to a renewal / reminder prompt from their own tracker
+     * (spec FR-B3). Wired to the shared <x-spar::response-actions> widget on the
+     * renewal card. Scoped: the journey must belong to this session's profile
+     * roll-up, so a tampered id can't answer for someone else's script. The
+     * signal string is validated against the enum before it reaches the service.
+     */
+    public function respondToReminder(string $signal, string $subjectType, int $subjectId, array $payload = []): void
+    {
+        // Only prescription-journey subjects are answerable from this widget.
+        if (! is_a($subjectType, SparPrescriptionJourney::class, true)) {
+            abort(403);
+        }
+
+        // Scope guard: the journey must be one of this profile's own journeys.
+        $journey = $this->journeys->firstWhere('id', $subjectId);
+        if (! $journey) {
+            abort(403);
+        }
+
+        $signalType = \Zapmed\SparCore\Enums\SparPatientSignalType::tryFrom($signal);
+        if (! $signalType) {
+            $this->error = 'That option is not available.';
+            return;
+        }
+
+        app(\Zapmed\SparCore\Services\SparActionService::class)
+            ->recordPatientResponse($journey, $signalType, $payload, 'inapp');
+
+        $this->logSparActivity('patient_reminder_response', 'Patient responded to a reminder via tracker', [
+            'spar_patient_id' => $this->sparPatient?->id,
+            'journey_id' => $journey->id,
+            'signal' => $signalType->value,
+        ]);
+
+        $this->error = '';
+        session()->flash('success', $this->reminderResponseMessage($signalType));
+    }
+
+    /** Friendly confirmation copy for each patient reminder response. */
+    private function reminderResponseMessage(\Zapmed\SparCore\Enums\SparPatientSignalType $signal): string
+    {
+        return match ($signal) {
+            \Zapmed\SparCore\Enums\SparPatientSignalType::YesCollect => "Great — we'll prepare your repeat for collection and be in touch.",
+            \Zapmed\SparCore\Enums\SparPatientSignalType::YesDeliver => "Great — we'll arrange delivery of your repeat and be in touch.",
+            \Zapmed\SparCore\Enums\SparPatientSignalType::RemindInDays => "No problem — we'll remind you again in a week.",
+            \Zapmed\SparCore\Enums\SparPatientSignalType::RemindNextCycle => "Sure — we'll remind you next month.",
+            \Zapmed\SparCore\Enums\SparPatientSignalType::StopReminders => "Done — we've stopped renewal reminders for this script.",
+            default => "Thanks — your response has been recorded.",
+        };
+    }
+
+    /**
      * Unread coach messages for the badge on the Health Coach button. Resolves
      * the conversation for the profile's primary member at their pharmacy
      * (same binding as PatientCoachMessages) WITHOUT creating one — a null

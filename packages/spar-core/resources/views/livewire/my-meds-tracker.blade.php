@@ -337,6 +337,22 @@
                         <p class="text-xs text-gray-400 text-center mt-1">www.zapmed.co.za</p>
                     </div>
                 @endif
+
+                {{-- REMINDER RESPONSE (FR-B3). When the pharmacy has sent a renewal
+                     nudge (staff clicked "Remind" → action_status = awaiting_patient),
+                     surface the patient's reply choices here on the card. Answering
+                     records a SparPatientSignal and reschedules / resolves the loop. --}}
+                @if($journey->status === 'renewal_due' && $journey->actionStatus() === \Zapmed\SparCore\Enums\SparActionableStatus::AwaitingPatient)
+                    <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3">
+                        <p class="text-sm font-semibold text-gray-800 mb-1">Shall we prepare your next repeat?</p>
+                        <p class="text-xs text-gray-500 mb-3">Your SPAR pharmacy asked about your renewal. Let them know:</p>
+                        <x-spar::response-actions
+                            :subject-type="\Zapmed\SparCore\Models\SparPrescriptionJourney::class"
+                            :subject-id="$journey->id"
+                            :show="['yes_collect', 'yes_deliver', 'remind_in_days', 'stop_reminders']"
+                            compact />
+                    </div>
+                @endif
             </div>
         @empty
             <div class="bg-amber-50 border border-amber-200 rounded-xl p-6 text-center">
