@@ -2,7 +2,7 @@
 <section id="calculators" class="py-20 px-4 sm:px-6 lg:px-8">
     <div class="max-w-7xl mx-auto">
         <div class="text-center mb-16">
-            <h2 class="text-3xl sm:text-4xl font-bold text-gray-900">Health Calculators</h2>
+            <h2 class="heading text-brand">Health Calculators</h2>
             <p class="mt-4 text-lg text-gray-500">Understand your body. Set your goals. Start your journey.</p>
         </div>
 
@@ -17,16 +17,16 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Height (cm)</label>
                         <input type="number" x-model="height" @input="calculate()" placeholder="170" min="100" max="250"
-                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-zapmed-500 focus:ring-zapmed-500">
+                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-zapmed-700 focus:ring-zapmed-700">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Weight (kg)</label>
                         <input type="number" x-model="weight" @input="calculate()" placeholder="75" min="30" max="300"
-                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-zapmed-500 focus:ring-zapmed-500">
+                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-zapmed-700 focus:ring-zapmed-700">
                     </div>
                 </div>
 
-                <button @click="calculate()" class="w-full mt-4 bg-zapmed-600 hover:bg-zapmed-700 text-white py-3 rounded-lg text-sm font-semibold transition-colors shadow-sm">
+                <button @click="calculate()" class="w-full mt-4 bg-zapmed-800 hover:bg-zapmed-900 text-white py-3 rounded-lg text-sm font-semibold transition-colors shadow-sm">
                     Calculate My BMI
                 </button>
 
@@ -82,12 +82,12 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Current Weight (kg)</label>
                         <input type="number" x-model="currentWeight" @input="project()" placeholder="95" min="50" max="300"
-                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-zapmed-500 focus:ring-zapmed-500">
+                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-zapmed-700 focus:ring-zapmed-700">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Goal Weight (kg)</label>
                         <input type="number" x-model="goalWeight" @input="project()" placeholder="75" min="40" max="250"
-                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-zapmed-500 focus:ring-zapmed-500">
+                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-zapmed-700 focus:ring-zapmed-700">
                     </div>
                 </div>
 
@@ -95,20 +95,20 @@
                 <div x-show="showResults" x-transition class="mt-6">
                     <!-- Progress Cards -->
                     <div class="grid grid-cols-3 gap-3 mb-6">
-                        <div class="bg-zapmed-50 rounded-lg p-3 text-center">
-                            <p class="text-xs text-zapmed-600 font-medium">3 Months</p>
-                            <p class="text-2xl font-bold text-zapmed-700" x-text="month3 + ' kg'"></p>
-                            <p class="text-xs text-zapmed-500" x-text="'-' + loss3 + ' kg'"></p>
+                        <div class="bg-sage-100 rounded-lg p-3 text-center">
+                            <p class="text-xs text-zapmed-800 font-medium">3 Months</p>
+                            <p class="text-2xl font-bold text-zapmed-900" x-text="month3 + ' kg'"></p>
+                            <p class="text-xs text-zapmed-700" x-text="'-' + loss3 + ' kg'"></p>
                         </div>
-                        <div class="bg-zapmed-100 rounded-lg p-3 text-center">
-                            <p class="text-xs text-zapmed-600 font-medium">6 Months</p>
-                            <p class="text-2xl font-bold text-zapmed-700" x-text="month6 + ' kg'"></p>
-                            <p class="text-xs text-zapmed-500" x-text="'-' + loss6 + ' kg'"></p>
+                        <div class="bg-sage-200 rounded-lg p-3 text-center">
+                            <p class="text-xs text-zapmed-800 font-medium">6 Months</p>
+                            <p class="text-2xl font-bold text-zapmed-900" x-text="month6 + ' kg'"></p>
+                            <p class="text-xs text-zapmed-700" x-text="'-' + loss6 + ' kg'"></p>
                         </div>
-                        <div class="bg-zapmed-200 rounded-lg p-3 text-center">
-                            <p class="text-xs text-zapmed-700 font-medium">12 Months</p>
-                            <p class="text-2xl font-bold text-zapmed-800" x-text="month12 + ' kg'"></p>
-                            <p class="text-xs text-zapmed-600" x-text="'-' + loss12 + ' kg'"></p>
+                        <div class="bg-sage-300 rounded-lg p-3 text-center">
+                            <p class="text-xs text-zapmed-900 font-medium">12 Months</p>
+                            <p class="text-2xl font-bold text-brand" x-text="month12 + ' kg'"></p>
+                            <p class="text-xs text-zapmed-800" x-text="'-' + loss12 + ' kg'"></p>
                         </div>
                     </div>
 
@@ -119,7 +119,7 @@
                             <span x-text="'Goal: ' + goalWeight + ' kg'"></span>
                         </div>
                         <div class="h-5 bg-gray-100 rounded-full overflow-hidden relative">
-                            <div class="h-full bg-gradient-to-r from-zapmed-400 to-zapmed-600 rounded-full transition-all duration-1000"
+                            <div class="h-full bg-gradient-to-r from-sage-400 to-brand rounded-full transition-all duration-1000"
                                  :style="'width: ' + progressPercent + '%'"></div>
                         </div>
                         <p class="text-xs text-gray-500 text-center mt-1" x-text="percentLoss + '% of excess weight projected in 12 months'"></p>
@@ -131,7 +131,7 @@
                     </div>
 
                     <!-- CTA -->
-                    <a href="{{ route('register') }}" class="mt-4 block w-full text-center bg-zapmed-600 hover:bg-zapmed-700 text-white py-3 rounded-lg text-sm font-semibold transition-colors shadow-sm">
+                    <a href="{{ route('register') }}" class="mt-4 block w-full text-center bg-brand hover:bg-brand-hover text-white py-3 rounded-lg text-sm font-semibold transition-colors shadow-sm">
                         Start Your Weight Loss Journey
                     </a>
                 </div>
@@ -146,7 +146,7 @@
 
         <!-- More Calculators Toggle -->
         <div class="text-center mt-8" x-data="{ showMore: false }">
-            <button @click="showMore = !showMore" class="inline-flex items-center px-6 py-3 bg-white border border-zapmed-600 text-zapmed-600 hover:bg-zapmed-50 rounded-xl text-sm font-semibold transition-colors">
+            <button @click="showMore = !showMore" class="inline-flex items-center px-6 py-3 bg-white border border-brand text-brand hover:bg-sage-100 rounded-xl text-sm font-semibold transition-colors">
                 <span x-text="showMore ? 'Show Less' : 'More Calculators'"></span>
                 <svg class="w-4 h-4 ml-2 transition-transform" :class="showMore ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
             </button>
@@ -169,14 +169,14 @@
                                 <template x-for="(opt, oi) in q.options" :key="oi">
                                     <button @click="answers[i] = opt.score; checkComplete()"
                                         class="px-3 py-1.5 rounded-lg text-xs font-medium border transition-all"
-                                        :class="answers[i] === opt.score ? 'bg-zapmed-600 text-white border-zapmed-600' : 'bg-white text-gray-600 border-gray-200 hover:border-zapmed-300'">
+                                        :class="answers[i] === opt.score ? 'bg-brand text-white border-brand' : 'bg-white text-gray-600 border-gray-200 hover:border-sage-300'">
                                         <span x-text="opt.label"></span>
                                     </button>
                                 </template>
                             </div>
                         </div>
                     </template>
-                    <button @click="calculateScore()" x-show="allAnswered" x-transition class="w-full mt-4 bg-zapmed-600 hover:bg-zapmed-700 text-white py-3 rounded-lg text-sm font-semibold transition-colors">
+                    <button @click="calculateScore()" x-show="allAnswered" x-transition class="w-full mt-4 bg-brand hover:bg-brand-hover text-white py-3 rounded-lg text-sm font-semibold transition-colors">
                         See My Score
                     </button>
                 </div>
@@ -210,7 +210,7 @@
                                 <template x-for="(opt, oi) in q.options" :key="oi">
                                     <button @click="answers[i] = opt.score; checkComplete()"
                                         class="px-3 py-1.5 rounded-lg text-xs font-medium border transition-all"
-                                        :class="answers[i] === opt.score ? 'bg-zapmed-600 text-white border-zapmed-600' : 'bg-white text-gray-600 border-gray-200 hover:border-zapmed-300'">
+                                        :class="answers[i] === opt.score ? 'bg-brand text-white border-brand' : 'bg-white text-gray-600 border-gray-200 hover:border-sage-300'">
                                         <span x-text="opt.label"></span>
                                     </button>
                                 </template>
@@ -258,7 +258,7 @@
                                 <template x-for="(opt, oi) in q.options" :key="oi">
                                     <button @click="answers[i] = opt.score"
                                         class="px-3 py-1.5 rounded-lg text-xs font-medium border transition-all"
-                                        :class="answers[i] === opt.score ? 'bg-zapmed-600 text-white border-zapmed-600' : 'bg-white text-gray-600 border-gray-200 hover:border-zapmed-300'">
+                                        :class="answers[i] === opt.score ? 'bg-brand text-white border-brand' : 'bg-white text-gray-600 border-gray-200 hover:border-sage-300'">
                                         <span x-text="opt.label"></span>
                                     </button>
                                 </template>

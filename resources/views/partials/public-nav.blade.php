@@ -132,7 +132,7 @@
                     </div>
                 @else
                     <a href="{{ route('login') }}" class="hidden sm:inline-block text-sm font-medium text-gray-600 hover:text-zapmed-700 border border-zapmed-600 px-4 py-2 rounded-lg transition-colors">Log in</a>
-                    <a href="{{ route('register') }}" class="bg-zapmed-600 hover:bg-zapmed-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm">
+                    <a href="{{ route('register') }}" class="bg-brand hover:bg-brand-hover text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm">
                         Start Assessment
                     </a>
                 @endauth

@@ -2,6 +2,46 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+|--------------------------------------------------------------------------
+| FONT CONTROL — single source of truth
+|--------------------------------------------------------------------------
+| To change fonts site-wide while experimenting:
+|   1. Change the families in these two CSS variables.
+|   2. Load the matching font in welcome.blade.php's <link> (bunny.net).
+| Everything using Tailwind's `font-serif` (headings) / `font-sans` (body)
+| or the `.heading` class below updates automatically — no per-heading edits.
+|
+| To change the SIZE of every heading below the hero at once:
+|   edit the font-size lines in `.heading` only.
+*/
+:root {
+    --font-heading: 'DM Serif Display', ui-serif, Georgia, serif;
+    --font-body: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer components {
+    /* One consistent heading look + size for all section headings below the hero.
+       Matches the "Doctor-led care for a healthier you." treatment heading. */
+    .heading {
+        font-family: var(--font-heading);
+        font-weight: 400;
+        letter-spacing: 0.02em;
+        line-height: 1.1;
+        font-size: 2.25rem;      /* text-4xl */
+    }
+    @media (min-width: 640px) {
+        .heading { font-size: 3rem; }   /* sm:text-5xl */
+    }
+    /* Italic accent (e.g. the green part of a heading) */
+    .heading-italic {
+        font-family: var(--font-heading);
+        font-weight: 400;
+        font-style: italic;
+        letter-spacing: 0.02em;
+    }
+}
+
 [x-cloak] {
     display: none !important;
 }

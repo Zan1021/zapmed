@@ -21,6 +21,7 @@ return [
         'name' => 'Weight Loss',
         'description' => 'GLP-1 medically guided weight loss with Health Coach support',
         'image' => '/images/services/weight-loss.webp',
+        'icon' => 'weight-loss',
         'treatments' => [
             'weight-loss' => [
                 'name' => 'Weight Loss',
@@ -46,7 +47,8 @@ return [
     'skincare' => [
         'name' => 'Skincare',
         'description' => 'Prescription skincare personalised to you',
-        'image' => '/images/services/skincare-routine-cleansing-wipe-woman.webp',
+        'image' => '/images/services/skincare.webp',
+        'icon' => 'skincare',
         'treatments' => [
             'acne-treatment' => [
                 'name' => 'Acne Treatment',
@@ -91,6 +93,7 @@ return [
         'name' => "Women's Health",
         'description' => 'Contraception, hormonal support, and intimate health',
         'image' => '/images/services/womens-health.webp',
+        'icon' => 'womens-health',
         'treatments' => [
             'bacterial-vaginosis-treatment' => [
                 'name' => 'Bacterial Vaginosis',
@@ -135,6 +138,7 @@ return [
         'name' => "Men's Health",
         'description' => 'Sexual performance, hair loss, and wellness',
         'image' => '/images/services/mens-health.webp',
+        'icon' => 'mens-health',
         'treatments' => [
             'erectile-dysfunction-treatment' => [
                 'name' => 'Erectile Dysfunction',
@@ -170,6 +174,7 @@ return [
         'name' => 'Sexual Health',
         'description' => 'Discreet treatment for sexual health concerns',
         'image' => '/images/services/sexual-health.webp',
+        'icon' => 'sexual-health',
         'treatments' => [
             'genital-herpes-101' => [
                 'name' => 'Genital Herpes',
@@ -214,6 +219,7 @@ return [
         'name' => 'General Health',
         'description' => 'Virtual GP consultations and everyday treatments',
         'image' => '/images/services/general-health.webp',
+        'icon' => 'general-health',
         'treatments' => [
             'acid-reflux-treatment' => [
                 'name' => 'Acid Reflux',

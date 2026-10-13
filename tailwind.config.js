@@ -17,9 +17,15 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Noto Sans', ...defaultTheme.fontFamily.sans],
+                // Driven by CSS variables in resources/css/app.css (single source of truth).
+                sans: ['var(--font-body)', ...defaultTheme.fontFamily.sans],
+                serif: ['var(--font-heading)', ...defaultTheme.fontFamily.serif],
             },
             colors: {
+                brand: {
+                    DEFAULT: '#04201e',
+                    hover: '#063430',
+                },
                 zapmed: {
                     50: '#f4fce6',
                     100: '#e6f9c8',
@@ -37,6 +43,13 @@ export default {
                     DEFAULT: '#1e293b',
                     hover: '#334155',
                     active: '#0f172a',
+                },
+                sage: {
+                    100: '#e3ecdf',
+                    200: '#cadcc2',
+                    300: '#a9c79b',
+                    400: '#8fb47e',
+                    500: '#749963',
                 },
             },
         },
