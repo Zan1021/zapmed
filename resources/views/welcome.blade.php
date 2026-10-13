@@ -437,12 +437,12 @@
 
     <!-- Lose weight for the last time (weight-loss hero banner) -->
     <section id="weight-loss-banner" class="relative overflow-hidden bg-brand min-h-[560px] flex items-center">
-        {{-- Background photo placeholder — swap /images/weight-loss-banner.webp when ready --}}
-        <div class="absolute inset-0 bg-gradient-to-br from-brand-hover via-brand to-brand"
-             style="background-image: url('/images/weight-loss-banner.webp'); background-size: cover; background-position: center right;">
+        {{-- Background photo (zapmed-weight-loss-background.webp) --}}
+        <div class="absolute inset-0 bg-cover bg-center"
+             style="background-image: url('/images/weight-loss-banner.webp');">
         </div>
         {{-- Left scrim so copy stays legible over the photo --}}
-        <div class="absolute inset-0 bg-gradient-to-r from-brand/85 via-brand/50 to-transparent"></div>
+        <div class="absolute inset-0 bg-gradient-to-r from-brand/85 via-brand/40 to-transparent"></div>
 
         <div class="relative max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-20">
             <div class="max-w-xl">
@@ -658,53 +658,51 @@
     <section id="tailored-care" class="px-4 sm:px-6 py-16 lg:py-20 bg-white">
         <div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
 
-            {{-- Men's health (green) --}}
-            <div class="relative overflow-hidden rounded-3xl bg-zapmed-50 border border-zapmed-100">
-                <div class="grid grid-cols-1 sm:grid-cols-5 h-full">
-                    <div class="sm:col-span-3 p-8 lg:p-10">
-                        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-zapmed-700">Tailored for Him</p>
-                        <h2 class="mt-3 text-4xl sm:text-5xl font-bold text-gray-900">Men's <span class="text-zapmed-700">health</span></h2>
-                        <p class="mt-4 text-base text-gray-600 leading-relaxed">
-                            Feel stronger, sharper and more confident with discreet, doctor-led treatments for men.
-                        </p>
+            {{-- Men's health (full-bleed image background) --}}
+            <div class="relative overflow-hidden rounded-3xl min-h-[460px]">
+                {{-- full-card background image --}}
+                <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('/images/mens-health-banner.webp');"></div>
+                {{-- scrim so the copy stays readable over the photo --}}
+                <div class="absolute inset-0 bg-gradient-to-r from-white/90 via-white/70 to-transparent"></div>
+                <div class="relative p-8 lg:p-10 max-w-xl">
+                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-zapmed-700">Tailored for Him</p>
+                    <h2 class="mt-3 text-4xl sm:text-5xl font-bold text-gray-900">Men's <span class="text-zapmed-700">health</span></h2>
+                    <p class="mt-4 text-base text-gray-700 leading-relaxed">
+                        Feel stronger, sharper and more confident with discreet, doctor-led treatments for men.
+                    </p>
 
-                        <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            @foreach ([
-                                ['M6.5 6.5h11M6.5 17.5h11M4 9v6M20 9v6M8 7v10M16 7v10', 'Energy & Performance'],
-                                ['M19 5l-5 5m5-5h-4m4 0v4M10 14a4 4 0 11-5.657 5.657A4 4 0 0110 14z', 'Testosterone Support'],
-                                ['M12 6a3 3 0 00-3 3c0 1 .5 1.5-1 3-1 1-1 3 0 4 .5.5 1.5 1 3 1s2.5-.5 3-1c1-1 1-3 0-4-1.5-1.5-1-2-1-3a3 3 0 00-1-2z', 'Mental Focus & Mood'],
-                                ['M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z', 'Sexual Health & Confidence'],
-                            ] as $card)
-                                <div class="flex items-center justify-between gap-3 bg-white rounded-xl px-4 py-3.5 shadow-sm border border-zapmed-100/60">
-                                    <div class="flex items-center gap-3">
-                                        <svg class="w-6 h-6 text-zapmed-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{{ $card[0] }}"/></svg>
-                                        <span class="text-sm font-semibold text-gray-800 leading-tight">{{ $card[1] }}</span>
-                                    </div>
-                                    <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        @foreach ([
+                            ['M6.5 6.5h11M6.5 17.5h11M4 9v6M20 9v6M8 7v10M16 7v10', 'Energy & Performance'],
+                            ['M19 5l-5 5m5-5h-4m4 0v4M10 14a4 4 0 11-5.657 5.657A4 4 0 0110 14z', 'Testosterone Support'],
+                            ['M12 6a3 3 0 00-3 3c0 1 .5 1.5-1 3-1 1-1 3 0 4 .5.5 1.5 1 3 1s2.5-.5 3-1c1-1 1-3 0-4-1.5-1.5-1-2-1-3a3 3 0 00-1-2z', 'Mental Focus & Mood'],
+                            ['M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z', 'Sexual Health & Confidence'],
+                        ] as $card)
+                            <div class="flex items-center justify-between gap-3 bg-white/90 backdrop-blur-sm rounded-xl px-4 py-3.5 shadow-sm border border-zapmed-100/60">
+                                <div class="flex items-center gap-3">
+                                    <svg class="w-6 h-6 text-zapmed-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{{ $card[0] }}"/></svg>
+                                    <span class="text-sm font-semibold text-gray-800 leading-tight">{{ $card[1] }}</span>
                                 </div>
-                            @endforeach
-                        </div>
+                                <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </div>
+                        @endforeach
+                    </div>
 
-                        <button type="button" class="mt-8 inline-flex items-center gap-2 bg-zapmed-900 hover:bg-zapmed-950 text-white px-7 py-3.5 rounded-full text-sm font-semibold transition-colors shadow">
-                            Explore Men's Health
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-                        </button>
-                    </div>
-                    {{-- photo placeholder (swap /images/mens-health.webp) --}}
-                    <div class="sm:col-span-2 min-h-[220px] bg-gradient-to-br from-zapmed-100 to-zapmed-200 flex items-center justify-center"
-                         style="background-image: url('/images/mens-health.webp'); background-size: cover; background-position: center;">
-                        <span class="text-xs text-zapmed-700/50">image placeholder</span>
-                    </div>
+                    <button type="button" class="mt-8 inline-flex items-center gap-2 bg-zapmed-900 hover:bg-zapmed-950 text-white px-7 py-3.5 rounded-full text-sm font-semibold transition-colors shadow">
+                        Explore Men's Health
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                    </button>
                 </div>
             </div>
 
-            {{-- Women's health (green) --}}
-            <div class="relative overflow-hidden rounded-3xl bg-sage-100/50 border border-sage-200">
-                <div class="grid grid-cols-1 sm:grid-cols-5 h-full">
-                    <div class="sm:col-span-3 p-8 lg:p-10">
+            {{-- Women's health (full-bleed image background) --}}
+            <div class="relative overflow-hidden rounded-3xl min-h-[460px]">
+                <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('/images/womens-health-banner.webp');"></div>
+                <div class="absolute inset-0 bg-gradient-to-r from-white/90 via-white/70 to-transparent"></div>
+                <div class="relative p-8 lg:p-10 max-w-xl">
                         <p class="text-xs font-semibold uppercase tracking-[0.2em] text-zapmed-700">Tailored for Her</p>
                         <h2 class="mt-3 text-4xl sm:text-5xl font-bold text-gray-900">Women's <span class="text-zapmed-700">health</span></h2>
-                        <p class="mt-4 text-base text-gray-600 leading-relaxed">
+                        <p class="mt-4 text-base text-gray-700 leading-relaxed">
                             Personalised care for every stage of life — from weight loss and hormonal balance to skin, energy and overall wellbeing.
                         </p>
 
@@ -715,7 +713,7 @@
                                 ['M15 9a6 6 0 00-6 6c0 2 1 3 1 5h4M18 7l1.5-1.5M19 11h2M17.5 4.5L18 4', 'Skin, Hair & Aesthetics'],
                                 ['M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z', 'Energy, Mood & Wellbeing'],
                             ] as $card)
-                                <div class="flex items-center justify-between gap-3 bg-white rounded-xl px-4 py-3.5 shadow-sm border border-sage-200/60">
+                                <div class="flex items-center justify-between gap-3 bg-white/90 backdrop-blur-sm rounded-xl px-4 py-3.5 shadow-sm border border-sage-200/60">
                                     <div class="flex items-center gap-3">
                                         <svg class="w-6 h-6 text-zapmed-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{{ $card[0] }}"/></svg>
                                         <span class="text-sm font-semibold text-gray-800 leading-tight">{{ $card[1] }}</span>
@@ -729,12 +727,6 @@
                             Explore Women's Health
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
                         </button>
-                    </div>
-                    {{-- photo placeholder (swap /images/womens-health.webp) --}}
-                    <div class="sm:col-span-2 min-h-[220px] bg-gradient-to-br from-sage-100 to-sage-200 flex items-center justify-center"
-                         style="background-image: url('/images/womens-health.webp'); background-size: cover; background-position: center;">
-                        <span class="text-xs text-zapmed-700/50">image placeholder</span>
-                    </div>
                 </div>
             </div>
 
