@@ -1,6 +1,16 @@
 import defaultTheme from 'tailwindcss/defaultTheme';
 import forms from '@tailwindcss/forms';
 
+/*
+| COLOURS & FONTS ARE DEFINED ONCE, in resources/css/app.css (CSS variables).
+| This file only MAPS Tailwind class names onto those variables. To re-colour
+| or re-font the site, edit the tokens in app.css — not here, not the Blade.
+|
+| `rgb(var(--x) / <alpha-value>)` would need numeric channels; the moodboard
+| tokens are hex, so we reference them directly. Tailwind opacity modifiers
+| (e.g. bg-brand/85) still work on the hex values.
+*/
+
 /** @type {import('tailwindcss').Config} */
 export default {
     content: [
@@ -17,40 +27,84 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                // Driven by CSS variables in resources/css/app.css (single source of truth).
                 sans: ['var(--font-body)', ...defaultTheme.fontFamily.sans],
                 serif: ['var(--font-heading)', ...defaultTheme.fontFamily.serif],
+                logo: ['var(--font-logo)', ...defaultTheme.fontFamily.sans],
             },
             colors: {
+                /* Brand anchor = Dark teal. Hover = the darker signature stop. */
                 brand: {
-                    DEFAULT: '#04201e',
-                    hover: '#063430',
+                    DEFAULT: 'var(--color-dark-teal)',
+                    hover: 'var(--color-teal-900)',
                 },
-                zapmed: {
-                    50: '#f4fce6',
-                    100: '#e6f9c8',
-                    200: '#cdf396',
-                    300: '#ade85a',
-                    400: '#93db2a',
-                    500: '#81cf00',
-                    600: '#6ab300',
-                    700: '#508a00',
-                    800: '#406d07',
-                    900: '#365c0b',
-                    950: '#1a3300',
+
+                /* Semantic palette names (prefer these in NEW markup) */
+                teal: {
+                    50:  'var(--color-teal-50)',
+                    100: 'var(--color-teal-100)',
+                    200: 'var(--color-teal-200)',
+                    300: 'var(--color-teal-300)',
+                    400: 'var(--color-teal-400)',
+                    500: 'var(--color-teal-500)',
+                    600: 'var(--color-teal-600)',
+                    700: 'var(--color-teal-700)',
+                    800: 'var(--color-teal-800)',
+                    900: 'var(--color-teal-900)',
+                    950: 'var(--color-teal-950)',
+                    DEFAULT: 'var(--color-primary-teal)',
                 },
-                sidebar: {
-                    DEFAULT: '#1e293b',
-                    hover: '#334155',
-                    active: '#0f172a',
-                },
+                ivory: 'var(--color-ivory)',
+
+                /* Men's accents */
+                navy:  'var(--color-navy)',
+                steel: 'var(--color-steel)',
+                dusty: 'var(--color-dusty)',
+
+                /* Women's accents (sage scale: pale → soft → deep) */
                 sage: {
-                    100: '#e3ecdf',
-                    200: '#cadcc2',
-                    300: '#a9c79b',
-                    400: '#8fb47e',
-                    500: '#749963',
+                    100: 'var(--color-pale-sage)',
+                    200: 'var(--color-pale-sage)',
+                    300: 'var(--color-soft-sage)',
+                    400: 'var(--color-soft-sage)',
+                    500: 'var(--color-deep-sage)',
+                    DEFAULT: 'var(--color-deep-sage)',
                 },
+
+                /* LEGACY alias — the frontend/admin still use `zapmed-*` classes
+                   everywhere. Re-pointed from the old lime green onto the brand
+                   teal ramp so existing markup adopts the new palette with no
+                   Blade edits. New work should use `teal-*` instead. */
+                zapmed: {
+                    50:  'var(--color-teal-50)',
+                    100: 'var(--color-teal-100)',
+                    200: 'var(--color-teal-200)',
+                    300: 'var(--color-teal-300)',
+                    400: 'var(--color-teal-400)',
+                    500: 'var(--color-teal-500)',
+                    600: 'var(--color-teal-600)',
+                    700: 'var(--color-teal-700)',
+                    800: 'var(--color-teal-800)',
+                    900: 'var(--color-teal-900)',
+                    950: 'var(--color-teal-950)',
+                },
+
+                /* Admin sidebar — kept as a role, now tinted to the dark-teal brand
+                   so the backend matches. Adjust these three tokens in app.css if
+                   you want a different sidebar shade later. */
+                sidebar: {
+                    DEFAULT: 'var(--color-dark-teal)',
+                    hover:   'var(--color-teal-700)',
+                    active:  'var(--color-teal-950)',
+                },
+            },
+            backgroundImage: {
+                'brand-gradient':        'var(--gradient-signature)',
+                'brand-gradient-dark':   'var(--gradient-signature-dark)',
+                'soft-gradient':         'var(--gradient-soft-primary)',
+                'mens-gradient':         'var(--gradient-mens)',
+                'mens-gradient-deep':    'var(--gradient-mens-deep)',
+                'womens-gradient':       'var(--gradient-womens)',
+                'womens-gradient-deep':  'var(--gradient-womens-deep)',
             },
         },
     },

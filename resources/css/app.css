@@ -4,25 +4,99 @@
 
 /*
 |--------------------------------------------------------------------------
-| FONT CONTROL — single source of truth
+| ZAPMED DESIGN TOKENS — the ONE place to change the whole look
 |--------------------------------------------------------------------------
-| To change fonts site-wide while experimenting:
-|   1. Change the families in these two CSS variables.
-|   2. Load the matching font in welcome.blade.php's <link> (bunny.net).
-| Everything using Tailwind's `font-serif` (headings) / `font-sans` (body)
-| or the `.heading` class below updates automatically — no per-heading edits.
+| Everything visual (colours, gradients, fonts) is defined here as CSS
+| variables. tailwind.config.js maps Tailwind class names onto these
+| variables, and the Blade templates use those class names. So:
 |
-| To change the SIZE of every heading below the hero at once:
-|   edit the font-size lines in `.heading` only.
+|   • Change a BRAND COLOUR site-wide  → edit a `--color-*` value below.
+|   • Change a GRADIENT site-wide       → edit a `--gradient-*` value below.
+|   • Change a FONT site-wide           → edit a `--font-*` value below
+|                                          (and load the matching web font
+|                                           in layouts/partials/head.blade.php).
+|
+| You do NOT edit tailwind.config.js or the Blade files to re-colour the
+| site — only this block. Values below are the official Zapmed moodboard
+| (ZM_CI.pdf, 31 Oct 2026), exact hex.
 */
 :root {
-    --font-heading: 'DM Serif Display', ui-serif, Georgia, serif;
-    --font-body: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+    /* ---- Primary palette (all channels) ---- */
+    --color-dark-teal:    #203E3E;  /* brand anchor, headings, body text on ivory, dark backgrounds */
+    --color-primary-teal: #2E767F;  /* emphasis, links on ivory, primary buttons, primary gradients */
+    --color-ivory:        #F4F0E7;  /* main reading background, light text on dark fills */
+
+    /* ---- Men's accents ---- */
+    --color-navy:  #172B40;  /* men's topic accent */
+    --color-steel: #617D8D;  /* men's supporting graphics */
+    --color-dusty: #A8BEC8;  /* men's website/blog light panels */
+
+    /* ---- Women's accents ---- */
+    --color-deep-sage: #526E60;  /* women's topic accent */
+    --color-soft-sage: #729D94;  /* women's supporting graphics */
+    --color-pale-sage: #DCE5DA;  /* women's website/blog light panels */
+
+    /* ---- Primary teal tint ramp (derived from --color-primary-teal) ----
+       Gives the Tailwind `zapmed-50..950` scale something coherent to map to,
+       so legacy class names (zapmed-700 etc.) now read as the brand teal
+       instead of the old lime. Anchored on #2E767F (= 600). */
+    --color-teal-50:  #eef5f5;
+    --color-teal-100: #d6e6e7;
+    --color-teal-200: #aecdd0;
+    --color-teal-300: #7faeb3;
+    --color-teal-400: #4f8d94;
+    --color-teal-500: #2E767F;
+    --color-teal-600: #2a6b73;
+    --color-teal-700: #235860;  /* common "primary text/icon" weight on the frontend */
+    --color-teal-800: #203E3E;  /* = dark teal */
+    --color-teal-900: #1b3535;
+    --color-teal-950: #122525;
+
+    /* ---- Semantic roles (use these in new work) ---- */
+    --color-bg:        var(--color-ivory);
+    --color-surface:   #ffffff;
+    --color-text:      var(--color-dark-teal);
+    --color-heading:   var(--color-dark-teal);
+    --color-link:      var(--color-primary-teal);
+    --color-on-dark:   var(--color-ivory);
+
+    /* ---- Gradients (all 135deg per the moodboard) ---- */
+    --gradient-signature:      linear-gradient(135deg, #203E3E 0%, #2E767F 100%);
+    --gradient-signature-dark: linear-gradient(135deg, #16302f 0%, #235860 100%); /* hover: darker */
+    --gradient-soft-primary:   linear-gradient(135deg, #F4F0E7 0%, #2E767F 100%);
+    --gradient-mens:           linear-gradient(135deg, #172B40 0%, #2E767F 100%);
+    --gradient-mens-deep:      linear-gradient(135deg, #172B40 0%, #203E3E 100%);
+    --gradient-womens:         linear-gradient(135deg, #526E60 0%, #2E767F 100%);
+    --gradient-womens-deep:    linear-gradient(135deg, #526E60 0%, #203E3E 100%);
+
+    /* ---- Fonts ---- */
+    --font-heading: 'Prata', ui-serif, Georgia, serif;          /* emphasis / display */
+    --font-body:    'Manrope', ui-sans-serif, system-ui, sans-serif;
+    --font-logo:    'Comfortaa', ui-sans-serif, system-ui, sans-serif; /* wordmark ONLY */
 }
 
+/*
+| Brand gradient utility classes — reference the tokens above so the whole
+| site's gradients change from one place. Hover animates to the darker ramp.
+*/
 @layer components {
-    /* One consistent heading look + size for all section headings below the hero.
-       Matches the "Doctor-led care for a healthier you." treatment heading. */
+    .bg-gradient-signature { background-image: var(--gradient-signature); }
+    .bg-gradient-signature:hover { background-image: var(--gradient-signature-dark); }
+    .bg-gradient-soft       { background-image: var(--gradient-soft-primary); }
+    .bg-gradient-mens       { background-image: var(--gradient-mens); }
+    .bg-gradient-mens-deep  { background-image: var(--gradient-mens-deep); }
+    .bg-gradient-womens     { background-image: var(--gradient-womens); }
+    .bg-gradient-womens-deep{ background-image: var(--gradient-womens-deep); }
+    .transition-gradient    { transition: background-image .4s ease, background-color .4s ease; }
+
+    /* The wordmark — Comfortaa Bold, moodboard says logo only. */
+    .wordmark {
+        font-family: var(--font-logo);
+        font-weight: 700;
+        letter-spacing: -0.01em;
+    }
+
+    /* One consistent heading look + size for section headings below the hero. */
     .heading {
         font-family: var(--font-heading);
         font-weight: 400;
@@ -33,11 +107,11 @@
     @media (min-width: 640px) {
         .heading { font-size: 3rem; }   /* sm:text-5xl */
     }
-    /* Italic accent (e.g. the green part of a heading) */
+    /* Prata has no official italic; keep the accent upright but distinct via colour. */
     .heading-italic {
         font-family: var(--font-heading);
         font-weight: 400;
-        font-style: italic;
+        font-style: normal;
         letter-spacing: 0.02em;
     }
 }

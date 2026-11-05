@@ -7,8 +7,16 @@
 
         <title>{{ $title ?? config('app.name', 'Zapmed') }}</title>
 
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=noto+sans:400,500,600,700&display=swap" rel="stylesheet" />
+        @include('partials.seo-meta', [
+            'metaTitle'       => $title ?? null,
+            'metaDescription' => $metaDescription ?? null,
+            'canonical'       => $canonical ?? null,
+            'ogImage'         => $ogImage ?? null,
+            'ogType'          => $ogType ?? null,
+            'noindex'         => $noindex ?? false,
+        ])
+
+        @include('partials.fonts')
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>

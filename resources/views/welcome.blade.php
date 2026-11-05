@@ -7,9 +7,7 @@
     <title>Zapmed - Online Doctor-Guided Medical Treatments</title>
     <meta name="description" content="Doctor-led online treatment for weight loss, sexual health, skincare, and chronic care. Prescribed by licensed SA doctors, delivered to your door.">
 
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    {{-- FONT SWAP: to change heading/body fonts site-wide, change the families here AND the two --font-* vars in resources/css/app.css --}}
-    <link href="https://fonts.bunny.net/css?family=dm-serif-display:400,400i|manrope:400,500,600,700,800&display=swap" rel="stylesheet" />
+    @include('partials.fonts')
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('partials.analytics')

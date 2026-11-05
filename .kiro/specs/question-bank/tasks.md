@@ -4,26 +4,41 @@
 `zzz_AAA-START-HERE-zapmed-question-bank.md`.
 
 ---
-## ▶️ NEXT SESSION STARTS HERE (status 2026-11-03)
-**Phases 1–9 are BUILT + committed locally (phases 6-9 NOT yet pushed to GitHub).** The engine, patient
-cutover, admin portal, doctor view, official .docx import (18 treatments / 337 Draft questions), and
-Dr Anke's Review Queue are all done + tested (53 green). Weight-loss is Live; the other 17 treatments
-are Draft awaiting clinical review.
+## ▶️ NEXT SESSION STARTS HERE (status 2026-11-05)
+**Phases 1–9 BUILT. Bulk sign-off DONE: ALL 18 treatments / 337 questions are now LIVE (dev DB).**
+Captain Zan confirmed Dr Anke signed the full set off OFFLINE, so her per-question Review Queue step was
+not required. Built `php artisan questionbank:approve-all [--treatment=<slug>] [--force]` — it mirrors the
+Review Queue's Approve + category auto-publish, audit-stamping every version ("clinically approved (bulk
+sign-off — Dr Anke)"). Ran it: 313 Draft → Live. State now 337/337 Live, 18/18 treatments Live, 0 drafts.
+Tests: 34 green across QB suites.
 
-**The remaining work is CLINICAL + cleanup, not new engine code:**
-1. Dr Anke reviews the 337 Draft questions via **Admin → Review Queue** (Approve/Edit/Reject); each
-   treatment auto-goes-Live when fully approved.
-2. Define the global **CORE block** (currently empty by design — it's a clinical call). Brief wants:
-   other conditions/surgery, current meds, allergies, pregnancy, "anything else", + the 5 gaps
-   **age/DOB, height, weight, smoking, alcohol**. Fix: birth-control & menopause must screen smoking+age;
-   weight-loss allergy branch. (If Captain Zan wants Naz to draft the CORE questions as Draft, ASK first.)
-3. Once ALL 18 treatments are Live → delete `config/assessment-questions.php` + the dual-write blob.
-4. Push the local commits (phases 6-7, 8, 9) when Captain Zan okays.
+⚠️ **This bulk approval ran on the LOCAL DEV DB only.** Staging/prod must run the same command there to
+go live: `php artisan questionbank:approve-all --force`.
+
+**The remaining work is cleanup + optional clinical polish, not new engine code:**
+1. ✅ (was: Dr Anke review) — DONE via bulk approve. All treatments Live.
+2. OPTIONAL clinical polish: define the global **CORE block** (still empty by design — a clinical call).
+   Brief wants: other conditions/surgery, current meds, allergies, pregnancy, "anything else", + the 5
+   gaps **age/DOB, height, weight, smoking, alcohol**. Also birth-control & menopause should screen
+   smoking+age; weight-loss allergy branch. (If Captain Zan wants Naz to draft CORE as Draft, ASK first.)
+3. Now all 18 are Live → safe to delete `config/assessment-questions.php` + the dual-write blob when ready.
+4. ✅ Pushed this checkout (see git state below).
 
 Reset dev DB anytime:
-`php artisan questionbank:import-docx "C:\Users\zande\Documents\Zapmed - Craig_New_Files\Health Assessments - Zapmed Full Services - June 2026 (1).docx" --purge-all` → then publish weight-loss.
+`php artisan questionbank:import-docx "C:\Users\zande\Documents\Zapmed - Craig_New_Files\Health Assessments - Zapmed Full Services - June 2026 (1).docx" --purge-all` → then `questionbank:approve-all --force`.
 
 Separate Craig briefs NOT started: category landing pages, charge-at-booking (sequence after this).
+
+### Moodboard re-skin (NEW, 2026-11-05) — frontend + backend
+Applied the official brand (Zapmed Moodboard.pdf: dark teal #203E3E, primary teal #2E767F, warm ivory
+#F4F0E7, men's navy/steel/dusty, women's sage trio; Manrope + Prata + Comfortaa). Built a central
+design-token layer: ALL colours/gradients/fonts are CSS variables in `resources/css/app.css` (the ONE
+place to edit); `tailwind.config.js` only maps names onto them; legacy `zapmed-*` classes re-pointed
+from lime → teal so the whole site adopted the palette with no per-template edits. Fonts consolidated into
+one `resources/views/partials/fonts.blade.php` (9 layouts were each loading different fonts). Admin "green"
+accents (Today's-Appointments stat icon, SPAR sidebar section) → teal; status greens left as-is on purpose.
+Browser-verified home + admin. NOT YET done: emails + PDFs still have hardcoded green; men's/women's
+per-treatment palettes (tokens exist, not wired per page).
 ---
 
 Nothing is pushed to GitHub beyond phases 1–5 (`670ff21`) + reference doc (`c9f0ad3`).
