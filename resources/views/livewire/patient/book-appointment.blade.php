@@ -94,7 +94,7 @@
         </button>
 
         @php
-            $questions = config("assessment-questions.{$selectedTreatment}", []);
+            $questions = $this->questionsFor($selectedTreatment);
             $treatmentData = config("treatments.{$appointmentType}.treatments.{$selectedTreatment}");
         @endphp
 
@@ -167,6 +167,7 @@
                                 @foreach($question['options'] as $optionIndex => $option)
                                     <label class="inline-flex items-center cursor-pointer">
                                         <input type="checkbox" wire:model="assessmentAnswers.{{ $question['id'] }}" value="{{ $option }}"
+                                            x-on:change="toggleCheckbox('{{ $question['id'] }}', '{{ addslashes($option) }}', $event.target.checked)"
                                             class="rounded text-zapmed-600 focus:ring-zapmed-500 border-gray-300">
                                         <span class="ml-2 text-sm text-gray-700">{{ $option }}</span>
                                     </label>

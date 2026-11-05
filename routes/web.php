@@ -3,7 +3,6 @@
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PdfController;
 use App\Http\Controllers\SubscriptionController;
-use App\Http\Controllers\TreatmentController;
 use App\Livewire\Patient\BookAppointment;
 use App\Livewire\Patient\MyAppointments;
 use App\Livewire\Patient\Onboarding;
@@ -22,7 +21,18 @@ if (app()->environment('local', 'staging')) {
 Route::get('assessment/{slug}', \App\Livewire\Patient\Assessment::class)->name('assessment.start');
 Route::get('doctors/apply', \App\Livewire\DoctorApply::class)->name('doctors.apply');
 Route::get('blog', \App\Livewire\Blog\BlogIndex::class)->name('blog');
-Route::get('blog/{slug}', \App\Livewire\Blog\BlogShow::class)->name('blog.show');
+// Legacy /blog/{slug} path — 301 to the root-level URL (SEO: posts live at root).
+Route::get('blog/{slug}', function (string $slug) {
+    return redirect("/{$slug}", 301);
+})->where('slug', '[a-z0-9\-]+')->name('blog.show');
+
+// Blog category archives — matches legacy WordPress /category/{slug}/ URLs.
+Route::get('category/{category}', \App\Livewire\Blog\BlogIndex::class)
+    ->where('category', '[a-z0-9\-]+')
+    ->name('blog.category');
+
+// XML sitemap (pages, treatments, blog posts, categories).
+Route::get('sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
 
 // SPAR routes (patient tracker, pharmacy staff, admin) are shipped by the
 // spar-core package (packages/spar-core/routes/spar.php) and loaded by
@@ -77,6 +87,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/finance', \App\Livewire\Admin\FinanceReports::class)->name('admin.finance');
         Route::get('/ai-nudges', \App\Livewire\Admin\AiNudges::class)->name('admin.ai-nudges');
         Route::get('/compliance', \App\Livewire\Admin\ComplianceConsole::class)->name('admin.compliance');
+        Route::get('/question-bank', \App\Livewire\Admin\QuestionLibrary::class)->name('admin.question-bank');
+        Route::get('/question-bank/categories/{slug?}', \App\Livewire\Admin\CategoryBuilder::class)->name('admin.question-bank.categories');
 
         // SPAR Chronic Medication Module admin routes are shipped by the
         // spar-core package (admin.spar.* names, prefix admin/spar), gated by
@@ -278,7 +290,11 @@ Route::get('partner/dashboard', \App\Livewire\Partner\Dashboard::class)
 require __DIR__.'/auth.php';
 
 
-// Treatment pages (catch-all, must be LAST — matches zapmed.co.za URL structure)
-Route::get('{slug}', [TreatmentController::class, 'show'])
+// Treatment + blog-post + legacy resolver (catch-all, must be LAST —
+// matches zapmed.co.za root URL structure: /{treatment} and /{post-slug}).
+// Route name kept as 'treatments.show' for backward compatibility with the many
+// route('treatments.show', $slug) references in views/controllers — it emits
+// /{slug}, which is correct for treatments AND root-level blog posts.
+Route::get('{slug}', [\App\Http\Controllers\PublicSlugController::class, 'resolve'])
     ->name('treatments.show')
     ->where('slug', '[a-z0-9\-]+');

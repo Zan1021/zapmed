@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Assessment extends Model
 {
@@ -11,6 +12,8 @@ class Assessment extends Model
         'user_id',
         'treatment_slug',
         'treatment_name',
+        'category_id',
+        'manifest_version',
         'answers',
         'status',
         'appointment_id',
@@ -20,6 +23,7 @@ class Assessment extends Model
     {
         return [
             'answers' => 'encrypted:array',
+            'manifest_version' => 'integer',
         ];
     }
 
@@ -31,5 +35,15 @@ class Assessment extends Model
     public function appointment(): BelongsTo
     {
         return $this->belongsTo(Appointment::class);
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(AssessmentCategory::class, 'category_id');
+    }
+
+    public function assessmentAnswers(): HasMany
+    {
+        return $this->hasMany(AssessmentAnswer::class);
     }
 }

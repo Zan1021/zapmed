@@ -6,6 +6,7 @@ use App\Models\Appointment;
 use App\Models\Assessment;
 use App\Models\DoctorProfile;
 use App\Models\User;
+use App\Services\Assessments\AssessmentService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -69,6 +70,40 @@ class BookAppointment extends Component
     }
 
     /**
+     * The assessment questions for the current treatment.
+     *
+     * Source of truth: the DATABASE question bank (AssessmentService) when this slug is
+     * feature-flagged AND has a live category manifest; otherwise the legacy config. Both return the
+     * SAME array shape (id/type/label/options/show_if/required/...) so the view, validation and
+     * branching are identical regardless of source. Public so the Blade view can call it.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    public function questionsFor(?string $slug = null): array
+    {
+        $slug ??= $this->selectedTreatment;
+
+        if ($this->usesQuestionBank($slug)) {
+            $flow = app(AssessmentService::class)->flowFor($slug);
+            if (! empty($flow)) {
+                return $flow;
+            }
+        }
+
+        return config("assessment-questions.{$slug}", []);
+    }
+
+    /** Whether this slug should be served from the bank (flagged + a live manifest exists). */
+    private function usesQuestionBank(string $slug): bool
+    {
+        if (! in_array($slug, config('questionbank.enabled_slugs', []), true)) {
+            return false;
+        }
+
+        return app(AssessmentService::class)->categoryIdFor($slug) !== null;
+    }
+
+    /**
      * Move to assessment questions.
      */
     public function proceedToAssessment(): void
@@ -94,7 +129,7 @@ class BookAppointment extends Component
             return;
         }
 
-        $questions = config("assessment-questions.{$this->selectedTreatment}", []);
+        $questions = $this->questionsFor();
         $questionIds = array_column($questions, 'id');
 
         // Checkbox-type questions must be initialised as arrays so Livewire collects
@@ -135,7 +170,7 @@ class BookAppointment extends Component
     public function proceedToPayment(): void
     {
         // Validate required questions (only those that are visible based on conditions)
-        $questions = config("assessment-questions.{$this->selectedTreatment}", []);
+        $questions = $this->questionsFor();
         $errors = [];
 
         foreach ($questions as $question) {
@@ -159,13 +194,34 @@ class BookAppointment extends Component
         // Save assessment to database
         $treatmentData = config("treatments.{$this->appointmentType}.treatments.{$this->selectedTreatment}");
 
+        $svc = app(AssessmentService::class);
+        $onBank = $this->usesQuestionBank($this->selectedTreatment);
+
         $assessment = Assessment::create([
             'user_id' => Auth::id(),
             'treatment_slug' => $this->selectedTreatment,
             'treatment_name' => $treatmentData['name'] ?? $this->selectedTreatment,
+            // pin the manifest version so questions can't change under the patient mid-flow (US-3)
+            'category_id' => $onBank ? $svc->categoryIdFor($this->selectedTreatment) : null,
+            'manifest_version' => $onBank ? $svc->manifestVersionFor($this->selectedTreatment) : null,
+            // legacy blob retained for the doctor view + historical continuity (dual-write during transition)
             'answers' => $this->buildAnswersWithQuestions($questions),
             'status' => 'completed',
         ]);
+
+        // When on the bank, also persist per-answer rows (version + timestamp + flag) — US-18.
+        if ($onBank) {
+            foreach ($questions as $question) {
+                if (isset($question['show_if']) && ! $this->isQuestionVisible($question, $questions)) {
+                    continue;
+                }
+                $value = $this->assessmentAnswers[$question['id']] ?? null;
+                if ($value === null || $value === '' || $value === []) {
+                    continue;
+                }
+                $svc->saveAnswer($assessment, $question['id'], $value);
+            }
+        }
 
         $this->assessmentId = $assessment->id;
         $this->step = 3;
