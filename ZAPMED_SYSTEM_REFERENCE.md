@@ -78,6 +78,9 @@ Grouped by what they do:
   `Partner`, `PatientAllergy`, `PatientChronicCondition`, `PatientAddress`, `PatientGoal`.
 - **Clinical flow:** `Appointment`, `Assessment`, `Consultation`, `VideoSession`,
   `Prescription` + `PrescriptionItem`, `Medication`, `Pharmacy`, `ProgressLog`.
+- **Question Bank (assessments):** `AssessmentQuestion` + `AssessmentQuestionVersion` (versioned
+  question library), `AssessmentCategory` + `AssessmentCategoryQuestion` (per-treatment manifest),
+  `AssessmentAnswer` (one encrypted row per answered question, with version + timestamp + flag).
 - **Commerce:** `Order` + `OrderItem` + `OrderStatusHistory`, `Payment` (+ `PaymentAttempt`,
   `PaymentWebhookEvent`), `Refund`, `Payout`, `SubscriptionPlan`, `Subscription` (+ cycles,
   pause events, followups), `CatalogItem`/`CatalogPrice`/`CatalogCoupon`.
@@ -250,6 +253,38 @@ It is aspirational and in places wrong:
 **When spec and code disagree, the code wins.** This file tracks the code.
 
 ---
+
+## 11. Related Context Files (in `.kiro/project-context/`)
+## 10b. Question Bank (assessments) — the data-driven assessment engine
+
+Replaces the old hard-coded `config/assessment-questions.php`. Patients' pre-consultation questions
+now live in the database, admin-managed, versioned.
+
+- **Spec:** `.kiro/specs/question-bank/` (requirements / design / tasks).
+- **Admin-only (Craig).** Doctors have NO access to the bank; they only view answers during consults.
+  No clinical-approver role — Craig is the single publish gate (change reason recorded for audit).
+- **Model:** a question is defined once (`AssessmentQuestion` + immutable `AssessmentQuestionVersion`);
+  a treatment is a manifest (`AssessmentCategory` + ordered `AssessmentCategoryQuestion`). Editing makes
+  a new version; publishing moves the live pointer. Questions are retired, never deleted.
+- **Engine:** `app/Services/Assessments/AssessmentService` assembles a category's flow
+  (CORE → category → free-text) in the SAME array shape the patient view already used, so the booking
+  UI is source-agnostic. `QuestionBankService` holds all admin writes + guards (no-delete, duplicate,
+  CORE-in-category). Per answer we store the question version + timestamp + a computed "needs attention"
+  flag (`AssessmentAnswer`).
+- **Admin screens:** `Admin\QuestionLibrary` + `Admin\CategoryBuilder` (route `/admin/question-bank`).
+  Craig can build/publish a whole new treatment with no developer.
+- **Patient cutover:** `BookAppointment::questionsFor()` reads the bank when `config/questionbank.php`
+  enables the slug (default `*` = all) AND the category is Live; otherwise falls back to the legacy
+  config. So treatments switch over one at a time as they're published.
+- **Doctor view:** `ConsultationScreen` groups answers by section (Allergies, Medicines, Medical history,
+  Pregnancy & reproductive, Patient notes) with per-answer timestamps and a "Needs attention" panel.
+- **Seeding/import:** `php artisan questionbank:import-docx "<Health Assessments .docx>" --purge-all`
+  imported Craig's OFFICIAL set (18 treatments, 337 questions, all Draft). `questionbank:import-config`
+  was the earlier config seeder (superseded). CORE block + publishing the other 17 treatments await
+  Dr Anke's clinical review via the portal.
+- **Status (2026-11-03):** weight-loss is Live on the bank; the other 17 treatments are Draft (still
+  served by the config fallback until published). The config file is retired IN INTENT but retained as
+  the safety net until all 18 are Live.
 
 ## 11. Related Context Files (in `.kiro/project-context/`)
 

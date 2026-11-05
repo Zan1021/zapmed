@@ -96,7 +96,9 @@ class BookAppointment extends Component
     /** Whether this slug should be served from the bank (flagged + a live manifest exists). */
     private function usesQuestionBank(string $slug): bool
     {
-        if (! in_array($slug, config('questionbank.enabled_slugs', []), true)) {
+        $enabled = config('questionbank.enabled_slugs', []);
+        // '*' = all treatments prefer the bank; a slug only actually switches if it has a LIVE manifest.
+        if (! in_array('*', $enabled, true) && ! in_array($slug, $enabled, true)) {
             return false;
         }
 

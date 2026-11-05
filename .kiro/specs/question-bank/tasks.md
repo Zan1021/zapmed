@@ -118,11 +118,19 @@ Work top-down. Each task ends with verification. Nothing committed/pushed until 
 - NOTE: CORE block still NOT auto-set — remains a clinical decision for Craig/Dr Anke via the portal.
       7 booking slugs have no docx category (health-coach, other-*, thrush) — not in Craig's doc; stay as-is.
 
-## Phase 8 — Retire the old path
-- [ ] 8.1 Once all live categories run off the bank, remove `config/assessment-questions.php` usage and
-      the dual-write blob; keep the file archived in the backup.
-- [ ] 8.2 Full suite green; update `ZAPMED_SYSTEM_REFERENCE.md` to describe the bank.
+## Phase 8 — Retire the old path  ✅ DONE (codeable part) — clinical rollout pending (2026-11-03)
+- [x] 8.1 Feature flag default now `*` (all treatments prefer the bank) with SAFE fallback: any slug
+      without a Live manifest still uses the legacy config. `usesQuestionBank()` honours the `*` wildcard.
+      So treatments auto-switch to the bank the moment their category is published — no code change per
+      treatment. Test: `wildcard flag enables all live categories but falls back for drafts`.
+      ⚠️ `config/assessment-questions.php` is retired IN INTENT but RETAINED as the safety net — it
+      CANNOT be deleted until all 18 categories are published Live (17 are still Draft awaiting Dr Anke).
+      Deleting it now would break the 17 not-yet-published treatments for patients.
+- [x] 8.2 Full suite green (53). `ZAPMED_SYSTEM_REFERENCE.md` updated with the Question Bank section
+      (new §10b + model list).
 
-## Blocked / needs client
-- Dr Anke clinical review (CORE wording + 5 missing Qs + branch fix) — Phase 7.3.
-- Google-Drive handoff package — Phase 7.1 (whole of Phase 7 waits on it).
+## Blocked / needs client (the ONLY remaining work)
+- **Dr Anke clinical review** — define the CORE question block, review the 337 Draft questions, fix the
+  flagged clinical gaps (age/height/weight/smoking/alcohol into CORE; birth-control/menopause smoking+age;
+  weight-loss allergy branch), then publish the other 17 treatments via the admin portal.
+- Once all 18 are Live: delete `config/assessment-questions.php` + the dual-write blob (final 8.1 cleanup).

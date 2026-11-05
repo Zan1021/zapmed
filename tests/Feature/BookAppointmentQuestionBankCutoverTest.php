@@ -83,6 +83,25 @@ class BookAppointmentQuestionBankCutoverTest extends TestCase
         $this->assertSame(['acne_duration'], $ids);
     }
 
+    public function test_wildcard_flag_enables_all_live_categories_but_falls_back_for_drafts(): void
+    {
+        config()->set('questionbank.enabled_slugs', ['*']); // all treatments prefer the bank
+        config()->set('assessment-questions', ['acne-treatment' => [
+            ['id' => 'cfg_acne', 'type' => 'text', 'label' => 'Config acne Q', 'required' => false],
+        ]]);
+        config()->set('treatments', []);
+
+        $this->bankWithLiveWeightLoss(); // weight-loss is LIVE; acne has no live manifest
+
+        $wl = new \App\Livewire\Patient\BookAppointment();
+        $wl->selectedTreatment = 'weight-loss';
+        $this->assertContains('WL_WEIGHT', array_column($wl->questionsFor(), 'id')); // bank
+
+        $acne = new \App\Livewire\Patient\BookAppointment();
+        $acne->selectedTreatment = 'acne-treatment';
+        $this->assertSame(['cfg_acne'], array_column($acne->questionsFor(), 'id')); // config fallback
+    }
+
     public function test_flagged_but_no_live_manifest_falls_back_to_config(): void
     {
         config()->set('questionbank.enabled_slugs', ['weight-loss']);
