@@ -266,6 +266,115 @@ class ConsultationScreen extends Component
         return $dob ? $dob->age : null;
     }
 
+    /**
+     * The assessment, assembled for the doctor's view (Phase 6, US-16/US-17).
+     *
+     * Reads the NEW per-answer rows (assessment_answers — with per-answer timestamp + flag) when they
+     * exist, falling back to the legacy encrypted blob for historical assessments. Returns:
+     *   - sections: answers grouped by clinical section, each with its timestamp
+     *   - needsAttention: flagged answers + every free-text answer + anything marked "not sure"
+     *
+     * @return array{has:bool, treatment:?string, sections:array, needsAttention:array}
+     */
+    public function getAssessmentViewProperty(): array
+    {
+        $empty = ['has' => false, 'treatment' => null, 'sections' => [], 'needsAttention' => []];
+
+        if (! $this->assessment) {
+            return $empty;
+        }
+
+        $rows = $this->assessment->assessmentAnswers()->with('question.currentVersion')->get();
+
+        // --- NEW per-answer rows path ---
+        if ($rows->isNotEmpty()) {
+            $sections = [];
+            $needs = [];
+
+            foreach ($rows as $row) {
+                $version = $row->question?->currentVersion;
+                $label = $version?->text ?? $row->question_key;
+                $type = $version?->type ?? 'text';
+                $value = $this->decodeAnswer($row->answer);
+
+                $section = $this->sectionFor($row->question_key, $label);
+                $sections[$section][] = [
+                    'question' => $label,
+                    'answer' => $value,
+                    'type' => $type,
+                    'at' => $row->answered_at,
+                ];
+
+                $isFreeText = in_array($type, ['text', 'textarea'], true);
+                $isUnsure = is_string($value) && str_contains(strtolower($value), 'not sure');
+                if ($row->flagged || ($isFreeText && $value !== '' && $value !== '—') || $isUnsure) {
+                    $needs[] = [
+                        'question' => $label,
+                        'answer' => $value,
+                        'reason' => $row->flagged ? 'flagged' : ($isUnsure ? 'unsure' : 'free-text'),
+                    ];
+                }
+            }
+
+            return [
+                'has' => true,
+                'treatment' => $this->assessment->treatment_name,
+                'sections' => $sections,
+                'needsAttention' => $needs,
+            ];
+        }
+
+        // --- Legacy blob fallback ---
+        $blob = $this->assessment->answers;
+        if (empty($blob)) {
+            return $empty;
+        }
+
+        $sections = [];
+        $needs = [];
+        foreach ($blob as $qa) {
+            $label = $qa['question'] ?? '';
+            $type = $qa['type'] ?? 'text';
+            $value = is_array($qa['answer'] ?? null) ? implode(', ', $qa['answer']) : ($qa['answer'] ?? '');
+            $section = $this->sectionFor('', $label);
+            $sections[$section][] = ['question' => $label, 'answer' => $qa['answer'] ?? '', 'type' => $type, 'at' => null];
+
+            $isFreeText = in_array($type, ['text', 'textarea'], true);
+            if ($isFreeText && $value !== '') {
+                $needs[] = ['question' => $label, 'answer' => $value, 'reason' => 'free-text'];
+            }
+        }
+
+        return ['has' => true, 'treatment' => $this->assessment->treatment_name, 'sections' => $sections, 'needsAttention' => $needs];
+    }
+
+    /** Map a question to a doctor-facing section heading (US-16). */
+    private function sectionFor(string $key, string $label): string
+    {
+        $hay = strtolower($key.' '.$label);
+
+        return match (true) {
+            str_contains($hay, 'allerg') => 'Allergies',
+            str_contains($hay, 'pregnan') || str_contains($hay, 'breastfeed') || str_contains($hay, 'contracept') => 'Pregnancy & reproductive',
+            str_contains($hay, 'medicat') || str_contains($hay, 'medicine') || str_contains($hay, 'supplement') || str_contains($hay, 'prescri') => 'Medicines',
+            str_contains($hay, 'condition') || str_contains($hay, 'diagnos') || str_contains($hay, 'disease') || str_contains($hay, 'history') => 'Medical history',
+            str_contains($hay, 'anything else') || str_contains($hay, 'other') && str_contains($hay, 'concern') => 'Patient notes',
+            default => 'Assessment answers',
+        };
+    }
+
+    private function decodeAnswer(?string $raw): mixed
+    {
+        if ($raw === null) {
+            return '';
+        }
+        $decoded = json_decode($raw, true);
+        if (is_array($decoded)) {
+            return implode(', ', $decoded);
+        }
+        return $raw;
+    }
+
     public function render()
     {
         return view('livewire.doctor.consultation-screen')

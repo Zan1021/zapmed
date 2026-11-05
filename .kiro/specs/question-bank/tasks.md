@@ -88,16 +88,35 @@ Work top-down. Each task ends with verification. Nothing committed/pushed until 
       Category Builder renders picker + 16-Q weight-loss flow w/ conditional badges + add/preview/publish;
       0 console errors. Fixed: layouts.app has no @stack('scripts') → moved drag JS to inline x-data.
 
-## Phase 6 — Doctor view
-- [ ] 6.1 Group answers by section + per-answer timestamps; "Needs attention" panel (flagged + free-text
-      + "not sure"). Read `assessment_answers`, fall back to legacy blob.
-- [ ] 6.2 Verify as doctor on a weight-loss assessment.
+## Phase 6 — Doctor view  ✅ DONE (2026-11-03)
+- [x] 6.1 `ConsultationScreen::getAssessmentViewProperty()` — reads the NEW per-answer rows
+      (timestamp + flag) with fallback to the legacy blob; groups answers by section (Allergies,
+      Pregnancy & reproductive, Medicines, Medical history, Patient notes, Assessment answers);
+      builds a "Needs attention" list = flagged answers + every free-text + "not sure". Blade updated:
+      amber Needs-attention panel at top, then grouped sections with per-answer timestamps; upload
+      answers still render as image thumbnails.
+- [x] 6.2 `DoctorAssessmentViewTest` (2): grouping + flags + timestamps over per-answer rows; legacy-blob
+      fallback. 52 green / 148 assertions overall. (Browser check skipped — reaching the consultation
+      screen needs a full appointment/consultation/video fixture; the computed accessor is unit-tested on
+      both the new-rows and blob paths, and the blade only reformats already-verified data.)
 
-## Phase 7 — Craig's package (gated on receiving the Drive file)
-- [ ] 7.1 Extract the handoff package (18 manifests, CORE library, 334 records, schemas, payloads).
-- [ ] 7.2 Import command: load 334 records as **Draft**, reconcile against the config-seeded set
-      (match by meaning, flag conflicts, don't silently overwrite).
-- [ ] 7.3 Hand to Dr Anke for clinical review → publish CORE + the 5 missing questions + weight-management.
+## Phase 7 — Official question set from Craig's .docx  ✅ DONE (2026-11-03)
+> Captain Zan confirmed the `.docx` IS the official question set (no separate pre-built package exists).
+> The old config-imported questions were deleted; the docx is now the single source of truth.
+- [x] 7.1 Built `php artisan questionbank:import-docx <path> [--fresh|--purge-all]` — a real parser for
+      the doc grammar (H1/structural titles = category; `SELECT:`/`?`+`[n]` = single; `?`+bare = multi;
+      `[IF YES]` = conditional text Q on prev=Yes; fixes Win-1252 mojibake). python-docx extraction helper.
+- [x] 7.2 Category-name → booking-slug map (acne→acne-treatment, rosacea→rosacea-treatment,
+      haemorrhoid→haemorrhoids-treatment, etc.) so the patient flow finds the categories.
+- [x] 7.3 `--purge-all` wipes the ENTIRE old bank (config + docx) for a clean official-set rebuild.
+      Result: **18 categories, 337 questions, 337 links** (matches Craig's "18 manifests / 334 records"),
+      all on booking slugs, ALL DRAFT, 0 unmatched slugs. Weight-loss re-published Live (24 Qs, up from 16).
+- [x] Browser-verified: Category Builder preview renders the full official weight-loss flow (24 Qs with
+      conditional follow-ups — med history, contraindications, pregnancy/contraception branch, mental-health).
+- [x] `QuestionBankDocxImportTest` (3): imports onto booking slugs as draft, branches parsed, idempotent.
+      Full regression 45 green (42 + 3).
+- NOTE: CORE block still NOT auto-set — remains a clinical decision for Craig/Dr Anke via the portal.
+      7 booking slugs have no docx category (health-coach, other-*, thrush) — not in Craig's doc; stay as-is.
 
 ## Phase 8 — Retire the old path
 - [ ] 8.1 Once all live categories run off the bank, remove `config/assessment-questions.php` usage and
