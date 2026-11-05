@@ -1,7 +1,32 @@
 # Question Bank & Assessment Admin — Tasks
 
-**Reads with:** requirements.md, design.md (same folder).
-Work top-down. Each task ends with verification. Nothing committed/pushed until Captain Zan says checkout.
+**Reads with:** requirements.md, design.md (same folder). Full handoff: vault note
+`zzz_AAA-START-HERE-zapmed-question-bank.md`.
+
+---
+## ▶️ NEXT SESSION STARTS HERE (status 2026-11-03)
+**Phases 1–9 are BUILT + committed locally (phases 6-9 NOT yet pushed to GitHub).** The engine, patient
+cutover, admin portal, doctor view, official .docx import (18 treatments / 337 Draft questions), and
+Dr Anke's Review Queue are all done + tested (53 green). Weight-loss is Live; the other 17 treatments
+are Draft awaiting clinical review.
+
+**The remaining work is CLINICAL + cleanup, not new engine code:**
+1. Dr Anke reviews the 337 Draft questions via **Admin → Review Queue** (Approve/Edit/Reject); each
+   treatment auto-goes-Live when fully approved.
+2. Define the global **CORE block** (currently empty by design — it's a clinical call). Brief wants:
+   other conditions/surgery, current meds, allergies, pregnancy, "anything else", + the 5 gaps
+   **age/DOB, height, weight, smoking, alcohol**. Fix: birth-control & menopause must screen smoking+age;
+   weight-loss allergy branch. (If Captain Zan wants Naz to draft the CORE questions as Draft, ASK first.)
+3. Once ALL 18 treatments are Live → delete `config/assessment-questions.php` + the dual-write blob.
+4. Push the local commits (phases 6-7, 8, 9) when Captain Zan okays.
+
+Reset dev DB anytime:
+`php artisan questionbank:import-docx "C:\Users\zande\Documents\Zapmed - Craig_New_Files\Health Assessments - Zapmed Full Services - June 2026 (1).docx" --purge-all` → then publish weight-loss.
+
+Separate Craig briefs NOT started: category landing pages, charge-at-booking (sequence after this).
+---
+
+Nothing is pushed to GitHub beyond phases 1–5 (`670ff21`) + reference doc (`c9f0ad3`).
 
 ## Phase 0 — Safety & groundwork
 - [x] 0.1 Back up the files this feature touches (done: `Documents\Zapmed\_backups\question-bank_<ts>\`).
