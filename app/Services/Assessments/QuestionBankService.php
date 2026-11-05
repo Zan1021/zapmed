@@ -92,6 +92,29 @@ class QuestionBankService
     }
 
     /**
+     * Reject a question version during clinical review — send it back to Draft with a reason so the
+     * author can revise. Keeps the version history intact (US review flow, Phase 9).
+     */
+    public function reject(AssessmentQuestion $question, string $reason, ?User $actor = null): void
+    {
+        $question->update(['status' => 'draft', 'updated_by' => $actor?->id]);
+
+        // record the rejection reason on the latest version for the changelog
+        $latest = $question->versions()->orderByDesc('version')->first();
+        $latest?->update(['reason' => 'REJECTED: '.$reason]);
+    }
+
+    /**
+     * Mark a question as under clinical review (Draft → In review). Phase 9 review queue.
+     */
+    public function markInReview(AssessmentQuestion $question, ?User $actor = null): void
+    {
+        if ($question->status === 'draft') {
+            $question->update(['status' => 'in_review', 'updated_by' => $actor?->id]);
+        }
+    }
+
+    /**
      * Retire a question (US-7). Never a hard delete — past answers still point at it.
      */
     public function retire(AssessmentQuestion $question, ?User $actor = null): void

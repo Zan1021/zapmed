@@ -129,8 +129,28 @@ Work top-down. Each task ends with verification. Nothing committed/pushed until 
 - [x] 8.2 Full suite green (53). `ZAPMED_SYSTEM_REFERENCE.md` updated with the Question Bank section
       (new §10b + model list).
 
+## Phase 9 — Clinical Review Queue (Dr Anke's sign-off tool)  ✅ DONE (2026-11-03)
+> Added after reviewing the flow from Dr Anke's side revealed she couldn't comfortably review 337
+> questions (Category Builder showed title+type only; publish was all-or-nothing per treatment).
+> Captain Zan chose Option 2 (dedicated review queue).
+- [x] 9.1 `QuestionBankService::reject()` (back to Draft + reason on the version) + `markInReview()`.
+- [x] 9.2 `Admin\ReviewQueue` Livewire + blade: one question at a time rendered AS THE PATIENT SEES IT
+      (wording, options, branch condition), Approve (publish Live) / Edit (reword→new version) / Reject
+      (back to Draft with a note the author sees) / Skip; progress bar ("N of 337 reviewed"); treatment
+      filter. A treatment AUTO-PUBLISHES Live once all its questions are approved. Route
+      `GET /admin/question-bank/review` (role:admin). Sidebar nav "Review Queue" added.
+- [x] 9.3 `QuestionBankReviewQueueTest` (5): doctors forbidden, approve→publish→advance, category
+      auto-publish when all approved, reject→draft+reason, edit→new version (no publish). 53 green.
+- [x] Browser-verified: filter→first acne question renders patient-style; Approve ticks progress 24→25→26
+      and advances; Reject records "REJECTED: <reason>" + sends to Draft; 0 console errors on the page.
+- Minor cosmetic: the status badge on the card can show the just-approved state for one render frame
+      before the next question loads — purely visual, data/flow correct.
+
 ## Blocked / needs client (the ONLY remaining work)
-- **Dr Anke clinical review** — define the CORE question block, review the 337 Draft questions, fix the
-  flagged clinical gaps (age/height/weight/smoking/alcohol into CORE; birth-control/menopause smoking+age;
-  weight-loss allergy branch), then publish the other 17 treatments via the admin portal.
-- Once all 18 are Live: delete `config/assessment-questions.php` + the dual-write blob (final 8.1 cleanup).
+- **Dr Anke clinical review** — now has a proper tool: Admin → Review Queue. She works through the 337
+  Draft questions (Approve / Edit / Send back); each treatment auto-goes-Live when fully approved. She
+  still needs to make the clinical CALLS: define the CORE block, fix the flagged gaps
+  (age/height/weight/smoking/alcohol into CORE; birth-control & menopause smoking+age; weight-loss
+  allergy branch). The tooling no longer blocks her.
+- Once all 18 treatments are Live: delete `config/assessment-questions.php` + the dual-write blob
+  (final 8.1 cleanup).

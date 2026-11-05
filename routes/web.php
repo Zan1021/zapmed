@@ -89,6 +89,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/compliance', \App\Livewire\Admin\ComplianceConsole::class)->name('admin.compliance');
         Route::get('/question-bank', \App\Livewire\Admin\QuestionLibrary::class)->name('admin.question-bank');
         Route::get('/question-bank/categories/{slug?}', \App\Livewire\Admin\CategoryBuilder::class)->name('admin.question-bank.categories');
+        Route::get('/question-bank/review', \App\Livewire\Admin\ReviewQueue::class)->name('admin.question-bank.review');
 
         // SPAR Chronic Medication Module admin routes are shipped by the
         // spar-core package (admin.spar.* names, prefix admin/spar), gated by
