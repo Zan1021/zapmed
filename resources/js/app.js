@@ -1,5 +1,6 @@
 import './bootstrap';
 import Alpine from 'alpinejs';
+import collapse from '@alpinejs/collapse';
 
 // How It Works interactive stepper
 window.howItWorks = function() {
@@ -186,6 +187,15 @@ window.consultationTimer = function(deadline, durationMinutes) {
         }
     };
 };
+
+// Register the Collapse plugin for WHICHEVER Alpine runs this page:
+//  • On plain pages, our own Alpine (started below) fires alpine:init.
+//  • On Livewire pages, Livewire boots its OWN bundled Alpine and our
+//    `if (!window.Alpine)` block is skipped — but that Alpine still fires
+//    alpine:init, so x-collapse works everywhere. Single registration point.
+document.addEventListener('alpine:init', () => {
+    window.Alpine.plugin(collapse);
+});
 
 // Only start Alpine if Livewire hasn't already started it
 if (!window.Alpine) {

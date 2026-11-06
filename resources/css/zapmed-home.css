@@ -1,42 +1,9 @@
 /* Zapmed homepage — vendored from Craig's mockup (2026-10-30), scoped to .zapmed-home.
    Asset paths assets/ -> /mockup-assets/. Brand hex matches our tokens. */
 
-/* ===== fonts.css ===== */
-@font-face{
-  font-family: 'Manrope';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url(/mockup-assets/brand-font-0.ttf) format('truetype');
-}
-@font-face{
-  font-family: 'Manrope';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url(/mockup-assets/brand-font-1.ttf) format('truetype');
-}
-@font-face{
-  font-family: 'Manrope';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url(/mockup-assets/brand-font-2.ttf) format('truetype');
-}
-@font-face{
-  font-family: 'Manrope';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url(/mockup-assets/brand-font-3.ttf) format('truetype');
-}
-@font-face{
-  font-family: 'Prata';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url(/mockup-assets/brand-font-4.ttf) format('truetype');
-}
+/* ===== fonts =====
+   Font @font-face rules now live in ONE place: resources/views/partials/fonts.blade.php
+   (self-hosted from /public/fonts). Kept out of here to avoid duplicate definitions. */
 
 /* ===== style.css ===== */
 :root{--ink:#0b4e53;--muted:#547776;--paper:#faf9f4;--green:#e5ede3;--sand:#eee5d7;--purple:#462658}

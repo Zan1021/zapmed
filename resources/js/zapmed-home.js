@@ -33,9 +33,13 @@ function animateReviews(t){const dt=Math.min(t-lastTime,50);lastTime=t;const rec
 function moveRail(id,d){const rail=document.getElementById(id);rail.scrollBy({left:d*(rail.querySelector('article,button')?.getBoundingClientRect().width+20||280),behavior:reduced.matches?'instant':'smooth'})}
 $$('[data-prev]').forEach(b=>b.addEventListener('click',()=>moveRail(b.dataset.prev,-1)));$$('[data-next]').forEach(b=>b.addEventListener('click',()=>moveRail(b.dataset.next,1)));
 $$('.rail,.topic-rail,.review-row').forEach(r=>r.addEventListener('keydown',e=>{if(e.target!==r)return;if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();r.scrollBy({left:e.key==='ArrowRight'?280:-280,behavior:reduced.matches?'instant':'smooth'})}}));
+// The mockup shipped its own mobile nav (#menu/#nav). Our homepage uses the shared
+// public-nav partial instead, so these may be absent — guard before wiring.
+if($('#menu')&&$('#nav')){
 $('#menu').addEventListener('click',()=>{const open=$('#menu').getAttribute('aria-expanded')!=='true';$('#menu').setAttribute('aria-expanded',open);$('#nav').classList.toggle('open',open)});
 $('#nav').addEventListener('click',e=>{if(e.target.closest('a,button')){$('#menu').setAttribute('aria-expanded','false');$('#nav').classList.remove('open')}});
 addEventListener('keydown',e=>{if(e.key==='Escape'){$('#menu').setAttribute('aria-expanded','false');$('#nav').classList.remove('open')}});
+}
 $('#bmi').addEventListener('submit',e=>{e.preventDefault();if(!e.target.reportValidity())return;const h=Number($('#height').value)/100,w=Number($('#weight').value);const v=w/(h*h);if(!Number.isFinite(v))return;$('#bmi-result').innerHTML=`<strong>${v.toFixed(1)}</strong> BMI <span class="small">— screening measure only</span>`;$('#bmi-marker').style.left=`${Math.max(0,Math.min(98,(v-15)/30*100))}%`});
 function updateGoal(){const w=Number($('#starting').value),p=Number($('input[name=percent]:checked').value);$('#starting-value').textContent=w+' kg';$('#change').innerHTML=`−${+(w*p/100).toFixed(1)}<small>kg</small>`;$('#goal').textContent=`Illustrative weight: ${+(w*(1-p/100)).toFixed(1)} kg at a ${p}% change`}
 $('#starting').addEventListener('input',updateGoal);$$('[name=percent]').forEach(r=>r.addEventListener('change',updateGoal));
@@ -111,4 +115,7 @@ function tiltScale(){const p=Number($('input[name=percent]:checked').value);$('#
 $$('[name=percent]').forEach(r=>r.addEventListener('change',tiltScale));
 // Use the exact same image geometry, colours and hover/focus behavior on both card collections.
 $$('.person').forEach((p,i)=>{p.classList.remove('in-view');peopleObserver.unobserve(p);p.dataset.cardTone=i>=4?'sand':'sage'});
-const topNav=$('header');const updateNav=()=>topNav.classList.toggle('has-scrolled',scrollY>40);addEventListener('scroll',updateNav,{passive:true});updateNav();
+// The mockup added a scroll-shadow to its own <header>. Our page uses the shared
+// public-nav partial (no bare <header>), so guard before touching it.
+const topNav=$('header');
+if(topNav){const updateNav=()=>topNav.classList.toggle('has-scrolled',scrollY>40);addEventListener('scroll',updateNav,{passive:true});updateNav();}

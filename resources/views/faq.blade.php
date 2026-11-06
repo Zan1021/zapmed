@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>FAQ - Zapmed Help Centre</title>
     <meta name="description" content="Frequently asked questions about Zapmed's online doctor consultations, medication delivery, payments, and treatments.">
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=noto-sans:400,500,600,700,800&display=swap" rel="stylesheet" />
+    @include('partials.fonts')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="font-sans antialiased bg-white">

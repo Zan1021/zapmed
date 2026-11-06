@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Weight Loss - Online Treatment & Health Coach Support | Zapmed</title>
     <meta name="description" content="Doctor-led GLP-1 weight loss with personalised Health Coach support. Licensed SA doctors, discreet delivery, cancel anytime.">
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=noto-sans:400,500,600,700,800&display=swap" rel="stylesheet" />
+    @include('partials.fonts')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="font-sans antialiased bg-white">
