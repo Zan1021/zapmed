@@ -95,19 +95,26 @@ Work on a copy/branch-safe basis; commit per logical chunk only on "check out".
 
 ## Phase 8 — Reviews + FAQ + verification trust
 - [ ] 8.1 Reviews scroller ("Care people come back to") — use OUR Testimonial data; mark unverified copy.
-- [ ] 8.2 FAQ accordion ("Your questions, answered") — keep our content/markup.
+- [x] 8.2 FAQ accordion ("Your questions, answered") — keep our content/markup. x-collapse now works
+      site-wide (installed @alpinejs/collapse, registered via alpine:init so it covers Livewire's Alpine too).
 - [ ] 8.3 Verification / credentials trust block.
 
-## Phase 9 — Treatment / category landing pages
-- [ ] 9.1 Align `resources/views/treatments/show.blade.php` to the mockup's category page treatment.
-- [ ] 9.2 Per-category men's/women's palette wiring (tokens + gradients already exist; wire per page).
-- [ ] 9.3 Link each category page to its onboarding/assessment entry (sets up charge-at-booking later).
+## Phase 9 — Treatment / category landing pages  ⏸️ PARKED (no mockup exists for these)
+Craig's mockups have NO standalone treatment page (both folders are single-page). Captain Zan:
+"leave it as is for now if there's no design indication." Our current `/weight-loss` etc. pages stay.
+Revisit only when Craig supplies a treatment-page design.
+- [~] 9.1 Align `treatments/show.blade.php` — PARKED (no design).
+- [~] 9.2 Per-category men's/women's palette — PARKED.
+- [~] 9.3 Link category pages to onboarding — PARKED (handle with charge-at-booking).
 
 ## Phase 10 — Responsive + QA
 - [ ] 10.1 Mobile pass at 390px (mockup README inspected at 390px) across all sections.
 - [ ] 10.2 Accessibility: contrast per moodboard pairings (primary button ≥ semibold 16px; avoid ivory on
       soft-sage/steel), focus states, alt text, heading order.
-- [ ] 10.3 Cross-check no old lime/stray colours; `npm run build`; browser-verify whole page.
+- [~] 10.3 Cross-check no old lime/stray colours; `npm run build`; browser-verify whole page.
+      DONE (2026-11-06): console cleaned 81 err/7 warn → 0/0 on home, /help, /weight-loss. Brand fonts
+      now SELF-HOSTED from /public/fonts (were blocked by CSP via bunny→jsdelivr). theme-color set to
+      brand teal #2E767F. Still TODO: full lime-sweep of remaining pages + 390px (10.1).
 - [ ] 10.4 Flag remaining approvals before launch: review excerpts/ratings, clinical claims, pricing,
       font/image licensing (per mockup README). NOTE: staff/portrait assets ship as-is per Captain Zan.
 
