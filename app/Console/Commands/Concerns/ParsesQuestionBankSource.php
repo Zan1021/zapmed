@@ -39,10 +39,15 @@ trait ParsesQuestionBankSource
 
         $flush = function () use (&$pendingQuestion, &$current) {
             if ($pendingQuestion !== null && $current !== null) {
-                if (! empty($pendingQuestion['options'])) {
-                    $pendingQuestion['type'] = $pendingQuestion['numbered'] ? 'single' : 'multi';
-                } else {
-                    $pendingQuestion['type'] = 'text';
+                // A widget hint already resolved to date/number — keep it, don't override.
+                $hinted = in_array($pendingQuestion['type'] ?? '', ['date', 'number'], true);
+
+                if (! $hinted) {
+                    if (! empty($pendingQuestion['options'])) {
+                        $pendingQuestion['type'] = $pendingQuestion['numbered'] ? 'single' : 'multi';
+                    } else {
+                        $pendingQuestion['type'] = 'text';
+                    }
                 }
 
                 // Explicit widget hints in the question text reduce typing for the patient.
@@ -93,16 +98,19 @@ trait ParsesQuestionBankSource
             }
 
             // conditional follow-up — [IF YES], [IF NO], [IF SELECTED], etc.
+            // Becomes a PENDING question so any option lines that follow attach to it (making it a
+            // single/multi choice). If no options follow, $flush resolves it to free-text — preserving
+            // the old behaviour for bare "[IF YES] Please provide further details" follow-ups.
             if (preg_match('/^\[IF\s+([A-Z ]+)\]\s*(.+)$/i', $text, $m)) {
                 $flush();
-                $q = [
+                $pendingQuestion = [
                     'text' => $this->clean(rtrim($m[2])),
                     'type' => 'text',
                     'options' => [],
                     'if_yes' => stripos($m[1], 'YES') !== false,
+                    'numbered' => false,
                 ];
-                $this->applyWidgetHint($q); // honour "(calendar date)"/"(number)" etc. on conditionals too
-                $current['questions'][] = $q;
+                $this->applyWidgetHint($pendingQuestion); // honour "(calendar date)"/"(number)" on conditionals too
                 continue;
             }
 
@@ -154,8 +162,10 @@ trait ParsesQuestionBankSource
                 continue;
             }
 
-            // a question line (ends with ?) — opens a new question
-            if (str_ends_with(rtrim($text), '?')) {
+            // a question line (ends with ?) — opens a new question.
+            // Tolerate a trailing widget hint, e.g. "What is your current weight? (number)" or
+            // "When diagnosed? (calendar date)", by ignoring the hint when testing for the '?'.
+            if (str_ends_with(rtrim($this->stripWidgetHint($text)), '?')) {
                 $flush();
                 $pendingQuestion = ['text' => $this->clean($text), 'type' => 'single', 'options' => [], 'if_yes' => false, 'numbered' => false];
                 continue;
@@ -314,7 +324,13 @@ trait ParsesQuestionBankSource
             $q['type'] = 'number';
         }
 
-        $q['text'] = preg_replace('/\s*\((?:month\s*\/?\s*year|calendar\s*date|date|number)\)\s*$/i', '', $t);
+        $q['text'] = $this->stripWidgetHint($t);
+    }
+
+    /** Remove a trailing "(number)"/"(calendar date)"/"(date)"/"(month/year)" widget hint from a label. */
+    protected function stripWidgetHint(string $t): string
+    {
+        return preg_replace('/\s*\((?:month\s*\/?\s*year|calendar\s*date|date|number)\)\s*$/i', '', $t);
     }
 
     protected function mapOptions(array $options): ?array

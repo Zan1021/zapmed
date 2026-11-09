@@ -1791,6 +1791,8 @@ Is there any further information you would like to share with your assigned Part
 
 ## Weight Loss Health Assessment
 
+What is your current weight? (number)
+
 Have you ever taken weight loss medications?
 [1] Yes
 [2] No
@@ -1800,11 +1802,12 @@ Tirzepatide (Mounjaro)
 Liraglutide (Saxenda / Victoza)
 Orlistat
 Other - [Please specify other weight loss medications]
+[IF YES] When did you start this medication? (calendar date)
 
 Do you have any allergies?
 [1] Yes
 [2] No
-[IF YES] Please select or list any known allergies
+[IF YES] Please select any known allergies
 Semaglutide
 Liraglutide
 Phenol
@@ -1820,10 +1823,6 @@ Have you ever had an allergic reaction to a medication?
 [1] Yes
 [2] No
 [IF YES] Please provide further details
-
-[What is your current weight? (kg)]
-
-[IF SELECTED] When did you start this medication? (calendar date)
 
 Do you have, or have had in the past, any of the following conditions?
 Type 2 Diabetes
@@ -1867,16 +1866,14 @@ None of the above
 Are you pregnant, breastfeeding, or planning pregnancy?
 [1] Yes
 [2] No
-
-[IF NO] Are you currently using contraception?
-[1] Yes - [Please specify]
-[2] No
-
 [IF YES] Select all that apply
 Pregnant
 Breastfeeding
 Actively trying to conceive
 Planning to conceive in the next 3 months
+[IF NO] Are you currently using contraception?
+[1] Yes
+[2] No
 
 Do you smoke?
 [1] Yes
@@ -1901,24 +1898,27 @@ How long have you been overweight or struggling with weight?
 
 What lifestyle changes (diet, exercise, programs) have you tried before?
 [TEXT]
-	SELECT: How would you describe your current diet?
-			[1] Balanced
-			[2] High calorie
-			[3] High sugar
-			[4] Irregular meals
-			[5] Other - [Please specify]
-	IF SELECTED: Do you follow any structured meal plan?
+
+SELECT: How would you describe your current diet?
+[1] Balanced
+[2] High calorie
+[3] High sugar
+[4] Irregular meals
+[5] Other - [Please specify]
+
+Do you follow any structured meal plan?
 [1] Yes
 [2] No
-	[IF YES] What type of exercise do you do?
-			Have you had blood tests in the past 12 months?
+[IF YES] What type of exercise do you do?
+
+Have you had blood tests in the past 12 months?
 [1] Yes
 [2] No
-			[IF YES] Please select blood tests
-[1] Glucose/HbA1c
-[2] Lipid profile
-[3] Liver function
-[4] Thyroid function
+[IF YES] Please select blood tests
+Glucose/HbA1c
+Lipid profile
+Liver function
+Thyroid function
 
 Have you ever been diagnosed with the following?
 Depression
@@ -1926,7 +1926,7 @@ Anxiety
 Eating disorder
 None
 
-IF SELECTED: Are you currently experiencing low mood, anxiety, or emotional eating?
+Are you currently experiencing low mood, anxiety, or emotional eating?
 [1] Yes
 [2] No
 

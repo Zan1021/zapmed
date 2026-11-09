@@ -37,7 +37,8 @@ class ImportQuestionBankFromMarkdown extends Command
     protected $signature = 'questionbank:import-md
         {path? : Path to the markdown source (default: resources/question-bank/health-assessments.md)}
         {--fresh : Wipe prior md-import drafts first}
-        {--purge-all : Wipe the ENTIRE bank first (official-set rebuild)}';
+        {--purge-all : Wipe the ENTIRE bank first (official-set rebuild)}
+        {--only= : Re-import ONLY this category slug (wipes just that category first), leaving the rest untouched}';
 
     protected $description = 'Import the clinical assessment question set from the markdown source';
 
@@ -64,6 +65,22 @@ class ImportQuestionBankFromMarkdown extends Command
         }
 
         $parsed = $this->parseSource($lines);
+
+        // --only=<slug>: surgically rebuild a SINGLE category, leaving the rest of the bank untouched.
+        if ($only = $this->option('only')) {
+            $parsed = array_values(array_filter(
+                $parsed,
+                fn ($cat) => $this->slugForCategory($cat['name']) === $only
+            ));
+
+            if (empty($parsed)) {
+                $this->error("No category in the source maps to slug '{$only}'.");
+                return self::FAILURE;
+            }
+
+            $this->wipeCategory($only);
+        }
+
         $counts = $this->persistParsed($parsed);
 
         $this->newLine();
@@ -129,6 +146,32 @@ class ImportQuestionBankFromMarkdown extends Command
         AssessmentCategory::query()->delete();
 
         $this->warn("Purged the entire bank: {$qCount} questions, {$cCount} categories (official-set rebuild).");
+    }
+
+    /**
+     * Wipe a SINGLE category's questions/versions/links so --only can rebuild it cleanly.
+     * The category ROW is deleted too (persistParsed re-creates it as a fresh Draft); any assessments
+     * that referenced it are detached (category_id → null) to respect the FK, same as purge-all.
+     */
+    private function wipeCategory(string $slug): void
+    {
+        $category = AssessmentCategory::where('slug', $slug)->first();
+        if (! $category) {
+            $this->warn("Category '{$slug}' did not exist yet — nothing to wipe.");
+            return;
+        }
+
+        $questionIds = AssessmentCategoryQuestion::where('category_id', $category->id)
+            ->pluck('question_id')->unique();
+
+        AssessmentCategoryQuestion::where('category_id', $category->id)->delete();
+        AssessmentQuestionVersion::whereIn('question_id', $questionIds)->delete();
+        \App\Models\Assessment::where('category_id', $category->id)->update(['category_id' => null]);
+        AssessmentQuestion::whereIn('id', $questionIds)->update(['current_version_id' => null]);
+        AssessmentQuestion::whereIn('id', $questionIds)->delete();
+        $category->delete();
+
+        $this->warn("Wiped category '{$slug}': {$questionIds->count()} questions (surgical re-import).");
     }
 
     private function wipeMdImported(): void
