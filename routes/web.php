@@ -19,6 +19,11 @@ if (app()->environment('local', 'staging')) {
     });
 }
 Route::get('assessment/{slug}', \App\Livewire\Patient\Assessment::class)->name('assessment.start');
+// Charge-at-booking onboarding journey (public — no account to START; OTP + account at "details").
+// Feature-flagged per slug in config/onboarding.php. Placed before the catch-all {slug} route.
+Route::get('start/{slug}', \App\Livewire\Patient\BookingJourney::class)
+    ->where('slug', '[a-z0-9\-]+')
+    ->name('onboarding.start');
 Route::get('doctors/apply', \App\Livewire\DoctorApply::class)->name('doctors.apply');
 Route::get('blog', \App\Livewire\Blog\BlogIndex::class)->name('blog');
 // Legacy /blog/{slug} path — 301 to the root-level URL (SEO: posts live at root).
