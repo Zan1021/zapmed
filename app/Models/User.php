@@ -58,7 +58,11 @@ class User extends Authenticatable implements MustVerifyEmail
 
         static::creating(function ($user) {
             if (empty($user->member_number)) {
-                $lastNumber = static::whereNotNull('member_number')
+                // Scan ALL rows incl. soft-deleted — the unique index on member_number
+                // covers trashed rows too, so ignoring them here would regenerate a number
+                // still held by a soft-deleted user and violate the constraint.
+                $lastNumber = static::withTrashed()
+                    ->whereNotNull('member_number')
                     ->orderByRaw("CAST(SUBSTR(member_number, 4) AS INTEGER) DESC")
                     ->value('member_number');
 
@@ -216,6 +220,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getAvatarUrlAttribute(): ?string
     {
         if ($this->avatar_path) {
+            // Bundled images (committed in /public) survive deploys; uploads live in storage.
+            if (str_starts_with($this->avatar_path, 'images/')) {
+                return asset($this->avatar_path);
+            }
+
             return asset('storage/' . $this->avatar_path);
         }
 

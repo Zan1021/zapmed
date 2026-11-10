@@ -31,6 +31,21 @@ class OnboardingJourneyTest extends TestCase
         parent::setUp();
         config()->set('onboarding.enabled_slugs', ['weight-loss']);
         config()->set('payfast.test_mode', true);
+
+        // Capture the OTP via the SMS service instead of reading it from (now removed) public page state.
+        $this->smsFake = new class extends \App\Services\SmsService {
+            public ?string $lastCode = null;
+            public function __construct() {}
+            public function sendOtp(string $phoneNumber, string $code): bool { $this->lastCode = $code; return true; }
+        };
+        $this->app->instance(\App\Services\SmsService::class, $this->smsFake);
+    }
+
+    private ?\App\Services\SmsService $smsFake = null;
+
+    private function captureOtp(): string
+    {
+        return (string) $this->smsFake->lastCode;
     }
 
     /** A live weight-loss category with two simple questions. */
@@ -95,11 +110,11 @@ class OnboardingJourneyTest extends TestCase
         // review -> details
         $c->call('toDetails')->assertSet('stage', 'details');
 
-        // details + OTP (sandbox: code is captured in otpExpected)
+        // details + OTP (the code is never exposed in page state; capture it via the SMS fake)
         $c->set('firstName', 'Thabo')->set('lastName', 'Mokoena')
           ->set('email', 'thabo@example.com')->set('cell', '0820000000')
           ->set('consentCare', true)->call('sendOtp')->assertSet('otpSent', true);
-        $code = $c->get('otpExpected');
+        $code = $this->captureOtp();
         $c->set('otp', $code)->call('verifyOtp')
           ->assertSet('verified', true)->assertSet('stage', 'book');
 
@@ -153,7 +168,7 @@ class OnboardingJourneyTest extends TestCase
           ->set('answers.WL_WEIGHT', '80')->call('nextQuestion')->call('toDetails')
           ->set('firstName', 'A')->set('lastName', 'B')->set('email', 'a@b.com')
           ->set('cell', '0820000001')->set('consentCare', true)->call('sendOtp');
-        $c->set('otp', $c->get('otpExpected'))->call('verifyOtp');
+        $c->set('otp', $this->captureOtp())->call('verifyOtp');
 
         // tamper the client-side fee
         $c->set('feeCents', 1)

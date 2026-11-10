@@ -1,5 +1,5 @@
-{{--
-    Onboarding / charge-at-booking journey — App\Livewire\Patient\BookingJourney.
+﻿{{--
+    Onboarding / charge-at-booking journey â€” App\Livewire\Patient\BookingJourney.
     Styled entirely with Tailwind utilities bound to the shared moodboard tokens
     (brand = dark teal #203E3E, teal-500 = primary #2E767F, ivory, font-serif = Prata,
     font-sans = Manrope). One centred card, slim progress bar, large tappable choices.
@@ -38,7 +38,7 @@
         </div>
     </div>
 
-    {{-- stage stepper — each step uses a distinct brand colour from the moodboard --}}
+    {{-- stage stepper â€” each step uses a distinct brand colour from the moodboard --}}
     @php
         // distinct website colours per stage (moodboard palette)
         $stageColors = [
@@ -70,7 +70,7 @@
     {{-- the card --}}
     <div class="mt-6 rounded-3xl border border-teal-100 bg-white p-6 shadow-sm sm:p-10">
 
-        {{-- ─────────────── ASSESSMENT ─────────────── --}}
+        {{-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ ASSESSMENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
         @if($stage === 'assessment' && $this->currentQuestion)
             @php $q = $this->currentQuestion; $id = $q['id']; $type = $q['type'] ?? 'text'; @endphp
 
@@ -110,7 +110,7 @@
                     <div class="grid gap-3">
                         @foreach(($q['options'] ?? []) as $opt)
                             @php $label = is_array($opt) ? ($opt['label'] ?? $opt['code'] ?? '') : $opt; $val = is_array($opt) ? ($opt['code'] ?? $label) : $opt; $sel = ($answers[$id] ?? null) === $val; @endphp
-                            <button type="button"
+                            <button type="button" wire:key="opt-{{ $id }}-{{ $loop->index }}"
                                     wire:click="$set('answers.{{ $id }}', @js($val))"
                                     class="flex w-full items-center justify-between rounded-2xl border px-5 py-4 text-left text-base transition {{ $sel ? 'border-teal-500 bg-teal-50 text-brand ring-1 ring-teal-500' : 'border-teal-200 bg-white text-brand hover:border-teal-400 hover:bg-teal-50/50' }}">
                                 <span>{{ $label }}</span>
@@ -123,7 +123,7 @@
                     <div class="grid gap-3">
                         @foreach(($q['options'] ?? []) as $opt)
                             @php $label = is_array($opt) ? ($opt['label'] ?? $opt['code'] ?? '') : $opt; $val = is_array($opt) ? ($opt['code'] ?? $label) : $opt; @endphp
-                            <label class="flex cursor-pointer items-center gap-3 rounded-2xl border border-teal-200 bg-white px-5 py-4 text-base text-brand transition hover:border-teal-400 hover:bg-teal-50/50 has-[:checked]:border-teal-500 has-[:checked]:bg-teal-50 has-[:checked]:ring-1 has-[:checked]:ring-teal-500">
+                            <label wire:key="opt-{{ $id }}-{{ $loop->index }}" class="flex cursor-pointer items-center gap-3 rounded-2xl border border-teal-200 bg-white px-5 py-4 text-base text-brand transition hover:border-teal-400 hover:bg-teal-50/50 has-[:checked]:border-teal-500 has-[:checked]:bg-teal-50 has-[:checked]:ring-1 has-[:checked]:ring-teal-500">
                                 <input type="checkbox" wire:model="answers.{{ $id }}" value="{{ $val }}" class="h-5 w-5 rounded border-teal-300 text-teal-500 focus:ring-teal-500/40">
                                 <span>{{ $label }}</span>
                             </label>
@@ -189,7 +189,7 @@
                 </div>
             @endif
 
-        {{-- ─────────────── REVIEW ─────────────── --}}
+        {{-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ REVIEW â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
         @elseif($stage === 'review')
             <p class="text-xs font-semibold uppercase tracking-widest text-teal-500">Review</p>
             <h2 class="mt-2 font-serif text-2xl text-brand sm:text-3xl">Check your answers.</h2>
@@ -212,7 +212,7 @@
                 <button type="button" class="{{ $primaryCls }}" wire:click="toDetails">Continue</button>
             </div>
 
-        {{-- ─────────────── YOUR DETAILS + OTP ─────────────── --}}
+        {{-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ YOUR DETAILS + OTP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
         @elseif($stage === 'details')
             <p class="text-xs font-semibold uppercase tracking-widest text-teal-500">Your details</p>
             <h2 class="mt-2 font-serif text-2xl text-brand sm:text-3xl">A few details to secure your booking.</h2>
@@ -264,7 +264,7 @@
                 </div>
             @endif
 
-        {{-- ─────────────── BOOK (doctor + slot) ─────────────── --}}
+        {{-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ BOOK (doctor + slot) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
         @elseif($stage === 'book')
             <p class="text-xs font-semibold uppercase tracking-widest text-teal-500">Book</p>
             <h2 class="mt-2 font-serif text-2xl text-brand sm:text-3xl">Choose your appointment.</h2>
@@ -281,7 +281,7 @@
                         {{ $slot }}
                     </button>
                 @empty
-                    <p class="col-span-full text-sm text-teal-700">No times available on this date — try another day.</p>
+                    <p class="col-span-full text-sm text-teal-700">No times available on this date â€” try another day.</p>
                 @endforelse
             </div>
             @error('selectedTime')<p class="{{ $errCls }}">{{ $message }}</p>@enderror
@@ -291,9 +291,18 @@
                 <div class="mt-3 grid gap-3 sm:grid-cols-2">
                     @forelse($this->doctorsForSlot as $doc)
                         <button type="button" wire:click="selectDoctor({{ $doc->user_id }})"
-                                class="flex flex-col items-start rounded-2xl border px-5 py-4 text-left transition {{ $selectedDoctorId === $doc->user_id ? 'border-teal-500 bg-teal-50 ring-1 ring-teal-500' : 'border-teal-200 bg-white hover:border-teal-400 hover:bg-teal-50/50' }}">
-                            <span class="font-semibold text-brand">Dr {{ $doc->user->last_name ?? '' }}</span>
-                            <span class="text-sm text-teal-700">{{ $doc->specialisation ?? 'General Practitioner' }}</span>
+                                class="flex items-center gap-4 rounded-2xl border px-5 py-4 text-left transition {{ $selectedDoctorId === $doc->user_id ? 'border-teal-500 bg-teal-50 ring-1 ring-teal-500' : 'border-teal-200 bg-white hover:border-teal-400 hover:bg-teal-50/50' }}">
+                            @if($doc->user?->avatar_url)
+                                <img src="{{ $doc->user->avatar_url }}" alt="{{ $doc->user->first_name }} {{ $doc->user->last_name }}"
+                                     class="h-14 w-14 shrink-0 rounded-full object-cover object-top">
+                            @endif
+                            <span class="flex flex-col">
+                                <span class="font-semibold text-brand">{{ str_contains($doc->speciality ?? '', 'Dietitian') ? '' : 'Dr ' }}{{ $doc->user->first_name ?? '' }} {{ $doc->user->last_name ?? '' }}</span>
+                                <span class="text-sm text-teal-700">{{ $doc->speciality ?: 'General Practitioner' }}</span>
+                                @if($doc->qualification)
+                                    <span class="text-xs text-teal-600">{{ $doc->qualification }}</span>
+                                @endif
+                            </span>
                         </button>
                     @empty
                         <p class="text-sm text-teal-700">We'll assign the best available doctor for this slot.</p>
@@ -302,10 +311,10 @@
 
                 <p class="mt-6 font-semibold text-brand">Consultation mode</p>
                 <div class="mt-3 grid gap-3 sm:grid-cols-2">
-                    <label class="flex cursor-pointer items-center gap-3 rounded-2xl border border-teal-200 bg-white px-5 py-4 text-brand transition hover:border-teal-400 has-[:checked]:border-teal-500 has-[:checked]:bg-teal-50 has-[:checked]:ring-1 has-[:checked]:ring-teal-500">
+                    <label wire:key="mode-video" class="flex cursor-pointer items-center gap-3 rounded-2xl border border-teal-200 bg-white px-5 py-4 text-brand transition hover:border-teal-400 has-[:checked]:border-teal-500 has-[:checked]:bg-teal-50 has-[:checked]:ring-1 has-[:checked]:ring-teal-500">
                         <input type="radio" wire:model="mode" value="video" class="h-5 w-5 border-teal-300 text-teal-500 focus:ring-teal-500/40"><span>Video consultation</span>
                     </label>
-                    <label class="flex cursor-pointer items-center gap-3 rounded-2xl border border-teal-200 bg-white px-5 py-4 text-brand transition hover:border-teal-400 has-[:checked]:border-teal-500 has-[:checked]:bg-teal-50 has-[:checked]:ring-1 has-[:checked]:ring-teal-500">
+                    <label wire:key="mode-telephone" class="flex cursor-pointer items-center gap-3 rounded-2xl border border-teal-200 bg-white px-5 py-4 text-brand transition hover:border-teal-400 has-[:checked]:border-teal-500 has-[:checked]:bg-teal-50 has-[:checked]:ring-1 has-[:checked]:ring-teal-500">
                         <input type="radio" wire:model="mode" value="telephone" class="h-5 w-5 border-teal-300 text-teal-500 focus:ring-teal-500/40"><span>Telephone consultation</span>
                     </label>
                 </div>
@@ -315,7 +324,7 @@
                 <button type="button" class="{{ $primaryCls }}" wire:click="toPay">Continue to payment</button>
             </div>
 
-        {{-- ─────────────── PAY ─────────────── --}}
+        {{-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ PAY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
         @elseif($stage === 'pay')
             <p class="text-xs font-semibold uppercase tracking-widest text-teal-500">Pay</p>
             <h2 class="mt-2 font-serif text-2xl text-brand sm:text-3xl">Secure your consultation.</h2>
@@ -324,7 +333,7 @@
             <div class="mt-6 rounded-2xl bg-ivory p-6">
                 <p class="font-semibold text-brand">{{ $treatmentName }}</p>
                 <p class="mt-1 text-teal-700">
-                    {{ \Illuminate\Support\Carbon::parse($selectedDate)->format('l, j F') }} · {{ $selectedTime }}<br>
+                    {{ \Illuminate\Support\Carbon::parse($selectedDate)->format('l, j F') }} Â· {{ $selectedTime }}<br>
                     {{ $mode === 'telephone' ? 'Telephone' : 'Video' }} consultation
                 </p>
                 <div class="mt-5 flex items-center justify-between border-t border-teal-200 pt-4">

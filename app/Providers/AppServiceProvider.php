@@ -19,6 +19,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Postgres LIKE is case-sensitive; make every "like" search case-insensitive (see class docblock).
+        if (config('database.connections.' . config('database.default') . '.driver') === 'pgsql') {
+            $connection = \Illuminate\Support\Facades\DB::connection();
+            $grammar = new \App\Database\CaseInsensitivePostgresGrammar($connection);
+            $grammar->setTablePrefix($connection->getTablePrefix());
+            $connection->setQueryGrammar($grammar);
+        }
+
         \Illuminate\Support\Facades\Event::listen(
             \SocialiteProviders\Manager\SocialiteWasCalled::class,
             [\SocialiteProviders\Apple\AppleExtendSocialite::class, 'handle']

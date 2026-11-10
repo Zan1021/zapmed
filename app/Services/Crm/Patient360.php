@@ -43,7 +43,7 @@ class Patient360
                     ->orWhere('phone', 'like', $like)
                     ->orWhere('first_name', 'like', $like)
                     ->orWhere('last_name', 'like', $like)
-                    ->orWhereRaw("(first_name || ' ' || last_name) like ?", [$like])
+                    ->orWhereRaw("lower(first_name || ' ' || last_name) like lower(?)", [$like])
                     ->orWhereHas('orders', function ($o) use ($like) {
                         $o->where('reference', 'like', $like)
                             ->orWhere('contro_order_number', 'like', $like);

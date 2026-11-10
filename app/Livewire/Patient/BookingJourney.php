@@ -49,7 +49,6 @@ class BookingJourney extends Component
     public bool $consentCare = false;
     public bool $consentMarketing = false;
     public string $otp = '';
-    public string $otpExpected = '';
     public bool $otpSent = false;
     public bool $verified = false;
 
@@ -179,23 +178,40 @@ class BookingJourney extends Component
             'consentCare' => 'accepted',
         ], [], ['consentCare' => 'privacy & care consent']);
 
-        $this->otpExpected = (string) random_int(100000, 999999);
+        // The code must NEVER be a public Livewire property: public state is serialised into the page
+        // (wire:snapshot) and readable by the visitor, which would defeat the phone check entirely.
+        // Keep only a keyed hash server-side in the session.
+        $code = (string) random_int(100000, 999999);
+        session(['booking_otp' => [
+            'hash' => hash_hmac('sha256', $code, (string) config('app.key')),
+            'cell' => $this->cell,
+            'expires' => now()->addMinutes(10)->getTimestamp(),
+            'attempts' => 0,
+        ]]);
         $this->otpSent = true;
 
         try {
-            app(\App\Services\SmsService::class)->sendOtp($this->cell, $this->otpExpected);
+            app(\App\Services\SmsService::class)->sendOtp($this->cell, $code);
         } catch (\Throwable $e) {
-            Log::info('BookingJourney OTP (fallback log)', ['cell' => $this->cell, 'code' => $this->otpExpected]);
+            Log::info('BookingJourney OTP (fallback log)', ['cell' => $this->cell, 'code' => $code]);
         }
     }
 
     public function verifyOtp(): void
     {
         $this->validate(['otp' => 'required|string']);
-        if (! hash_equals($this->otpExpected, trim($this->otp))) {
+        $stored = session('booking_otp');
+        if (! $stored || $stored['expires'] < now()->getTimestamp() || $stored['cell'] !== $this->cell || $stored['attempts'] >= 5) {
+            $this->addError('otp', 'That code has expired. Please request a new one.');
+            return;
+        }
+        if (! hash_equals($stored['hash'], hash_hmac('sha256', trim($this->otp), (string) config('app.key')))) {
+            $stored['attempts']++;
+            session(['booking_otp' => $stored]);
             $this->addError('otp', 'That code is not correct. Please try again.');
             return;
         }
+        session()->forget('booking_otp');
         $this->verified = true;
         $this->createOrAttachUserAndAssessment();
         $this->stage = 'book';
