@@ -20,10 +20,23 @@ use Illuminate\Console\Command;
  * changed. Fix the questions in the .md, re-run this, review + publish per category in admin.
  *
  * Grammar (per section `##`):
- *   SELECT: <q>?            + [n] options  → single-choice
+ *   SELECT: <q>             + [n] options  → single-choice
  *   <q>?                    + [n] options  → single-choice
  *   <q>?                    + bare lines   → multi-choice (pick many)
- *   [IF YES] <q>                           → free-text follow-up shown when the prior Q = Yes
+ *   [<statement>]           + bare lines   → multi-choice whose question has no "?" (explicit stem)
+ *   SELECT CALENDAR: <q>                   → month/year date picker
+ *   <q>? (number) / (calendar date)        → number / date widget (hint stripped from the label)
+ *   <option> - [Please specify]            → free-text follow-up shown only when THAT option is chosen
+ *   [2] No - [JUMP: <later q>]             → questions between here and <later q> are skipped on "No"
+ *
+ * Follow-up questions (conditional):
+ *   [IF YES] / [IF NO]      → shown when the last top-level question = Yes / No
+ *   [IF SELECTED]           → shown when it was answered with anything but No / None / "None of the above"
+ *   [IF <OPTION>]           → shown when that option is ticked, e.g. [IF HEADACHES], [IF OTHER]
+ *   [THEN …]                → same tags, but hang off the question IMMEDIATELY ABOVE (even if it is itself
+ *                             conditional) — this is how nested flows are written
+ *   [IF NO] [STOP] <text>   → a hard-stop message (no input, no Continue) e.g. "we cannot assist…"
+ *   <!-- … -->              → reviewer notes; stripped, never shown to patients
  *
  * Everything imported as DRAFT, scope=category. Idempotent: --fresh wipes prior md-import drafts;
  * --purge-all wipes the ENTIRE bank for a clean official-set rebuild.
@@ -106,7 +119,10 @@ class ImportQuestionBankFromMarkdown extends Command
      */
     private function extractLines(string $path): array
     {
-        $raw = preg_split('/\R/', (string) file_get_contents($path));
+        // Strip HTML comments (<!-- REVIEW … -->, possibly multi-line): they are notes to the clinical
+        // reviewers, never patient-facing content — left in, they were being imported as answer options.
+        $content = preg_replace('/<!--.*?-->/s', '', (string) file_get_contents($path));
+        $raw = preg_split('/\R/', (string) $content);
         $out = [];
 
         foreach ($raw as $line) {

@@ -30,7 +30,7 @@
                         Where appropriate, treatment may include clinically approved GLP-1 medication (such as semaglutide), prescribed by your Partner Doctor after a private medical assessment.
                     </p>
                     <div class="mt-8">
-                        <a href="{{ route('patient.book', ['category' => 'weight-loss', 'treatment' => 'weight-loss']) }}" class="inline-block bg-zapmed-600 hover:bg-zapmed-700 text-white px-8 py-4 rounded-xl text-base font-semibold transition-all shadow-lg">
+                        <a href="{{ treatment_start_url('weight-loss', 'weight-loss') }}" class="inline-block bg-zapmed-600 hover:bg-zapmed-700 text-white px-8 py-4 rounded-xl text-base font-semibold transition-all shadow-lg">
                             Start Your Assessment
                         </a>
                     </div>
@@ -42,7 +42,7 @@
         </div>
     </section>
 
-    @include('partials.how-it-works', ['bookingUrl' => route('patient.book', ['category' => 'weight-loss', 'treatment' => 'weight-loss'])])
+    @include('partials.how-it-works', ['bookingUrl' => treatment_start_url('weight-loss', 'weight-loss')])
 
 
     <!-- Pricing -->
@@ -66,7 +66,7 @@
                     <li class="flex items-center text-sm text-gray-600"><svg class="w-4 h-4 mr-2 text-zapmed-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>Cancel anytime — no contracts</li>
                 </ul>
                 <p class="mt-6 text-xs text-gray-400">Cost of medication is excluded and depends on the dosage and type prescribed by your Partner Doctor.</p>
-                <a href="{{ route('patient.book', ['category' => 'weight-loss', 'treatment' => 'weight-loss']) }}" class="mt-6 block w-full bg-zapmed-600 hover:bg-zapmed-700 text-white py-3.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
+                <a href="{{ treatment_start_url('weight-loss', 'weight-loss') }}" class="mt-6 block w-full bg-zapmed-600 hover:bg-zapmed-700 text-white py-3.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
                     Start Your Assessment
                 </a>
             </div>
@@ -184,7 +184,7 @@
                         <div class="flex justify-between text-xs text-gray-400 mb-4"><span>Underweight</span><span>Normal</span><span>Overweight</span><span>Obese</span></div>
                         <div class="p-4 rounded-lg" :class="insightBg"><p class="text-sm" :class="insightText" x-text="insight"></p></div>
                         <div class="mt-4 text-center"><p class="text-xs text-gray-500">Healthy weight for your height: <span class="font-semibold text-gray-700" x-text="healthyRange"></span></p></div>
-                        <a href="{{ route('patient.book', ['category' => 'weight-loss', 'treatment' => 'weight-loss']) }}" class="mt-4 block w-full text-center bg-zapmed-600 hover:bg-zapmed-700 text-white py-3 rounded-lg text-sm font-semibold transition-colors shadow-sm">
+                        <a href="{{ treatment_start_url('weight-loss', 'weight-loss') }}" class="mt-4 block w-full text-center bg-zapmed-600 hover:bg-zapmed-700 text-white py-3 rounded-lg text-sm font-semibold transition-colors shadow-sm">
                             Start Your Weight Loss Journey
                         </a>
                     </div>
@@ -220,7 +220,7 @@
                             <p class="text-xs text-gray-500 text-center mt-1" x-text="percentLoss + '% of excess weight projected in 12 months'"></p>
                         </div>
                         <div class="p-4 bg-zapmed-50 rounded-lg border border-zapmed-100"><p class="text-sm text-zapmed-800"><strong>Clinical data:</strong> Patients on GLP-1 medication typically lose 15-20% of body weight over 12 months with medical supervision and lifestyle changes.</p></div>
-                        <a href="{{ route('patient.book', ['category' => 'weight-loss', 'treatment' => 'weight-loss']) }}" class="mt-4 block w-full text-center bg-zapmed-600 hover:bg-zapmed-700 text-white py-3 rounded-lg text-sm font-semibold transition-colors shadow-sm">
+                        <a href="{{ treatment_start_url('weight-loss', 'weight-loss') }}" class="mt-4 block w-full text-center bg-zapmed-600 hover:bg-zapmed-700 text-white py-3 rounded-lg text-sm font-semibold transition-colors shadow-sm">
                             Start Your Weight Loss Journey
                         </a>
                     </div>
@@ -282,7 +282,7 @@
         <div class="max-w-4xl mx-auto bg-gray-900 rounded-3xl p-12 text-center">
             <h2 class="text-2xl sm:text-3xl font-bold text-white">Ready to start your weight-loss journey?</h2>
             <p class="mt-4 text-lg text-gray-400">Complete your assessment in just a few minutes. A licensed doctor will review it and guide you to the right plan.</p>
-            <a href="{{ route('patient.book', ['category' => 'weight-loss', 'treatment' => 'weight-loss']) }}" class="mt-8 inline-block bg-zapmed-500 hover:bg-zapmed-600 text-white px-8 py-4 rounded-xl text-base font-semibold transition-all shadow-lg">
+            <a href="{{ treatment_start_url('weight-loss', 'weight-loss') }}" class="mt-8 inline-block bg-zapmed-500 hover:bg-zapmed-600 text-white px-8 py-4 rounded-xl text-base font-semibold transition-all shadow-lg">
                 Start Your Assessment
             </a>
         </div>

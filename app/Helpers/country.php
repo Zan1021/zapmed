@@ -101,3 +101,21 @@ if (!function_exists('tax_amount')) {
         return (int) round($amountInCents * ($rate / (100 + $rate))); // Extract VAT from inclusive price
     }
 }
+
+if (!function_exists('treatment_start_url')) {
+    /**
+     * Where a "Start your assessment" button should go for a treatment.
+     * Treatments enabled in config/onboarding.php use the new charge-at-booking journey (/start/{slug});
+     * anything else keeps the legacy booking page.
+     */
+    function treatment_start_url(string $slug, ?string $category = null): string
+    {
+        $enabled = (array) config('onboarding.enabled_slugs', []);
+
+        if (in_array('*', $enabled, true) || in_array($slug, $enabled, true)) {
+            return route('onboarding.start', ['slug' => $slug]);
+        }
+
+        return route('patient.book', array_filter(['category' => $category, 'treatment' => $slug]));
+    }
+}

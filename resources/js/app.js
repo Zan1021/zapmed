@@ -109,24 +109,29 @@ window.assessmentForm = function(questions) {
             const question = this.questions.find(q => q.id === questionId);
             if (!question || !question.show_if) return true;
 
+            // Mirrors App\Services\Assessments\AssessmentService::branchMatches() — keep the two in sync.
+            //   "Yes"        exact answer (or ticked in a checkbox list)
+            //   "*selected"  anything other than a negative answer (No / None / None of the above / I've never…)
+            //   "!No"        answered, and the answer is not "No"  (skips a block when a JUMP option is chosen)
+            const isNegative = (label) =>
+                /^(no|none|n\/a|not applicable|never|i['\u2019]?ve never|i have never)\b/i.test(String(label).trim());
+
+            const matches = (required, answer) => {
+                if (answer === undefined || answer === null || answer === '') return false;
+                const values = Array.isArray(answer) ? answer : [answer];
+                if (values.length === 0) return false;
+
+                if (required === '*selected') return values.some(v => !isNegative(v));
+                if (typeof required === 'string' && required.startsWith('!')) {
+                    return !values.includes(required.slice(1));
+                }
+                return values.includes(required);
+            };
+
             // Check all conditions (AND logic)
             for (const [depId, requiredValue] of Object.entries(question.show_if)) {
-                const currentAnswer = this.answers[depId];
-
-                if (currentAnswer === undefined || currentAnswer === null || currentAnswer === '') {
+                if (!matches(requiredValue, this.answers[depId])) {
                     return false;
-                }
-
-                // For checkbox answers (arrays), check if the required value is in the array
-                if (Array.isArray(currentAnswer)) {
-                    if (!currentAnswer.includes(requiredValue)) {
-                        return false;
-                    }
-                } else {
-                    // For radio/select/text, exact match
-                    if (currentAnswer !== requiredValue) {
-                        return false;
-                    }
                 }
             }
 

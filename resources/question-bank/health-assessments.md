@@ -141,7 +141,7 @@ Alpha or beta hydroxy acids (AHAs or BHAs)
 I don’t know
 None of the above
 
-What are you main concerns?
+What are your main concerns?
 Wrinkles
 Benzoyl Peroxide
 Fine lines
@@ -163,7 +163,7 @@ Have you taken any prescription skin medication in the past that you no longer u
 
 [IF YES] Please provide the name and dosage of the medication you were prescribed?
 
-Which face care products do you currently use and apply to your skin? Please provide any details.
+[Which face care products do you currently use and apply to your skin? Please provide any details.]
 [TEXT]
 
 Do any of the following options apply to you?
@@ -194,7 +194,7 @@ Do you have any allergies, including medication-related allergies?
 
 [IF YES] Please provide further details
 
-Is there any further information you would like to share with your assigned Partner Doctor
+Is there any further information you would like to share with your assigned Partner Doctor?
 
 ## Rosacea Consultation
 
@@ -202,7 +202,7 @@ Have you been diagnosed with rosacea by a medical professional?
 [1] Yes
 [2] No
 
-[IF NO THEN] Unfortunately we cannot assist unless you have had a physical diagnosis.
+[IF NO] [STOP] Unfortunately we cannot assist unless you have had a physical diagnosis.
 
 [IF YES] When were you diagnosed? (calendar date)
 [TEXT]
@@ -376,12 +376,14 @@ Is there any further information you would like to share with your assigned Part
 
 ## Birth Control health assessment
 
-<!-- REVIEW (Dr Anke + Craig): this section contains a deeply NESTED branching flow in the source
-     (method → brand → "continue? / why change?") with placeholder notes like
-     "[SELECT METHOD OPTIONS AS BELOW]". The current question-bank branch model is single-level
-     (show-if-previous-answer), so this cannot be imported as-is without simplification or a
-     branch-model enhancement. Left verbatim below pending a decision — DO NOT publish this
-     category to patients until reconstructed. -->
+<!-- Rebuilt 2026-11-09 from the nested flow in Craig's doc, using [IF …] / [THEN …] follow-ups:
+       [IF …]   hangs off the last top-level question
+       [THEN …] hangs off the question immediately above (even if that one is itself conditional)
+     Changes vs the Word doc (for Dr Anke to confirm):
+       - "Which brand of pill?" is free text (the doc said "[SELECT BC MED OPTIONS]" but gave no brand list).
+       - "Do you want to continue using this method?" is asked for EVERY current method
+         (the doc only asked it for the pill, ring and patch).
+       - Blood pressure is two clearly-worded questions (top / bottom number). -->
 
 Are you currently using a method of birth control?
 [1] Yes
@@ -389,31 +391,35 @@ Are you currently using a method of birth control?
 
 [IF NO] Have you previously used a method of birth control?
 [1] Yes
-[Which method of birth control did you last use?]
-[SELECT METHOD OPTIONS AS BELOW - Same flow]
-[Which method did you last use?]
-[2] No - [JUMP TO: How much are you able to spend]
+[2] No
 
-[IF YES; SELECT] Which method of birth control are you currently using?
+[THEN YES] Which method of birth control did you last use?
 [1] Contraceptive pill
-[Which brand of contraceptive pill are you currently taking?]
-[SELECT BC MED OPTIONS]
-[Do you want to continue using this brand of contraceptive pill?]
-[1] Yes
-[2] No - [Why do you want to change?]
 [2] Contraceptive ring (NuvaRing)
-[Do you want to continue using this method of contraception?]
-[1] Yes
-[2] No - [Why do you want to change?]
 [3] Contraceptive patch (Evra)
-[Do you want to continue using this method of contraception?]
-[1] Yes
-[2] No - [Why do you want to change?]
 [4] The injection
 [5] The implant
 [6] IUD
 [7] Condoms
-[8] Other - [Please provide further details]
+[8] Other - [Please specify the method you last used]
+
+[THEN CONTRACEPTIVE PILL] Which brand of contraceptive pill did you last use?
+
+[IF YES] Which method of birth control are you currently using?
+[1] Contraceptive pill
+[2] Contraceptive ring (NuvaRing)
+[3] Contraceptive patch (Evra)
+[4] The injection
+[5] The implant
+[6] IUD
+[7] Condoms
+[8] Other - [Please specify the method you are currently using]
+
+[THEN CONTRACEPTIVE PILL] Which brand of contraceptive pill are you currently taking?
+
+[THEN SELECTED] Do you want to continue using this method of contraception?
+[1] Yes
+[2] No - [Why do you want to change?]
 
 How much are you able to spend per month on your prescribed contraceptive method (not including Contro’s service fee)?
 [1] Up to R220/month
@@ -421,16 +427,14 @@ How much are you able to spend per month on your prescribed contraceptive method
 [3] Up to R450/month
 [4] My medical aid will cover my prescribed medication
 
-Please provide your most recent Blood Pressure reading from your recent check-up. If you are uncertain, or do not have a reading from the last 6 months, please visit your nearest clinic or pharmacy and complete this form once your check-up is completed.
-
-SELECT: Systolic (top number)
+SELECT: What was the top number (systolic) of your most recent blood pressure reading? If you do not have a reading from the last 6 months, please visit your nearest clinic or pharmacy and complete this form once your check-up is done.
 [1] 0 - 99
 [2] 100 - 119
 [3] 120 - 129
 [4] 130 - 139
 [5] 140 and above
 
-SELECT: Diasystolic (bottom number)
+SELECT: What was the bottom number (diastolic) of that blood pressure reading?
 [1] 0 - 79
 [2] 80 - 89
 [3] 90 and above
@@ -464,7 +468,7 @@ Barbiturates
 Topiramate
 None of the above
 
-[IF SELECTED]: Please provide further details about the above condition(s)
+[IF SELECTED] Please provide further details about the above condition(s)
 
 Do you have any of the following conditions?
 Heart conditions
@@ -472,18 +476,20 @@ Kidney conditions
 Liver conditions
 Diabetes
 Headaches
-[Have you been diagnosed with migraines?]
-[1] Yes - [Please provide further details]
-[2]  No
 HIV
 Cancer
 High blood pressure
-	[Has a healthcare professional diagnosed you with high blood pressure?]
-	[1] Yes - Please provide further details]
-	[2] No
 None of the above
 
-[IF SELECTED] - Please provide further details
+[IF HEADACHES] Have you been diagnosed with migraines?
+[1] Yes - [Please provide further details about your migraines]
+[2] No
+
+[IF HIGH BLOOD PRESSURE] Has a healthcare professional diagnosed you with high blood pressure?
+[1] Yes - [Please provide further details about your high blood pressure]
+[2] No
+
+[IF SELECTED] Please provide further details
 
 Do you have any other medical conditions or a history of prior surgeries?
 [1] Yes
@@ -502,6 +508,7 @@ Do you have any allergies, including medication-related allergies?
 [2] No
 
 [IF YES] Please provide further details
+
 Do any of the following options apply to you?
 I am pregnant
 I am breastfeeding
@@ -565,7 +572,7 @@ Are you experiencing any irregular or undiagnosed vaginal bleeding?
 
 Are you experiencing hot flushes (a feeling of heat through your body that can cause sweating, heart palpitations, chills and/or anxiety)?
 [1] Yes
-[2] No
+[2] No - [JUMP: Are you experiencing any of the following symptoms?]
 
 How often do you experience hot flushes?
 [1] Rarely
@@ -799,10 +806,11 @@ Cancer
 Sickle cell disease
 Peptic ulcer disease
 High blood pressure
-	[Has a healthcare professional diagnosed you with high blood pressure?]
-	[1] Yes - [Please provide further details]
-	[2] No
 None of the above
+
+[IF HIGH BLOOD PRESSURE] Has a healthcare professional diagnosed you with high blood pressure?
+[1] Yes - [Please provide further details about your high blood pressure]
+[2] No
 
 [IF SELECTED] Please provide further details
 
@@ -965,7 +973,8 @@ Scabbing
 Flu-like symptoms such as fever, muscle aches or swollen lymph nodes
 Other
 
-[IF SELECTED] Please provide further details
+[THEN OTHER] Please provide further details
+
 Where are you currently experiencing symptoms?
 Around the genital area
 Around the mouth (cold sores)
@@ -973,7 +982,7 @@ Anus and surrounding areas
 Within your vagina or anus
 Other
 
-[IF SELECTED] Please provide further details
+[IF OTHER] Please provide further details
 
 Is this your first time experiencing these symptoms?
 [1] Yes
@@ -1050,7 +1059,7 @@ Was that genital warts treatment effective?
 
 Do you currently have any symptoms?
 [1] Yes
-[2] No
+[2] No - [JUMP: How many genital warts outbreaks have you had in the last 12 months?]
 
 [IF YES] Which symptoms do you currently have?
 Blisters, pustules or sores
@@ -1244,7 +1253,7 @@ SELECT: Have you been diagnosed and are currently using medication to treat acid
 [2] I’ve been diagnosed but I’m not taking any medication
 [3] I’ve been diagnosed and am currently on medication for acid reflux
 
-When you do NOT take over-the-counter or prescription medicines for acid reflux, which of the following symptoms do you have? Select all that apply to you
+[When you do NOT take over-the-counter or prescription medicines for acid reflux, which of the following symptoms do you have? Select all that apply to you]
 Pain in your chest after eating
 Wake up in the middle of the night with burning in the chest
 Burning in the chest if you lay down shortly after eating
@@ -1274,7 +1283,7 @@ Have you experienced any side effects from either the OTC or PRESCRIPTION acid r
 
 [IF YES] Please describe the medication and the side effects you experience.
 
-Some symptoms indicate a more serious condition might be causing your acid reflux. Select all that apply to you.
+[Some symptoms indicate a more serious condition might be causing your acid reflux. Select all that apply to you.]
 Difficulty swallowing
 Pain when swallowing
 Coughing up or throwing up blood
@@ -1360,7 +1369,7 @@ Headache
 Upset stomach
 Other
 
-Where are you currently experiencing symptoms these symptoms?
+Where are you currently experiencing these symptoms?
 Genital areas
 Around the mouth (cold sores)
 Anus and surrounding areas
@@ -1370,7 +1379,7 @@ Is this your first time experiencing these symptoms?
 [1] Yes
 [2] No
 
-SELECT: How long have you had these symptoms
+SELECT: How long have you had these symptoms?
 [1] Less than a week
 [2] 1 - 2 weeks
 [3] 2 - 4 weeks
@@ -1432,7 +1441,7 @@ Have you been diagnosed with haemorrhoids (piles) in the past by a healthcare pr
 
 Do you currently have any symptoms?
 [1] Yes
-[2] No
+[2] No - [JUMP: Are you currently suffering from constipation?]
 [IF YES] Which symptoms do you currently have?
 Bright red blood after you poo
 An itchy anus
@@ -1506,7 +1515,7 @@ Is there any further information you would like to share with your assigned Part
 
 ## Hairloss Health Assessment
 
-Please describe where you are losing hair on your head.
+[Please describe where you are losing hair on your head.]
 [1] Receding hairline
 [2] Thinning at the crown
 [3] Overall thinning hair
@@ -1576,9 +1585,6 @@ Cancer
 Sickle cell disease
 Peptic ulcer disease
 High blood pressure
-	[Has a healthcare professional diagnosed you with high blood pressure?]
-	[1] Yes - [Please provide further details]
-	[2] No
 Scalp infections
 Systemic lupus
 Eczema
@@ -1587,6 +1593,10 @@ Prostate disease
 Prostate cancer
 Rheumatoid arthritis
 None of the above
+
+[IF HIGH BLOOD PRESSURE] Has a healthcare professional diagnosed you with high blood pressure?
+[1] Yes - [Please provide further details about your high blood pressure]
+[2] No
 
 [IF SELECTED] Please provide further details
 
@@ -1607,8 +1617,8 @@ Is there any further information you would like to share with your assigned Part
 ## UTI Health Assessment
 
 Which of the following symptoms are you experiencing?
-Blood in urine - [Blood in urine: Are you experiencing constant discolouration?]
-Fever - [Have you had a fever for more than 3 days?]
+Blood in urine
+Fever
 Frequent urination
 Increased vaginal discharge
 Lower abdominal pain
@@ -1616,19 +1626,35 @@ Pain or burning with urination
 Smelly urine
 Urgent need to urinate
 Vaginal itching
-Back or flank pain - [Have you suffered from bank or flank pain for more than 3 days increasing in severity?]
-Chills - [Have you had a fever for more than 3 days?]
+Back or flank pain
+Chills
 Extreme fatigue
 Nausea or vomiting
 Pelvic pain
 Other - [Please provide further details]
+
+[IF BLOOD IN URINE] Are you experiencing constant discolouration of your urine?
+[1] Yes
+[2] No
+
+[IF FEVER] Have you had a fever for more than 3 days?
+[1] Yes
+[2] No
+
+[IF BACK OR FLANK PAIN] Have you suffered from back or flank pain for more than 3 days, increasing in severity?
+[1] Yes
+[2] No
+
+[IF CHILLS] Have you had a fever for more than 3 days?
+[1] Yes
+[2] No
 
 How long have you been experiencing these symptoms?
 [1] Less than 3 days
 [2] 4-7 days
 [3] 8 or more days
 
-Please rate your overall discomfort on a scale of 1-5, 1 being minimal discomfort and 5 being extreme discomfort.
+SELECT: Please rate your overall discomfort on a scale of 1-5, 1 being minimal discomfort and 5 being extreme discomfort.
 [1] 1
 [2] 2
 [3] 3
@@ -1719,7 +1745,7 @@ Is there any further information you would like to share with your assigned Part
 
 ## GP Consultation
 
-We're here to help you get the care you need. What can we help you with? Select all that apply to you.
+[We're here to help you get the care you need. What can we help you with? Select all that apply to you.]
 Allergies
 Infections, e.g. ear infection, eye infection
 Musculoskeletal problems, e.g. back or neck pain
@@ -1735,9 +1761,6 @@ Other
 [TEXT]
 
 [IF OTHER SELECTED] Please provide further details of the care you need
-[TEXT]
-
-Please explain your symptoms and how long you have had them for
 [TEXT]
 
 Have used or been prescribed any medication for your current condition?
@@ -1909,7 +1932,7 @@ SELECT: How would you describe your current diet?
 Do you follow any structured meal plan?
 [1] Yes
 [2] No
-[IF YES] What type of exercise do you do?
+[IF YES] What type of meal plan do you follow?
 
 Have you had blood tests in the past 12 months?
 [1] Yes

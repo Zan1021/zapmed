@@ -39,8 +39,8 @@ trait ParsesQuestionBankSource
 
         $flush = function () use (&$pendingQuestion, &$current) {
             if ($pendingQuestion !== null && $current !== null) {
-                // A widget hint already resolved to date/number — keep it, don't override.
-                $hinted = in_array($pendingQuestion['type'] ?? '', ['date', 'number'], true);
+                // A widget hint already resolved to date/number/stop — keep it, don't override.
+                $hinted = in_array($pendingQuestion['type'] ?? '', ['date', 'number', 'stop'], true);
 
                 if (! $hinted) {
                     if (! empty($pendingQuestion['options'])) {
@@ -54,7 +54,22 @@ trait ParsesQuestionBankSource
                 $this->applyWidgetHint($pendingQuestion);
 
                 unset($pendingQuestion['numbered']);
+                $followups = $pendingQuestion['followups'] ?? [];
+                unset($pendingQuestion['followups']);
                 $current['questions'][] = $pendingQuestion;
+
+                // Inline "Other - [Please specify]" style follow-ups become their own conditional
+                // free-text questions, shown only when that exact option is picked.
+                foreach ($followups as $fu) {
+                    $current['questions'][] = [
+                        'text' => $fu['text'],
+                        'type' => 'text',
+                        'options' => [],
+                        'if_yes' => true,
+                        'cond' => ['kind' => 'label', 'label' => $fu['label']],
+                        'depends' => 'parent',
+                    ];
+                }
             }
             $pendingQuestion = null;
         };
@@ -89,7 +104,7 @@ trait ParsesQuestionBankSource
                     $last = array_key_last($current['questions']);
                     // don't downgrade a question that already resolved to a richer widget
                     // (date/number/select) via an explicit hint — the [TEXT] here is redundant.
-                    if (! in_array($current['questions'][$last]['type'] ?? 'text', ['date', 'number', 'select'], true)) {
+                    if (! in_array($current['questions'][$last]['type'] ?? 'text', ['date', 'number', 'select', 'stop'], true)) {
                         $current['questions'][$last]['type'] = 'text';
                         $current['questions'][$last]['options'] = [];
                     }
@@ -97,20 +112,39 @@ trait ParsesQuestionBankSource
                 continue;
             }
 
-            // conditional follow-up — [IF YES], [IF NO], [IF SELECTED], etc.
+            // conditional follow-up — [IF YES], [IF NO], [IF SELECTED], [IF OTHER], "IF SELECTED: …" etc.
+            // "[THEN …]" is the same but hangs off the PREVIOUS choice question (even if that one was
+            // itself conditional) — this is what lets a nested flow be written down:
+            //     [IF NO]   Have you previously used a method?   Yes/No
+            //     [THEN YES] Which method did you last use?      (only if the line above = Yes)
             // Becomes a PENDING question so any option lines that follow attach to it (making it a
             // single/multi choice). If no options follow, $flush resolves it to free-text — preserving
             // the old behaviour for bare "[IF YES] Please provide further details" follow-ups.
-            if (preg_match('/^\[IF\s+([A-Z ]+)\]\s*(.+)$/i', $text, $m)) {
+            // The tag is matched case-SENSITIVELY (the source writes it in capitals) so an ordinary
+            // sentence starting "If you …" is never mistaken for a directive.
+            if (preg_match('/^\[?(IF|THEN)\s+([A-Z][A-Z ;,]*?)\s*(?:\]|:)\s*[-:]?\s*(.+)$/', $text, $m)) {
                 $flush();
+                $body = $m[3];
+                $isStop = false;
+                if (preg_match('/^\[STOP\]\s*(.+)$/i', $body, $sm)) {
+                    $isStop = true;
+                    $body = $sm[1];
+                }
+                $cond = $this->parseCondition($m[2]);
+                if ($m[1] === 'THEN') {
+                    $cond['rel'] = 'prev';
+                }
                 $pendingQuestion = [
-                    'text' => $this->clean(rtrim($m[2])),
-                    'type' => 'text',
+                    'text' => $this->clean(rtrim($body)),
+                    'type' => $isStop ? 'stop' : 'text',
                     'options' => [],
-                    'if_yes' => stripos($m[1], 'YES') !== false,
+                    'if_yes' => true, // "is conditional" (kept name for compatibility)
+                    'cond' => $cond,
                     'numbered' => false,
                 ];
-                $this->applyWidgetHint($pendingQuestion); // honour "(calendar date)"/"(number)" on conditionals too
+                if (! $isStop) {
+                    $this->applyWidgetHint($pendingQuestion); // honour "(calendar date)"/"(number)" on conditionals too
+                }
                 continue;
             }
 
@@ -131,12 +165,19 @@ trait ParsesQuestionBankSource
                 continue;
             }
 
-            // numbered option  [1] Label   (strip any inline "- [follow-up]" tail → keep just the label)
+            // numbered option  [1] Label   (an inline "- [follow-up]" tail becomes a conditional
+            // follow-up question; a "- [JUMP …]" tail is routing metadata and is dropped)
             if (preg_match('/^\[(\d+)\]\s*(.+)$/', $text, $m)) {
                 if ($pendingQuestion !== null) {
-                    $label = preg_replace('/\s*-\s*\[.*\]\s*$/', '', $m[2]);
-                    $pendingQuestion['options'][] = $this->clean(rtrim($label, ": "));
+                    [$label, $followText] = $this->splitOptionTail($m[2]);
+                    $label = $this->clean(rtrim($label, ': '));
+                    $pendingQuestion['options'][] = $label;
                     $pendingQuestion['numbered'] = true;
+                    if ($followText !== null) {
+                        $pendingQuestion['followups'][] = ['label' => $label, 'text' => $this->clean($followText)];
+                    } elseif (($jumpTo = $this->extractJumpTarget($m[2])) !== null) {
+                        $pendingQuestion['jumps'][] = ['label' => $label, 'target' => $jumpTo];
+                    }
                 }
                 continue;
             }
@@ -152,6 +193,13 @@ trait ParsesQuestionBankSource
                     'if_yes' => false,
                     'numbered' => false,
                 ];
+                continue;
+            }
+
+            // SELECT CALENDAR: question (month/year date picker)
+            if (preg_match('/^SELECT\s+CALENDAR:\s*(.+)$/i', $text, $m)) {
+                $flush();
+                $pendingQuestion = ['text' => $this->clean($m[1]), 'type' => 'date', 'options' => [], 'if_yes' => false, 'numbered' => false];
                 continue;
             }
 
@@ -171,10 +219,34 @@ trait ParsesQuestionBankSource
                 continue;
             }
 
+            // an un-tagged "Please provide further details…" line is a free-text follow-up to the
+            // question above it (shown when that answer is something other than "No"/"None"),
+            // never an answer option.
+            if ($pendingQuestion !== null || ! empty($current['questions'])) {
+                if (preg_match('/^please\s+(provide|describe|list|explain|specify)\b/i', $text)) {
+                    $flush();
+                    $pendingQuestion = [
+                        'text' => $this->clean($text),
+                        'type' => 'text',
+                        'options' => [],
+                        'if_yes' => true,
+                        'cond' => ['kind' => 'selected'],
+                        'numbered' => false,
+                    ];
+                    continue;
+                }
+            }
+
             // otherwise: a bare option line belonging to the pending (multi-choice) question.
             if ($pendingQuestion !== null) {
-                $label = preg_replace('/\s*-\s*\[.*\]\s*$/', '', $text);
-                $pendingQuestion['options'][] = $this->clean($label);
+                [$label, $followText] = $this->splitOptionTail($text);
+                $label = $this->clean($label);
+                $pendingQuestion['options'][] = $label;
+                if ($followText !== null) {
+                    $pendingQuestion['followups'][] = ['label' => $label, 'text' => $this->clean($followText)];
+                } elseif (($jumpTo = $this->extractJumpTarget($text)) !== null) {
+                    $pendingQuestion['jumps'][] = ['label' => $label, 'target' => $jumpTo];
+                }
             }
         }
 
@@ -183,7 +255,145 @@ trait ParsesQuestionBankSource
             $categories[] = $current;
         }
 
-        return $categories;
+        return array_map(fn (array $cat) => $this->applyJumps($cat), $categories);
+    }
+
+    /**
+     * Split "Other - [Please specify]" into [label, followUpText]. Only genuine follow-up QUESTIONS
+     * (starting with please/why/which/what/how/when/specify/provide/describe/list/explain) become a
+     * follow-up; routing tails such as "[JUMP: …]" / "[Jump to Minoxidil]" and references to other
+     * questions are stripped and ignored here (see extractJumpTarget).
+     *
+     * @return array{0:string,1:?string}
+     */
+    protected function splitOptionTail(string $raw): array
+    {
+        if (preg_match('/^(.*?)\s*-\s*\[?\s*((?:please|why|which|what|how|when|specify|provide|describe|list|explain)\b[^\]]*)\]?\s*$/i', $raw, $m)) {
+            return [trim($m[1]), trim($m[2])];
+        }
+
+        return [trim(preg_replace('/\s*-\s*\[.*\]\s*$/', '', $raw)), null];
+    }
+
+    /**
+     * The question TEXT an option routes to, from a tail like "- [JUMP: <q>]", "- [JUMP TO: <q>]",
+     * "- [Jump to Minoxidil]" or a bare pointer such as "- [Have you sought treatment …?]".
+     * Resolved later (applyJumps) against the questions that follow; unresolved pointers are ignored.
+     */
+    protected function extractJumpTarget(string $raw): ?string
+    {
+        if (preg_match('/-\s*\[\s*JUMP(?:\s+TO)?\s*:?\s*(.+?)\s*\]?\s*$/i', $raw, $m)) {
+            return trim($m[1]);
+        }
+        if (preg_match('/-\s*\[\s*(.+\?)\s*\]\s*$/', $raw, $m)) {
+            return trim($m[1]);
+        }
+
+        return null;
+    }
+
+    /**
+     * Honour `[2] No - [JUMP: <later question>]`: every UNCONDITIONAL question between the asking
+     * question and its jump target is only shown when the answer was NOT that option. (Questions that
+     * are already conditional keep their own, tighter condition.)
+     *
+     * @param  array{name:string,questions:array}  $cat
+     * @return array{name:string,questions:array}
+     */
+    protected function applyJumps(array $cat): array
+    {
+        $qs = $cat['questions'];
+        $norm = fn (string $s): string => trim(preg_replace('/\s+/', ' ', preg_replace('/[^a-z0-9]+/', ' ', strtolower($s))));
+
+        foreach ($qs as $i => $q) {
+            foreach ($q['jumps'] ?? [] as $jump) {
+                $needle = $norm($jump['target']);
+                if ($needle === '') {
+                    continue;
+                }
+                $to = null;
+                for ($k = $i + 1; $k < count($qs); $k++) {
+                    if (str_contains($norm($qs[$k]['text']), $needle)) {
+                        $to = $k;
+                        break;
+                    }
+                }
+                if ($to === null) {
+                    continue; // unresolved pointer — ignore rather than guess
+                }
+                for ($k = $i + 1; $k < $to; $k++) {
+                    if (empty($qs[$k]['if_yes'])) {
+                        $qs[$k]['skip'][] = ['idx' => $i, 'label' => $jump['label']];
+                    }
+                }
+            }
+            unset($qs[$i]['jumps']);
+        }
+
+        $cat['questions'] = $qs;
+
+        return $cat;
+    }
+
+    /**
+     * Turn the text inside "[IF …]" into a condition descriptor.
+     *   YES            → kind=yes      (parent answer === "Yes")
+     *   NO / NO THEN   → kind=no       (parent answer === "No")
+     *   SELECTED       → kind=selected (parent answered with anything other than a negative option)
+     *   OTHER / OTHER SELECTED / SURGICAL REMOVAL → kind=option, hint=<words> (parent option containing the hint)
+     *
+     * @return array{kind:string,hint?:string}
+     */
+    protected function parseCondition(string $tag): array
+    {
+        $t = strtoupper(trim($tag));
+
+        if (preg_match('/\bYES\b/', $t)) {
+            return ['kind' => 'yes'];
+        }
+        if (preg_match('/^NO\b/', $t)) {
+            return ['kind' => 'no'];
+        }
+
+        $hint = trim(preg_replace('/\b(SELECTED|SELECT|THEN|IF)\b|[;,]/', ' ', $t));
+        $hint = trim(preg_replace('/\s+/', ' ', $hint));
+
+        return $hint === '' ? ['kind' => 'selected'] : ['kind' => 'option', 'hint' => $hint];
+    }
+
+    /**
+     * Resolve a condition descriptor to a branch_rules map against the parent question.
+     *
+     * @param  array<string,mixed>  $q
+     * @param  array<int,string>    $parentOptions
+     * @return array<string,array<int,string>>|null
+     */
+    protected function branchFor(array $q, ?string $parentKey, array $parentOptions): ?array
+    {
+        if (empty($q['if_yes']) || ! $parentKey) {
+            return null;
+        }
+
+        $cond = $q['cond'] ?? ['kind' => 'yes'];
+
+        switch ($cond['kind']) {
+            case 'label':
+                return [$parentKey => [$cond['label']]];
+            case 'yes':
+                return [$parentKey => ['Yes']];
+            case 'no':
+                return [$parentKey => ['No']];
+            case 'option':
+                foreach ($parentOptions as $opt) {
+                    if (stripos($opt, $cond['hint']) !== false) {
+                        return [$parentKey => [$opt]];
+                    }
+                }
+                // no option carries that hint — fall back to "anything but a negative answer"
+                // fall through
+            default:
+                return [$parentKey => [\App\Services\Assessments\AssessmentService::BRANCH_ANY_SELECTED]];
+        }
     }
 
     /**
@@ -209,9 +419,13 @@ trait ParsesQuestionBankSource
                 $createdCategories++;
 
                 $position = 1;
-                $lastKey = null;
+                $lastKey = null;      // last NON-conditional question (what [IF YES]/[IF SELECTED] hang off)
+                $lastOptions = [];
+                $parentKey = null;    // question immediately before an inline option follow-up
+                $parentOptions = [];
+                $keysByIndex = [];    // question index within the category → question_key (for jump skips)
 
-                foreach ($cat['questions'] as $q) {
+                foreach ($cat['questions'] as $idx => $q) {
                     $question = AssessmentQuestion::create([
                         'question_key' => $this->uniqueKey($cat['name'], $q['text']),
                         'scope' => 'category',
@@ -219,9 +433,17 @@ trait ParsesQuestionBankSource
                         'status' => 'draft',
                     ]);
 
-                    $branch = null;
-                    if ($q['if_yes'] && $lastKey) {
-                        $branch = [$lastKey => ['Yes']];
+                    $isFollowUp = ($q['depends'] ?? null) === 'parent';
+                    $hangsOffPrevious = $isFollowUp || (($q['cond']['rel'] ?? null) === 'prev');
+                    $branch = $hangsOffPrevious
+                        ? $this->branchFor($q, $parentKey, $parentOptions)
+                        : $this->branchFor($q, $lastKey, $lastOptions);
+
+                    // `[2] No - [JUMP: …]` skips: show only when that parent was NOT answered with that option.
+                    foreach ($q['skip'] ?? [] as $skip) {
+                        if (isset($keysByIndex[$skip['idx']])) {
+                            $branch[$keysByIndex[$skip['idx']]] = ['!'.$skip['label']];
+                        }
                     }
 
                     $version = $question->versions()->create([
@@ -230,11 +452,12 @@ trait ParsesQuestionBankSource
                         'type' => $q['type'],
                         'options' => $this->mapOptions($q['options']),
                         'branch_rules' => $branch,
-                        'required' => ! $q['if_yes'],
+                        'required' => ! $q['if_yes'] && $q['type'] !== 'stop',
                         'reason' => 'md-import',
                     ]);
                     $question->update(['current_version_id' => $version->id]);
                     $createdQuestions++;
+                    $keysByIndex[$idx] = $question->question_key;
 
                     AssessmentCategoryQuestion::create([
                         'category_id' => $category->id,
@@ -243,8 +466,15 @@ trait ParsesQuestionBankSource
                     ]);
                     $links++;
 
+                    // "previous question" for [THEN …] and inline follow-ups = the last CHOICE question
+                    // (free-text / date / stop leaves are never a sensible thing to branch on).
+                    if (! $isFollowUp && ! empty($q['options'])) {
+                        $parentKey = $question->question_key;
+                        $parentOptions = $q['options'];
+                    }
                     if (! $q['if_yes']) {
                         $lastKey = $question->question_key;
+                        $lastOptions = $q['options'];
                     }
                 }
             }

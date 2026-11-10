@@ -22,6 +22,58 @@ use Illuminate\Support\Collection;
 class AssessmentService
 {
     /**
+     * Branch token meaning "show this follow-up when the parent was answered with anything other than
+     * a negative answer" (No / None / None of the above / "I've never…"). It is what the question-bank
+     * source's `[IF SELECTED]` compiles to, so a patient who ticks "None of the above" is not asked to
+     * "provide further details".
+     */
+    public const BRANCH_ANY_SELECTED = '*selected';
+
+    /**
+     * Does a parent answer satisfy a branch requirement? Single source of truth for the patient
+     * journey AND the legacy booking page.
+     *
+     * @param  mixed  $required  exact answer label, or BRANCH_ANY_SELECTED
+     * @param  mixed  $answer    string (single choice / text) or array (multi choice)
+     */
+    public static function branchMatches(mixed $required, mixed $answer): bool
+    {
+        if ($answer === null || $answer === '' || $answer === []) {
+            return false;
+        }
+
+        $values = is_array($answer) ? $answer : [$answer];
+
+        // "!No" = the parent was answered, and the answer is NOT "No" (used to skip a block of
+        // questions when the source says `[2] No - [JUMP: <later question>]`).
+        if (is_string($required) && str_starts_with($required, '!')) {
+            return ! in_array(substr($required, 1), $values, true);
+        }
+
+        if ($required === self::BRANCH_ANY_SELECTED) {
+            foreach ($values as $v) {
+                if (! self::isNegativeAnswer((string) $v)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        return in_array($required, $values, true);
+    }
+
+    /** "No", "None", "None of the above", "N/A", "I've never…", "No, but…" etc. */
+    public static function isNegativeAnswer(string $label): bool
+    {
+        $l = mb_strtolower(trim($label));
+
+        return (bool) preg_match(
+            "/^(no|none|n\/a|not applicable|never|i(?:'|’|\x{2019})?ve never|i have never)\b/u",
+            $l
+        );
+    }
+
+    /**
      * Ordered, assembled flow for a category slug, in the legacy array shape.
      * Returns [] if there is no live category manifest for the slug.
      *

@@ -128,6 +128,13 @@
                                 placeholder="{{ $question['placeholder'] ?? '' }}"
                                 class="w-full rounded-lg border-gray-300 shadow-sm focus:border-zapmed-500 focus:ring-zapmed-500 text-sm">
 
+                        @elseif($question['type'] === 'date')
+                            {{-- Month + year is all a patient can reliably recall; free text keeps this legacy page simple. --}}
+                            <input type="text" wire:model="assessmentAnswers.{{ $question['id'] }}"
+                                x-on:input="updateAnswer('{{ $question['id'] }}', $event.target.value)"
+                                placeholder="{{ $question['placeholder'] ?? 'Month and year, e.g. March 2025' }}"
+                                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-zapmed-500 focus:ring-zapmed-500 text-sm">
+
                         @elseif($question['type'] === 'number')
                             <input type="number" wire:model="assessmentAnswers.{{ $question['id'] }}"
                                 x-on:input="updateAnswer('{{ $question['id'] }}', $event.target.value)"

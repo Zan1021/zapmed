@@ -71,7 +71,7 @@
                         @endif
                     </div>
                     <div class="mt-6">
-                        <a href="{{ route('patient.book', ['category' => $treatment['category_slug'], 'treatment' => $slug]) }}" class="inline-block bg-zapmed-600 hover:bg-zapmed-700 text-white px-8 py-4 rounded-xl text-base font-semibold transition-all shadow-lg">
+                        <a href="{{ treatment_start_url($slug, $treatment['category_slug']) }}" class="inline-block bg-zapmed-600 hover:bg-zapmed-700 text-white px-8 py-4 rounded-xl text-base font-semibold transition-all shadow-lg">
                             Start Your Assessment
                         </a>
                     </div>
@@ -86,7 +86,7 @@
     </section>
 
     <!-- How It Works -->
-    @include('partials.how-it-works', ['bookingUrl' => route('patient.book', ['category' => $treatment['category_slug'], 'treatment' => $slug])])
+    @include('partials.how-it-works', ['bookingUrl' => treatment_start_url($slug, $treatment['category_slug'])])
 
     <!-- Treatment-Specific Content -->
     @if(View::exists('treatments.content.' . ($contentSlug ?? $slug)))
@@ -112,7 +112,7 @@
         <div class="max-w-4xl mx-auto bg-gray-900 rounded-3xl p-12 text-center">
             <h2 class="text-2xl sm:text-3xl font-bold text-white">Ready to get started?</h2>
             <p class="mt-4 text-lg text-gray-400">Complete your assessment in just a few minutes — a licensed doctor will review it the same day.</p>
-            <a href="{{ route('patient.book', ['category' => $treatment['category_slug'], 'treatment' => $slug]) }}" class="mt-8 inline-block bg-zapmed-500 hover:bg-zapmed-600 text-white px-8 py-4 rounded-xl text-base font-semibold transition-all shadow-lg">
+            <a href="{{ treatment_start_url($slug, $treatment['category_slug']) }}" class="mt-8 inline-block bg-zapmed-500 hover:bg-zapmed-600 text-white px-8 py-4 rounded-xl text-base font-semibold transition-all shadow-lg">
                 Start Your Assessment
             </a>
         </div>

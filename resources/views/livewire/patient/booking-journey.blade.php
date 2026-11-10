@@ -163,15 +163,23 @@
                         </select>
                     </div>
 
+                @elseif($type === 'stop')
+                    {{-- Hard-stop message (e.g. "we cannot assist without a physical diagnosis"): nothing to answer. --}}
+                    <div class="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-base text-amber-900" role="alert">
+                        {{ $q['label'] ?? '' }}
+                    </div>
+
                 @else
                     <textarea wire:model="answers.{{ $id }}" rows="4" placeholder="{{ $q['placeholder'] ?? 'Type your answer' }}" class="{{ $inputCls }}"></textarea>
                 @endif
             </div>
 
             <div class="mt-8">
+                @if($type !== 'stop')
                 <button type="button" class="{{ $primaryCls }}" wire:click="nextQuestion">
                     {{ $this->progress['current'] === $this->progress['total'] ? 'Review answers' : 'Continue' }}
                 </button>
+                @endif
             </div>
 
             @if(!empty($q['why_we_ask']) || !empty($q['helper_text']))

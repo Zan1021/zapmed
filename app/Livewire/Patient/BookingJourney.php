@@ -113,6 +113,11 @@ class BookingJourney extends Component
     {
         $q = $this->current_question;
 
+        // A "stop" message has nothing to answer and must not be skippable via a crafted request.
+        if ($q && ($q['type'] ?? null) === 'stop') {
+            return;
+        }
+
         // Date questions are entered as two selects (answers.{id}_month / _year); compose them into
         // the single answers.{id} value ("Month YYYY") so required-check, review and save all work
         // against the same key every other question uses.
@@ -387,15 +392,7 @@ class BookingJourney extends Component
             return true;
         }
         foreach ($q['show_if'] as $depId => $required) {
-            $cur = $this->answers[$depId] ?? null;
-            if ($this->isBlank($cur)) {
-                return false;
-            }
-            if (is_array($cur)) {
-                if (! in_array($required, $cur, true)) {
-                    return false;
-                }
-            } elseif ($cur !== $required) {
+            if (! \App\Services\Assessments\AssessmentService::branchMatches($required, $this->answers[$depId] ?? null)) {
                 return false;
             }
         }

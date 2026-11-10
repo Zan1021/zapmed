@@ -239,21 +239,8 @@ class BookAppointment extends Component
         }
 
         foreach ($question['show_if'] as $depId => $requiredValue) {
-            $currentAnswer = $this->assessmentAnswers[$depId] ?? null;
-
-            if ($currentAnswer === null || $currentAnswer === '') {
+            if (! \App\Services\Assessments\AssessmentService::branchMatches($requiredValue, $this->assessmentAnswers[$depId] ?? null)) {
                 return false;
-            }
-
-            // For checkbox answers (arrays), check if value is selected
-            if (is_array($currentAnswer)) {
-                if (!in_array($requiredValue, $currentAnswer)) {
-                    return false;
-                }
-            } else {
-                if ($currentAnswer !== $requiredValue) {
-                    return false;
-                }
             }
         }
 

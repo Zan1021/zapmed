@@ -190,7 +190,7 @@
                     <div class="mt-4 p-4 rounded-lg" :class="scoreBg">
                         <p class="text-sm" :class="scoreTextColor" x-text="scoreInsight"></p>
                     </div>
-                    <a href="{{ route('patient.book', ['category' => 'mens-health', 'treatment' => 'erectile-dysfunction-treatment']) }}" class="mt-4 block w-full text-center bg-zapmed-600 hover:bg-zapmed-700 text-white py-3 rounded-lg text-sm font-semibold transition-colors shadow-sm">
+                    <a href="{{ treatment_start_url('erectile-dysfunction-treatment', 'mens-health') }}" class="mt-4 block w-full text-center bg-zapmed-600 hover:bg-zapmed-700 text-white py-3 rounded-lg text-sm font-semibold transition-colors shadow-sm">
                         Get Discreet ED Treatment
                     </a>
                     <button @click="showResult = false; answers = [null,null,null,null,null]" class="mt-2 text-xs text-gray-500 hover:text-gray-700">Retake</button>
@@ -229,7 +229,7 @@
                     <div class="mt-4 p-4 rounded-lg" :class="riskBg">
                         <p class="text-sm" :class="riskTextColor" x-text="riskInsight"></p>
                     </div>
-                    <a href="{{ route('patient.book', ['category' => 'general-health', 'treatment' => 'hair-loss-treatment']) }}" class="mt-4 block w-full text-center bg-zapmed-600 hover:bg-zapmed-700 text-white py-3 rounded-lg text-sm font-semibold transition-colors shadow-sm">
+                    <a href="{{ treatment_start_url('hair-loss-treatment', 'general-health') }}" class="mt-4 block w-full text-center bg-zapmed-600 hover:bg-zapmed-700 text-white py-3 rounded-lg text-sm font-semibold transition-colors shadow-sm">
                         Start Hair Loss Treatment
                     </a>
                     <button @click="showResult = false; answers = [null,null,null,null,null]" class="mt-2 text-xs text-gray-500 hover:text-gray-700">Retake</button>
@@ -277,7 +277,7 @@
                     <div class="mt-4 p-4 rounded-lg" :class="skinAge > age ? 'bg-red-50' : 'bg-green-50'">
                         <p class="text-sm" :class="skinAge > age ? 'text-red-800' : 'text-green-800'" x-text="skinInsight"></p>
                     </div>
-                    <a href="{{ route('patient.book', ['category' => 'skincare', 'treatment' => 'anti-aging-treatment']) }}" class="mt-4 block w-full text-center bg-zapmed-600 hover:bg-zapmed-700 text-white py-3 rounded-lg text-sm font-semibold transition-colors shadow-sm">
+                    <a href="{{ treatment_start_url('anti-aging-treatment', 'skincare') }}" class="mt-4 block w-full text-center bg-zapmed-600 hover:bg-zapmed-700 text-white py-3 rounded-lg text-sm font-semibold transition-colors shadow-sm">
                         Explore Anti-Aging Treatments
                     </a>
                     <button @click="showResult = false; answers = [null,null,null,null,null]" class="mt-2 text-xs text-gray-500 hover:text-gray-700">Retake</button>
