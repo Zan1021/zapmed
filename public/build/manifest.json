@@ -9,7 +9,7 @@
     ]
   },
   "resources/css/zapmed-home.css": {
-    "file": "assets/zapmed-home-D6jhUgEj.css",
+    "file": "assets/zapmed-home-CscK54ov.css",
     "src": "resources/css/zapmed-home.css",
     "isEntry": true,
     "name": "zapmed-home",
@@ -33,7 +33,7 @@
     "isEntry": true
   },
   "resources/js/zapmed-home.js": {
-    "file": "assets/zapmed-home-gpyS7s_A.js",
+    "file": "assets/zapmed-home-M6nQHtyy.js",
     "name": "zapmed-home",
     "src": "resources/js/zapmed-home.js",
     "isEntry": true

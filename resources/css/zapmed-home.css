@@ -962,3 +962,14 @@ body, .zapmed-home button, .zapmed-home input, .zapmed-home select, .zapmed-home
 .zapmed-home /* Portraits sit directly on the category colour, .zapmed-home without a contrasting panel. */
 .topic-photo{border-radius:0;background:transparent;object-fit:contain;mix-blend-mode:normal;mask-image:linear-gradient(to bottom,#000 85%,transparent 100%)}
 .zapmed-home #weight-loss .weight-copy h2 em{font-size:calc(.88em - 2px)}
+
+/* ===== hero auto-play (Zan 2026-11): the hero data columns always scroll on their own.
+   No pause buttons, no pause on hover/focus, and not switched off by the OS reduced-motion setting. ===== */
+.zapmed-home .health-stream:hover .health-track,
+.zapmed-home .health-stream:focus-within .health-track,
+.zapmed-home .health-stream.motion-paused .health-track{animation-play-state:running}
+@media(prefers-reduced-motion:reduce){
+.zapmed-home .health-track{animation:vertical-metrics 35s linear infinite!important}
+.zapmed-home .man-stream .health-track{animation-duration:39s!important}
+.zapmed-home .health-window{overflow:hidden}
+}

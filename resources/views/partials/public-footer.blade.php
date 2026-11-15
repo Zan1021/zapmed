@@ -30,7 +30,7 @@
                 <h4 class="text-sm font-semibold text-gray-900 mb-3">Company</h4>
                 <ul class="space-y-2 text-sm text-gray-500">
                     <li><a href="{{ route('faq') }}" class="hover:text-gray-900 transition-colors">FAQ / Help Centre</a></li>
-                    <li><a href="/#doctors" class="hover:text-gray-900 transition-colors">Our Doctors</a></li>
+                    <li><a href="/#care-team" class="hover:text-gray-900 transition-colors">Our Doctors</a></li>
                     <li><a href="/#how-it-works" class="hover:text-gray-900 transition-colors">How It Works</a></li>
                     <li><a href="{{ route('doctors.apply') }}" class="hover:text-gray-900 transition-colors">Join as a Doctor</a></li>
                     <li><a href="mailto:support@zapmed.co.za" class="hover:text-gray-900 transition-colors">Contact</a></li>

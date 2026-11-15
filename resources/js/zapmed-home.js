@@ -50,6 +50,40 @@ $('#care-search').addEventListener('submit',e=>{e.preventDefault();const q=$('#c
 $('#guide-open').addEventListener('click',()=>openDialog('<p class="eyebrow">GUIDE PREVIEW</p><h2>Your weight-loss kickstarter.</h2><img src="/mockup-assets/guide.webp" alt="The guide concept from the deck"><p>The proposed guide covers a nutrition plan, exercise recommendations, treatment options, expert insights and your next steps.</p><p class="small">The slide provides a cover concept, not the complete guide. A clinically reviewed downloadable guide must be supplied before launch.</p>'));
 
 
+/* ===== refinements.js ===== */
+/* Shared motion and icon refinements from the supplied reference. */
+const lineIcons={
+ doctor:'<path d="M7 3v6a5 5 0 0 0 10 0V3M5 3h4M15 3h4M12 14v3a4 4 0 0 0 8 0v-3"/><circle cx="20" cy="11" r="2"/>',
+ clipboard:'<rect x="5" y="4" width="14" height="18" rx="2"/><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M9 11h6M9 15h6M9 19h3"/>',
+ coach:'<path d="M3 4h18v13H9l-6 4V4Z"/><path d="m8 10 3 3 5-6"/>',
+ gift:'<rect x="3" y="9" width="18" height="12" rx="2"/><path d="M12 9v12M2 9h20M12 9C4 9 6 1 10 4l2 5ZM12 9c8 0 6-8 2-5l-2 5Z"/>',
+ delivery:'<path d="M2 5h12v12H2zM14 9h4l4 4v4h-8"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/>',
+ monitor:'<rect x="2" y="3" width="20" height="14" rx="3"/><path d="M8 21h8M12 17v4M8 10h8M12 6v8"/>',
+ pharmacy:'<path d="M4 21V7h16v14M2 7l2-4h16l2 4M9 21v-6h6v6M9 10h6M12 8v4"/>',
+ shield:'<path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6l8-3Z"/><path d="m8 12 3 3 5-6"/>'
+};
+function icon(name){return `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">${lineIcons[name]}</svg>`}
+
+['clipboard','doctor','delivery','coach'].forEach((n,i)=>{$$('.steps article > span')[i].innerHTML=icon(n)});
+const services=[['monitor','Online consults'],['doctor','Licensed medical providers'],['clipboard','Online scripts'],['shield','SAHPRA-registered medicines*'],['pharmacy','Registered pharmacies'],['delivery','Private delivery'],['coach','Health Coach'],['gift','Partner benefits']];
+const serviceGroup=()=>`<div class="services-group">${services.map(([i,t])=>`<span>${icon(i)}${t}</span>`).join('')}</div>`;
+$('.services-track').innerHTML=serviceGroup()+serviceGroup();$('.services-group:last-child').setAttribute('aria-hidden','true');
+const dataCards=[['Heart rate','74','bpm'],['Metabolic health','5.3','% HbA1c'],['Cholesterol','2.1','mmol/L LDL'],['Daily movement','6,284','steps'],['Everyday health','118/76','mmHg']];
+const dataGroup=()=>`<div class="health-group">${dataCards.map(([t,v,u])=>`<article class="health-card"><span>${t}</span><strong>${v}<small>${u}</small></strong><svg class="pulse" viewBox="0 0 160 30" aria-hidden="true"><path d="M0 18h30l8-7 10 15 14-23 12 24 9-9h30l8-5 9 8 8-3h22"/></svg></article>`).join('')}</div>`;
+$('.health-track').innerHTML=dataGroup()+dataGroup();$('.health-group:last-child').setAttribute('aria-hidden','true');
+function pauseMotion(id,target,label){$(id).addEventListener('click',e=>{const paused=e.currentTarget.getAttribute('aria-pressed')!=='true';e.currentTarget.setAttribute('aria-pressed',paused);e.currentTarget.setAttribute('aria-label',`${paused?'Resume':'Pause'} ${label}`);e.currentTarget.textContent=paused?'▶':'Ⅱ';$(target).classList.toggle('motion-paused',paused)})}
+pauseMotion('#pause-services','.service-strip','service scrolling');
+const promiseObserver=new IntersectionObserver(entries=>{entries.forEach(e=>{e.target.classList.toggle('is-revealed',e.isIntersecting)})},{threshold:.4});promiseObserver.observe($('.process-promise'));
+const stepObserver=new IntersectionObserver(es=>es.forEach(e=>e.target.classList.toggle('step-visible',e.isIntersecting)),{threshold:.25});$$('.steps article').forEach(e=>stepObserver.observe(e));
+function tiltScale(){const p=Number($('input[name=percent]:checked').value);$('#scale-ticks').style.transform=`rotate(${(p-10)*.7}deg)`}
+$$('[name=percent]').forEach(r=>r.addEventListener('change',tiltScale));
+// Use the exact same image geometry, colours and hover/focus behavior on both card collections.
+$$('.person').forEach((p,i)=>{p.classList.remove('in-view');peopleObserver.unobserve(p);p.dataset.cardTone=i>=4?'sand':'sage'});
+// The mockup added a scroll-shadow to its own <header>. Our page uses the shared
+// public-nav partial (no bare <header>), so guard before touching it.
+const topNav=$('header');
+if(topNav){const updateNav=()=>topNav.classList.toggle('has-scrolled',scrollY>40);addEventListener('scroll',updateNav,{passive:true});updateNav();}
+
 /* ===== metrics.js ===== */
 /* Illustrative, browser-local metric display; no health data collected. */
 (()=>{
@@ -81,41 +115,5 @@ first.setAttribute('aria-label','Illustrative women’s health metrics');
 const second=first.cloneNode(true);second.classList.remove('woman-stream');second.classList.add('man-stream');second.setAttribute('aria-label','Illustrative men’s health metrics');
 second.querySelector('.health-track').innerHTML=contents([3,4,5])+contents([3,4,5]);second.querySelector('.health-group:last-child').setAttribute('aria-hidden','true');
 second.querySelector('.stream-heading>span').textContent='HIS HEALTH IN VIEW';
-const pause=second.querySelector('button');pause.id='pause-health-men';pause.setAttribute('aria-label','Pause men’s health metrics');pause.addEventListener('click',()=>{const paused=pause.getAttribute('aria-pressed')!=='true';pause.setAttribute('aria-pressed',paused);pause.textContent=paused?'▶':'Ⅱ';pause.setAttribute('aria-label',`${paused?'Resume':'Pause'} men’s health metrics`);second.classList.toggle('motion-paused',paused)});
 first.after(second);
 })();
-
-
-/* ===== refinements.js ===== */
-/* Shared motion and icon refinements from the supplied reference. */
-const lineIcons={
- doctor:'<path d="M7 3v6a5 5 0 0 0 10 0V3M5 3h4M15 3h4M12 14v3a4 4 0 0 0 8 0v-3"/><circle cx="20" cy="11" r="2"/>',
- clipboard:'<rect x="5" y="4" width="14" height="18" rx="2"/><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M9 11h6M9 15h6M9 19h3"/>',
- coach:'<path d="M3 4h18v13H9l-6 4V4Z"/><path d="m8 10 3 3 5-6"/>',
- gift:'<rect x="3" y="9" width="18" height="12" rx="2"/><path d="M12 9v12M2 9h20M12 9C4 9 6 1 10 4l2 5ZM12 9c8 0 6-8 2-5l-2 5Z"/>',
- delivery:'<path d="M2 5h12v12H2zM14 9h4l4 4v4h-8"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/>',
- monitor:'<rect x="2" y="3" width="20" height="14" rx="3"/><path d="M8 21h8M12 17v4M8 10h8M12 6v8"/>',
- pharmacy:'<path d="M4 21V7h16v14M2 7l2-4h16l2 4M9 21v-6h6v6M9 10h6M12 8v4"/>',
- shield:'<path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6l8-3Z"/><path d="m8 12 3 3 5-6"/>'
-};
-function icon(name){return `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">${lineIcons[name]}</svg>`}
-
-['clipboard','doctor','delivery','coach'].forEach((n,i)=>{$$('.steps article > span')[i].innerHTML=icon(n)});
-const services=[['monitor','Online consults'],['doctor','Licensed medical providers'],['clipboard','Online scripts'],['shield','SAHPRA-registered medicines*'],['pharmacy','Registered pharmacies'],['delivery','Private delivery'],['coach','Health Coach'],['gift','Partner benefits']];
-const serviceGroup=()=>`<div class="services-group">${services.map(([i,t])=>`<span>${icon(i)}${t}</span>`).join('')}</div>`;
-$('.services-track').innerHTML=serviceGroup()+serviceGroup();$('.services-group:last-child').setAttribute('aria-hidden','true');
-const dataCards=[['Heart rate','74','bpm'],['Metabolic health','5.3','% HbA1c'],['Cholesterol','2.1','mmol/L LDL'],['Daily movement','6,284','steps'],['Everyday health','118/76','mmHg']];
-const dataGroup=()=>`<div class="health-group">${dataCards.map(([t,v,u])=>`<article class="health-card"><span>${t}</span><strong>${v}<small>${u}</small></strong><svg class="pulse" viewBox="0 0 160 30" aria-hidden="true"><path d="M0 18h30l8-7 10 15 14-23 12 24 9-9h30l8-5 9 8 8-3h22"/></svg></article>`).join('')}</div>`;
-$('.health-track').innerHTML=dataGroup()+dataGroup();$('.health-group:last-child').setAttribute('aria-hidden','true');
-function pauseMotion(id,target,label){$(id).addEventListener('click',e=>{const paused=e.currentTarget.getAttribute('aria-pressed')!=='true';e.currentTarget.setAttribute('aria-pressed',paused);e.currentTarget.setAttribute('aria-label',`${paused?'Resume':'Pause'} ${label}`);e.currentTarget.textContent=paused?'▶':'Ⅱ';$(target).classList.toggle('motion-paused',paused)})}
-pauseMotion('#pause-health','.health-stream','health data scrolling');pauseMotion('#pause-services','.service-strip','service scrolling');
-const promiseObserver=new IntersectionObserver(entries=>{entries.forEach(e=>{e.target.classList.toggle('is-revealed',e.isIntersecting)})},{threshold:.4});promiseObserver.observe($('.process-promise'));
-const stepObserver=new IntersectionObserver(es=>es.forEach(e=>e.target.classList.toggle('step-visible',e.isIntersecting)),{threshold:.25});$$('.steps article').forEach(e=>stepObserver.observe(e));
-function tiltScale(){const p=Number($('input[name=percent]:checked').value);$('#scale-ticks').style.transform=`rotate(${(p-10)*.7}deg)`}
-$$('[name=percent]').forEach(r=>r.addEventListener('change',tiltScale));
-// Use the exact same image geometry, colours and hover/focus behavior on both card collections.
-$$('.person').forEach((p,i)=>{p.classList.remove('in-view');peopleObserver.unobserve(p);p.dataset.cardTone=i>=4?'sand':'sage'});
-// The mockup added a scroll-shadow to its own <header>. Our page uses the shared
-// public-nav partial (no bare <header>), so guard before touching it.
-const topNav=$('header');
-if(topNav){const updateNav=()=>topNav.classList.toggle('has-scrolled',scrollY>40);addEventListener('scroll',updateNav,{passive:true});updateNav();}

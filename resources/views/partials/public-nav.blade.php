@@ -15,8 +15,8 @@
                     <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-zapmed-600 group-hover:w-full transition-all duration-300"></span>
                 </button>
                 <a href="/#how-it-works" class="relative text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors pb-1 group">How It Works<span class="absolute bottom-0 left-0 w-0 h-0.5 bg-zapmed-600 group-hover:w-full transition-all duration-300"></span></a>
-                <a href="/#pricing" class="relative text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors pb-1 group">Pricing<span class="absolute bottom-0 left-0 w-0 h-0.5 bg-zapmed-600 group-hover:w-full transition-all duration-300"></span></a>
-                <a href="/#doctors" class="relative text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors pb-1 group">Our Doctors<span class="absolute bottom-0 left-0 w-0 h-0.5 bg-zapmed-600 group-hover:w-full transition-all duration-300"></span></a>
+                <a href="/#membership" class="relative text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors pb-1 group">Pricing<span class="absolute bottom-0 left-0 w-0 h-0.5 bg-zapmed-600 group-hover:w-full transition-all duration-300"></span></a>
+                <a href="/#care-team" class="relative text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors pb-1 group">Our Doctors<span class="absolute bottom-0 left-0 w-0 h-0.5 bg-zapmed-600 group-hover:w-full transition-all duration-300"></span></a>
                 <a href="{{ route('help') }}" class="relative text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors pb-1 group">FAQ<span class="absolute bottom-0 left-0 w-0 h-0.5 bg-zapmed-600 group-hover:w-full transition-all duration-300"></span></a>
                 <a href="{{ route('blog') }}" class="relative text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors pb-1 group">Blog<span class="absolute bottom-0 left-0 w-0 h-0.5 bg-zapmed-600 group-hover:w-full transition-all duration-300"></span></a>
             </div>
@@ -192,8 +192,8 @@
     <div x-show="mobileOpen" x-transition x-cloak class="md:hidden bg-white border-b border-gray-200 shadow-lg max-h-[80vh] overflow-y-auto">
         <div class="px-4 py-4 space-y-4">
             <a href="/#how-it-works" class="block text-sm font-medium text-gray-600 hover:text-gray-900">How It Works</a>
-            <a href="/#pricing" class="block text-sm font-medium text-gray-600 hover:text-gray-900">Pricing</a>
-            <a href="/#doctors" class="block text-sm font-medium text-gray-600 hover:text-gray-900">Our Doctors</a>
+            <a href="/#membership" class="block text-sm font-medium text-gray-600 hover:text-gray-900">Pricing</a>
+            <a href="/#care-team" class="block text-sm font-medium text-gray-600 hover:text-gray-900">Our Doctors</a>
             <a href="{{ route('faq') }}" class="block text-sm font-medium text-gray-600 hover:text-gray-900">FAQ</a>
             <a href="{{ route('blog') }}" class="block text-sm font-medium text-gray-600 hover:text-gray-900">Blog</a>
             <div class="border-t border-gray-100 pt-4">
