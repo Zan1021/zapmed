@@ -19,6 +19,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Forge zero-downtime deploys: keep uploads (blog images etc.) in a shared folder.
+        // Never allowed to break a request.
+        if (! $this->app->runningUnitTests() && ($shared = \App\Support\SharedStorage::sharedPublicFor(base_path()))) {
+            try {
+                \App\Support\SharedStorage::link(storage_path('app/public'), $shared);
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+
         // Postgres LIKE is case-sensitive; make every "like" search case-insensitive (see class docblock).
         if (config('database.connections.' . config('database.default') . '.driver') === 'pgsql') {
             $connection = \Illuminate\Support\Facades\DB::connection();
