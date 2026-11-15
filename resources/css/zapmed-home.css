@@ -565,8 +565,8 @@ html{scroll-behavior:smooth;scroll-padding-top:100px}
 @media(max-width:800px){.zapmed-home .logo-window{width:131px}}
 
 /* ===== colour-system.css ===== */
-.zapmed-home /* Zapmed colour system: neutral navigation, .zapmed-home shared teal actions, .zapmed-home topic accents. */
-:root{--teal:#2E767F;--forest:#203E3E;--ivory:#FAF9F6;--soft-teal:#E8F3F2;--navy:#284B63;--blue:#EDF2F6;--mauve:#966B8B;--blush:#F7EDF3;--sage:#E6EDE6;--ink:var(--forest);--muted:#506765;--paper:var(--ivory);--green:var(--sage);--purple:var(--mauve)}
+/* Zapmed colour system: neutral navigation, .zapmed-home shared teal actions, .zapmed-home topic accents. */
+.zapmed-home{--teal:#2E767F;--forest:#203E3E;--ivory:#FAF9F6;--soft-teal:#E8F3F2;--navy:#284B63;--blue:#EDF2F6;--mauve:#966B8B;--blush:#F7EDF3;--sage:#E6EDE6;--ink:var(--forest);--muted:#506765;--paper:var(--ivory);--green:var(--sage);--purple:var(--mauve)}
 .zapmed-home{background:var(--ivory);color:var(--forest)}
 .zapmed-home header{background:#FAF9F6f5;color:var(--forest)}
 .zapmed-home header nav a:hover, .zapmed-home header nav button:hover, .zapmed-home header nav a:focus-visible, .zapmed-home header nav button:focus-visible{color:var(--teal)}
@@ -626,8 +626,8 @@ html{scroll-behavior:smooth;scroll-padding-top:100px}
 @media(max-width:500px){.zapmed-home .membership-grid{grid-template-columns:1fr}}
 
 /* ===== brand.css ===== */
-.zapmed-home /* Zapmed Colour Brand Kit: core identity, .zapmed-home then category-specific accents. */
-:root{--ink:#203E3E;--muted:#526E60;--paper:#F4F0E7;--green:#DCE5DA;--sand:#F4F0E7;--purple:#526E60;--teal:#2E767F;--navy:#172B40;--steel:#617D8D;--blue:#A8BEC8;--sage:#729D94}
+/* Zapmed Colour Brand Kit: core identity, .zapmed-home then category-specific accents. */
+.zapmed-home{--ink:#203E3E;--muted:#526E60;--paper:#F4F0E7;--green:#DCE5DA;--sand:#F4F0E7;--purple:#526E60;--teal:#2E767F;--navy:#172B40;--steel:#617D8D;--blue:#A8BEC8;--sage:#729D94}
 .zapmed-home{font-family:'Manrope',sans-serif}
 .zapmed-home button, .zapmed-home input, .zapmed-home select, .zapmed-home textarea{font-family:inherit}
 .zapmed-home em{font-family:inherit}
@@ -693,8 +693,8 @@ html{scroll-behavior:smooth;scroll-padding-top:100px}
 @media(max-width:500px){.zapmed-home .hero h1{font-size:clamp(26px,7.8vw,35px);max-width:100%;line-height:1.25}
 .zapmed-home .hero .hero-prata{font-size:.96em}
 .zapmed-home .categories .category.care-card span{min-height:58px}}
-.zapmed-home /* Reconcile the prior colour-system layer with the supplied brand kit. */
-:root{--ivory:#F4F0E7;--forest:#203E3E;--soft-teal:#F4F0E7;--mauve:#526E60;--blush:#DCE5DA}
+/* Reconcile the prior colour-system layer with the supplied brand kit. */
+.zapmed-home{--ivory:#F4F0E7;--forest:#203E3E;--soft-teal:#F4F0E7;--mauve:#526E60;--blush:#DCE5DA}
 .zapmed-home .logo-window img{filter:none}
 .zapmed-home .category.care-card:nth-child(2){box-shadow:inset 0 -3px #526E60}
 .zapmed-home .category.care-card:nth-child(3){box-shadow:inset 0 -3px #172B40}
