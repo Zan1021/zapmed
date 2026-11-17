@@ -295,6 +295,15 @@ Route::get('partner/dashboard', \App\Livewire\Partner\Dashboard::class)
 
 require __DIR__.'/auth.php';
 
+// New-design treatment category pages (static HTML in resources/treatment-pages-v3,
+// assets in public/zapmed-v3). Registered before the catch-all so they win over it.
+// Every "Get started" button on these pages goes straight to /start/{slug} (no sign-up first).
+foreach (['weight-loss', 'womens-health', 'mens-health', 'sexual-health', 'hair-loss', 'skincare', 'general-health'] as $categoryPage) {
+    Route::get($categoryPage, function () use ($categoryPage) {
+        return response(file_get_contents(resource_path("treatment-pages-v3/{$categoryPage}.html")), 200)
+            ->header('Content-Type', 'text/html; charset=UTF-8');
+    })->name("category-page.{$categoryPage}");
+}
 
 // Treatment + blog-post + legacy resolver (catch-all, must be LAST —
 // matches zapmed.co.za root URL structure: /{treatment} and /{post-slug}).

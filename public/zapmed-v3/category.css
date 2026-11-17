@@ -1,0 +1,6 @@
+/* Treatment cards on the category pages (uses Craig's colours and fonts) */
+.treat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin-top:28px}
+.treat-card{background:#fff;border:1px solid rgba(32,62,62,.12);border-radius:20px;padding:26px 24px;display:flex;flex-direction:column;gap:10px}
+.treat-card h3{margin:0;font-size:22px}
+.treat-card p{margin:0 0 14px;flex:1}
+.treat-card .pill{align-self:flex-start}
