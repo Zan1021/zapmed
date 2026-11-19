@@ -44,7 +44,11 @@ class SparExceptions extends Component
 
     public function getOverdueDispensesProperty()
     {
+        // Scoped to the staff member's pharmacy/group; snoozed and resolved
+        // items drop off the list until they wake.
         return SparDispenseRecord::overdue()
+            ->dueNow()
+            ->whereHas('journey', fn ($q) => $q->visibleToCurrentActor())
             ->with($this->patientWith(['journey.pharmacy']))
             ->orderBy('due_date')
             ->limit(50)
@@ -54,6 +58,8 @@ class SparExceptions extends Component
     public function getMissingRenewalsProperty()
     {
         return SparPrescriptionJourney::where('status', 'renewal_due')
+            ->visibleToCurrentActor()
+            ->dueNow()
             ->where('renewal_due_date', '<', now()->subDays(7))
             ->with($this->patientWith(['pharmacy']))
             ->orderBy('renewal_due_date')
@@ -64,7 +70,13 @@ class SparExceptions extends Component
     public function getUnresponsivePatientsProperty()
     {
         $service = new SparReminderService();
-        return $service->getUnresponsivePatients(10);
+
+        // The reminder service is platform-wide; limit to what this user may see.
+        $visible = SparPrescriptionJourney::visibleToCurrentActor()->pluck('id')->flip();
+
+        return $service->getUnresponsivePatients(10)
+            ->filter(fn ($d) => $visible->has($d->journey_id))
+            ->values();
     }
 
     /* --------------------------------------------------------------------- */

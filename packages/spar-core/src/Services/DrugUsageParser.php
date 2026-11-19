@@ -40,10 +40,28 @@ class DrugUsageParser
         'profile code' => 'profile_code',
         'dependent code' => 'dependent_code',
         'dependant code' => 'dependent_code',
+
+        // Member-extract layout (pipe-delimited text file, e.g. Wapadrand_extract.csv).
+        'lastname' => 'last_name',
+        'cellphone' => 'cellphone',
+        'profilenumber' => 'profile_code',
+        'dependantnumber' => 'dependent_code',
+        'medicalaidnumber' => 'medical_aid_number',
+        'consent' => 'source_consent',
+        'dateofbirth' => 'date_of_birth',
     ];
 
-    /** Cells that must be present for a row to be a header row. */
-    private const HEADER_MARKERS = ['surname', 'profile code'];
+    /**
+     * A header row must contain one label from EACH group: a surname column and
+     * a profile-code column (old Drug Usage names or the member-extract names).
+     */
+    private const HEADER_MARKER_GROUPS = [
+        ['surname', 'lastname'],
+        ['profile code', 'profilenumber'],
+    ];
+
+    /** Text values SPAR uses for "nothing here". */
+    private const NULL_TOKENS = ['NULL', 'N/A'];
 
     /**
      * Parse the xlsx and return identity rows keyed by "profile_code|dependent_code".
@@ -63,12 +81,9 @@ class DrugUsageParser
             throw new \RuntimeException('Drug Usage file too large. Maximum 50MB allowed.');
         }
 
-        $reader = IOFactory::createReaderForFile($filePath);
-        $reader->setReadDataOnly(true);
-        $spreadsheet = $reader->load($filePath);
-        $sheet = $spreadsheet->getActiveSheet();
-
-        $grid = $sheet->toArray(null, true, false, false); // 0-indexed rows/cols
+        $grid = $this->isSpreadsheet($filePath)
+            ? $this->readSpreadsheetGrid($filePath)
+            : $this->readDelimitedGrid($filePath);
 
         $headerRowIndex = $this->locateHeaderRow($grid);
         if ($headerRowIndex === null) {
@@ -103,6 +118,10 @@ class DrugUsageParser
                 $record[$field] = $this->clean($raw[$colIdx] ?? null);
             }
 
+            if (array_key_exists('date_of_birth', $record)) {
+                $record['date_of_birth'] = $this->normaliseDob($record['date_of_birth']);
+            }
+
             $profile = trim((string) ($record['profile_code'] ?? ''));
             $dependent = $this->normaliseDependent($record['dependent_code'] ?? '');
             if ($profile === '') {
@@ -117,11 +136,86 @@ class DrugUsageParser
             }
             unset($record['cellphone_alt']);
 
+            // Consent is a safety flag: if ANY line for this member says "N",
+            // the member counts as "N" (never let a later "Y" line override it).
+            $incomingConsent = isset($record['source_consent']) ? strtoupper(trim((string) $record['source_consent'])) : '';
+            $record['source_consent'] = in_array($incomingConsent, ['Y', 'N'], true) ? $incomingConsent : null;
+
             $key = $profile . '|' . $dependent;
+            $existingConsent = $identities[$key]['source_consent'] ?? null;
             $identities[$key] = $this->mergePreferringNonEmpty($identities[$key] ?? [], $record);
+            if ($existingConsent === 'N' || $record['source_consent'] === 'N') {
+                $identities[$key]['source_consent'] = 'N';
+            }
         }
 
         return $identities;
+    }
+
+    private function isSpreadsheet(string $filePath): bool
+    {
+        $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+        if (in_array($ext, ['xlsx', 'xls'], true)) {
+            return true;
+        }
+        if (in_array($ext, ['csv', 'txt'], true)) {
+            return false;
+        }
+
+        // Unknown extension (e.g. an uploaded temp name): sniff the zip header.
+        $fh = @fopen($filePath, 'rb');
+        $magic = $fh ? fread($fh, 2) : '';
+        if ($fh) {
+            fclose($fh);
+        }
+
+        return $magic === 'PK';
+    }
+
+    /** @return array<int, array<int, mixed>> */
+    private function readSpreadsheetGrid(string $filePath): array
+    {
+        $reader = IOFactory::createReaderForFile($filePath);
+        $reader->setReadDataOnly(true);
+        $spreadsheet = $reader->load($filePath);
+
+        return $spreadsheet->getActiveSheet()->toArray(null, true, false, false); // 0-indexed rows/cols
+    }
+
+    /**
+     * Read a delimited text member extract (pipe or comma). Tolerates a UTF-8
+     * BOM, blank/broken trailing lines and padded values; the literal text
+     * "NULL" is treated as empty.
+     *
+     * @return array<int, array<int, mixed>>
+     */
+    private function readDelimitedGrid(string $filePath): array
+    {
+        $content = (string) file_get_contents($filePath);
+        $content = preg_replace('/^\xEF\xBB\xBF/', '', $content);
+
+        $firstLine = strtok($content, "\n");
+        $delimiter = $firstLine !== false && str_contains($firstLine, '|') ? '|' : ',';
+
+        $grid = [];
+        foreach (preg_split('/\r\n|\r|\n/', $content) as $line) {
+            if (trim($line) === '') {
+                continue;
+            }
+            $cells = array_map(function ($c) {
+                $c = trim((string) $c);
+
+                return in_array(strtoupper($c), self::NULL_TOKENS, true) ? '' : $c;
+            }, str_getcsv($line, $delimiter));
+
+            // A line with fewer than 3 fields is a broken fragment, not a record.
+            if (count($cells) < 3) {
+                continue;
+            }
+            $grid[] = $cells;
+        }
+
+        return $grid;
     }
 
     private function locateHeaderRow(array $grid): ?int
@@ -129,8 +223,8 @@ class DrugUsageParser
         foreach ($grid as $idx => $row) {
             $cells = array_map(fn ($c) => $this->normaliseHeader($c), $row);
             $present = true;
-            foreach (self::HEADER_MARKERS as $marker) {
-                if (!in_array($marker, $cells, true)) {
+            foreach (self::HEADER_MARKER_GROUPS as $alternatives) {
+                if (empty(array_intersect($alternatives, $cells))) {
                     $present = false;
                     break;
                 }
@@ -141,6 +235,32 @@ class DrugUsageParser
         }
 
         return null;
+    }
+
+    /**
+     * Date of birth as Y-m-d, or null when it is blank or implausible. Accepts
+     * "27 Jul 1949" text and Excel serial numbers.
+     */
+    private function normaliseDob(?string $value): ?string
+    {
+        $v = trim((string) $value);
+        if ($v === '') {
+            return null;
+        }
+
+        try {
+            $date = is_numeric($v)
+                ? \Carbon\Carbon::instance(ExcelDate::excelToDateTimeObject((float) $v))
+                : \Carbon\Carbon::parse($v);
+        } catch (\Throwable $e) {
+            return null;
+        }
+
+        if ($date->year < 1900 || $date->isFuture()) {
+            return null;
+        }
+
+        return $date->format('Y-m-d');
     }
 
     private function normaliseHeader($value): string

@@ -76,14 +76,15 @@ class SparReconciler
             }
         }
 
-        // Journey-level loop: once the file shows the course is fully dispensed
-        // (or moved to renewal_due), the journey's own actionable loop is closed.
-        // Under overlay a not-yet-confirmed in-app resolution stays; under
-        // system_wins a resolution unsupported by the file's progress is reopened.
-        $courseComplete = $journey->status === 'renewal_due'
-            || ($journey->total_dispenses > 0 && $journey->dispenses_completed >= $journey->total_dispenses);
+        // Journey-level loop = the RENEWAL follow-up. Reaching the last repeat
+        // ("renewal_due") is when that loop OPENS, not when it closes: staff and
+        // reminders must still chase the patient for a new script. The loop only
+        // closes once the file shows the script was replaced (renewed), was a
+        // finished one-off (expired) or was cancelled. Under overlay a staff
+        // resolution stays; under system_wins an unsupported resolution reopens.
+        $loopClosed = in_array($journey->status, ['renewed', 'expired', 'cancelled'], true);
 
-        if ($courseComplete) {
+        if ($loopClosed) {
             if (! $journey->actionStatus()->isResolved()) {
                 $journey->resolveActionable();
                 $stats['resolved']++;

@@ -16,7 +16,8 @@ class SparPatient extends Model
         'profile_code',
         'cellphone',
         'email',
-        // NOTE: 'medical_aid_number' removed — no such column exists on
+        'date_of_birth',
+        // NOTE: 'medical_aid_number' removed: no such column exists on
         // spar_patients (the table has medical_aid_name/medical_aid_option).
         // Dead entry cleaned up in Phase 10.2. Add back with a real column if
         // medical aid numbers are ever stored (they would be PHI → encrypt).
@@ -34,6 +35,7 @@ class SparPatient extends Model
         'dependent_relation',
         'first_name',
         'last_name',
+        'date_of_birth',
         'cellphone',
         'cellphone_hash',
         'email',
@@ -113,6 +115,26 @@ class SparPatient extends Model
 
         // Profile code: case/space-insensitive.
         return strtoupper(preg_replace('/\s+/', '', $v));
+    }
+
+    /**
+     * Age in whole years: from the member extract's date of birth when we have
+     * it, else the age the sales extract carried at first import. Null if unknown.
+     */
+    public function ageYears(): ?int
+    {
+        $dob = trim((string) $this->date_of_birth);
+        if ($dob !== '') {
+            try {
+                return \Carbon\Carbon::parse($dob)->age;
+            } catch (\Throwable $e) {
+                // fall through to the sales-extract age
+            }
+        }
+
+        $age = $this->metadata['age'] ?? null;
+
+        return is_numeric($age) ? (int) $age : null;
     }
 
     public function flagIdentityReview(string $reason): void

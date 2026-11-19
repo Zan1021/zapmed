@@ -55,8 +55,8 @@ class SparImports extends Component
     protected function rules(): array
     {
         return [
-            'csvFile' => 'required|file|mimes:csv,txt|max:10240',
-            'drugUsageFile' => 'nullable|file|mimes:xlsx,xls|max:10240',
+            'csvFile' => 'required|file|mimes:csv,txt,xlsx,xls|max:10240',
+            'drugUsageFile' => 'nullable|file|mimes:xlsx,xls,csv,txt|max:10240',
         ];
     }
 

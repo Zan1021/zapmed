@@ -11,6 +11,9 @@ use Zapmed\SparCore\Models\SparPrescriptionJourney;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Reader\IReadFilter;
+use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 
 class SparImportService
 {
@@ -23,6 +26,14 @@ class SparImportService
      */
     private array $identityMap = [];
 
+    /**
+     * Sales lines ignored in the current parse because they were cut off in the
+     * export (no quantity and no profile code). Reported once per batch.
+     */
+    private int $incompleteLines = 0;
+
+    private const NO_MAIN_MEMBER_REASON = 'No main member (dependant 0) for this household in the SPAR files. '
+        . 'Confirm who the household contact is before inviting anyone.';
     /**
      * Column mapping — maps CSV headers to our internal fields.
      * Update this when SPAR sends the final format.
@@ -96,6 +107,8 @@ class SparImportService
         int $importedBy = null,
         string $source = 'manual'
     ): SparImportBatch {
+        $this->allowLongRun();
+
         try {
             $this->identityMap = (new DrugUsageParser())->parse($drugUsagePath);
         } catch (\Throwable $e) {
@@ -121,10 +134,26 @@ class SparImportService
     }
 
     /**
+     * A real weekly extract (hundreds of patients, thousands of lines) takes
+     * longer than PHP's default 30 second web limit, which killed the import
+     * half way and left the batch stuck on "processing". Allow up to 15 minutes
+     * and keep going if the browser tab is closed.
+     */
+    private function allowLongRun(): void
+    {
+        if (function_exists('set_time_limit')) {
+            @set_time_limit(900);
+        }
+        @ignore_user_abort(true);
+    }
+
+    /**
      * Import a CSV file.
      */
     public function importFile(string $filePath, int $importedBy = null, string $source = 'manual'): SparImportBatch
     {
+        $this->allowLongRun();
+
         $batch = SparImportBatch::create([
             'filename' => basename($filePath),
             'source' => $source,
@@ -145,6 +174,16 @@ class SparImportService
 
             $rows = $this->parseCSV($filePath);
             $batch->update(['records_total' => count($rows)]);
+
+            if ($this->incompleteLines > 0) {
+                SparImportLog::create([
+                    'batch_id' => $batch->id,
+                    'row_number' => 0,
+                    'status' => 'skipped',
+                    'error_message' => $this->incompleteLines . ' incomplete sales line(s) ignored '
+                        . '(cut off in the export: no quantity, price or profile code).',
+                ]);
+            }
 
             // Group rows by profile_code + dependent_code + store so each
             // household MEMBER (principal + each dependant) becomes its own
@@ -280,6 +319,22 @@ class SparImportService
             // the sales extract (no contact) meets the report (name/phone/etc).
             $this->applyDrugUsageIdentity($patient, $profileCode, trim($firstRow['dependent_code'] ?? '0'));
 
+            // Keep age/gender current (the age on the sales line moves on each year).
+            if (!$wasCreated) {
+                $meta = $patient->metadata ?? [];
+                foreach (['age' => 'age', 'gender' => 'gender'] as $field => $key) {
+                    $v = trim((string) ($firstRow[$field] ?? ''));
+                    if ($v !== '' && ($meta[$key] ?? null) !== $v) {
+                        $meta[$key] = $v;
+                    }
+                }
+                if ($meta !== ($patient->metadata ?? [])) {
+                    $patient->update(['metadata' => $meta]);
+                }
+            }
+
+            $this->reviewHouseholdContact($patient, $profileHash);
+
             // Recalculate onboarding lifecycle from identity + consent state.
             $patient->refreshOnboardingStatus();
 
@@ -303,6 +358,36 @@ class SparImportService
 
             $batch->incrementCounter($wasCreated ? 'records_created' : 'records_updated');
         });
+    }
+
+    /**
+     * A household whose main member (dependant 0) is absent from the SPAR files
+     * must not silently promote a dependant (often a child) to household contact.
+     * Flag those dependants for staff review; clear the flag once the main
+     * member turns up in a later import.
+     */
+    private function reviewHouseholdContact(SparPatient $patient, ?string $profileHash): void
+    {
+        if ($profileHash === null) {
+            return;
+        }
+
+        if ($patient->is_primary_member) {
+            SparPatient::where('profile_code_hash', $profileHash)
+                ->where('needs_identity_review', true)
+                ->where('identity_review_reason', self::NO_MAIN_MEMBER_REASON)
+                ->update(['needs_identity_review' => false, 'identity_review_reason' => null]);
+
+            return;
+        }
+
+        $hasMain = SparPatient::where('profile_code_hash', $profileHash)
+            ->where('is_primary_member', true)
+            ->exists();
+
+        if (!$hasMain && !$patient->needs_identity_review) {
+            $patient->flagIdentityReview(self::NO_MAIN_MEMBER_REASON);
+        }
     }
 
     /**
@@ -434,6 +519,11 @@ class SparImportService
             $updates['email'] = $email;
         }
 
+        $dob = trim((string) ($identity['date_of_birth'] ?? ''));
+        if ($dob !== '' && empty($patient->date_of_birth)) {
+            $updates['date_of_birth'] = $dob;
+        }
+
         // Address + member number live in metadata (no dedicated columns).
         $meta = $patient->metadata ?? [];
         if (!empty($identity['address']) && empty($meta['address'])) {
@@ -444,6 +534,13 @@ class SparImportService
         }
         if (!empty($identity['medical_aid_number']) && empty($meta['medical_aid_number'])) {
             $meta['medical_aid_number'] = trim((string) $identity['medical_aid_number']);
+        }
+        // Source consent flag from the SPAR member extract (Y/N). Recorded for
+        // reference ONLY: it never opts a patient in. Our own consent capture
+        // (POPIA) stays the only thing that enables messaging. Latest value wins.
+        $sourceConsent = $identity['source_consent'] ?? null;
+        if (in_array($sourceConsent, ['Y', 'N'], true)) {
+            $meta['source_consent'] = $sourceConsent;
         }
         if ($meta !== ($patient->metadata ?? [])) {
             $updates['metadata'] = $meta;
@@ -503,36 +600,39 @@ class SparImportService
             ->values();
         $startDate = $allDates->first() ?? now();
 
-        // Find existing journey for this script or create new one
+        // Find existing journey for this script or create new one. A journey that
+        // already hit "renewal_due" (or a finished one-off, "expired") is still
+        // THIS script, so match it too: otherwise a re-import of the same file
+        // opens a duplicate journey for the same script number.
         $journey = SparPrescriptionJourney::where('spar_patient_id', $patient->id)
             ->where('script_number', $scriptNumber)
-            ->where('status', 'active')
+            ->whereIn('status', ['active', 'renewal_due', 'expired'])
             ->first();
 
+        // SPAR's repeat columns (confirmed against the member extract's
+        // "RepeatsLeft"): "Repeats" = repeats on the original script and
+        // "Repeat number" = repeats STILL LEFT after this fill. A script with R
+        // repeats therefore allows R + 1 fills in total (the original + R repeats).
+        [$origRepeats] = $this->repeatInfo($rows);
+        $totalFills = $origRepeats !== null ? $origRepeats + 1 : 6; // blank column: legacy default of 6
+
         if (!$journey) {
-            $repeats = (int) ($firstRow['repeats'] ?? 6);
             $journey = SparPrescriptionJourney::create([
                 'spar_patient_id' => $patient->id,
                 'spar_pharmacy_id' => $pharmacy->id,
                 'script_number' => $scriptNumber,
                 'status' => 'active',
-                'total_dispenses' => $repeats > 0 ? $repeats : 6,
+                'total_dispenses' => $totalFills,
                 'dispenses_completed' => 0,
                 'start_date' => $startDate,
                 'next_dispense_date' => $startDate->copy()->addMonth(),
-                'renewal_due_date' => $startDate->copy()->addMonths($repeats > 0 ? $repeats : 6),
+                'renewal_due_date' => $startDate->copy()->addMonths($totalFills),
                 'doctor_name' => trim($firstRow['doctor'] ?? ''),
                 'doctor_bhf' => trim($firstRow['doctor_bhf'] ?? ''),
-                'medications' => collect($byDocument->last())->map(fn ($row) => [
-                    'name' => trim($row['item_description'] ?? ''),
-                    'nappi_code' => trim($row['nappi_code'] ?? ''),
-                    'quantity' => (float) ($row['sales_quantity'] ?? 0),
-                    'value' => (int) round((float) ($row['sales_value'] ?? 0) * 100),
-                    'schedule' => $row['schedule'] ?? null,
-                    'supplier' => $row['supplier'] ?? null,
-                    'brand_name' => $row['brand_name'] ?? null,
-                ])->toArray(),
+                'medications' => collect($byDocument->last())->map(fn ($row) => $this->medicationLine($row))->toArray(),
             ]);
+        } elseif ($origRepeats !== null && (int) $journey->total_dispenses !== $totalFills) {
+            $journey->update(['total_dispenses' => $totalFills]);
         }
 
         // Process each fill (document) as its own dispense, oldest first so the
@@ -542,6 +642,9 @@ class SparImportService
             return $d ? $d->timestamp : 0;
         });
 
+        $latestDate = null;
+        $latestLeft = null;
+
         foreach ($documents as $docRows) {
             $docRows = $docRows->toArray();
             $docFirst = $docRows[0];
@@ -550,23 +653,22 @@ class SparImportService
                 continue;
             }
 
-            $medications = collect($docRows)->map(function ($row) {
-                return [
-                    'name' => trim($row['item_description'] ?? ''),
-                    'nappi_code' => trim($row['nappi_code'] ?? ''),
-                    'quantity' => (float) ($row['sales_quantity'] ?? 0),
-                    'value' => (int) round((float) ($row['sales_value'] ?? 0) * 100),
-                    'schedule' => $row['schedule'] ?? null,
-                    'supplier' => $row['supplier'] ?? null,
-                    'brand_name' => $row['brand_name'] ?? null,
-                ];
-            })->toArray();
+            $medications = collect($docRows)->map(fn ($row) => $this->medicationLine($row))->toArray();
 
             $documentNumber = trim($docFirst['document_number'] ?? '');
-            $repeatNumber = (int) ($docFirst['repeat_number'] ?? ($journey->dispenses_completed + 1));
+            [, $left] = $this->repeatInfo($docRows);
+            // Which fill of the script this is: total fills minus repeats still left.
+            $fillNumber = $left !== null
+                ? max(1, min($totalFills, $totalFills - $left))
+                : $journey->dispenses_completed + 1;
             $totalValue = collect($docRows)->sum(function ($row) {
                 return (int) round((float) ($row['sales_value'] ?? 0) * 100);
             });
+
+            if ($latestDate === null || $date->gte($latestDate)) {
+                $latestDate = $date;
+                $latestLeft = $left;
+            }
 
             // Idempotency: skip a fill we've already recorded (by document number).
             $existingDispense = SparDispenseRecord::where('journey_id', $journey->id)
@@ -579,7 +681,7 @@ class SparImportService
             SparDispenseRecord::create([
                 'journey_id' => $journey->id,
                 'spar_patient_id' => $patient->id,
-                'dispense_number' => $repeatNumber,
+                'dispense_number' => $fillNumber,
                 'status' => 'collected',
                 'due_date' => $date,
                 'completed_at' => $date,
@@ -599,11 +701,84 @@ class SparImportService
             }
         }
 
+        // SPAR told us exactly how many repeats are left after the latest fill:
+        // trust that over our own fill count (a file only holds recent fills, so
+        // counting them undercounts a script that started months ago).
+        if ($latestDate !== null && $latestLeft !== null) {
+            $journey->refresh();
+            $journey->update([
+                'dispenses_completed' => max((int) $journey->dispenses_completed, max(1, $totalFills - $latestLeft)),
+                'status' => $latestLeft === 0 ? ($origRepeats === 0 ? 'expired' : 'renewal_due') : 'active',
+                'next_dispense_date' => $latestDate->copy()->addMonth(),
+                // The first collection that has no repeat behind it needs a new script.
+                'renewal_due_date' => $latestDate->copy()->addMonths($latestLeft + 1),
+            ]);
+        }
+
         // Close-the-loop reconciliation (FR-B5): now that this import's real
         // dispense facts are recorded on the journey, reconcile the in-app
         // actionable state against them per the configured D2 conflict rule.
         $journey->refresh();
         (new SparReconciler())->reconcileJourney($journey);
+    }
+
+    /**
+     * Repeat figures for a set of sales lines: [original repeats, repeats left].
+     * Repeats are tracked per item, and a script can mix a chronic item (repeats)
+     * with a one-off item (none). Items with no repeats are ignored when at least
+     * one item HAS repeats; if none do, the script is a one-off (0 and 0).
+     * "Left" is the lowest across the repeating items: the first to run out is
+     * the one that needs a new script. Both are null when the columns are blank.
+     *
+     * @return array{0: ?int, 1: ?int}
+     */
+    private function repeatInfo(array $rows): array
+    {
+        $items = [];
+        foreach ($rows as $r) {
+            $o = trim((string) ($r['repeats'] ?? ''));
+            $l = trim((string) ($r['repeat_number'] ?? ''));
+            if ($o === '' || !is_numeric($o)) {
+                continue;
+            }
+            $items[] = [(int) $o, ($l !== '' && is_numeric($l)) ? (int) $l : null];
+        }
+
+        if (empty($items)) {
+            return [null, null];
+        }
+
+        $repeating = array_values(array_filter($items, fn ($i) => $i[0] > 0));
+        if (empty($repeating)) {
+            return [0, 0]; // every item is a one-off
+        }
+
+        $orig = max(array_column($repeating, 0));
+        $lefts = array_filter(array_column($repeating, 1), fn ($v) => $v !== null);
+
+        return [$orig, empty($lefts) ? null : min($lefts)];
+    }
+
+    /**
+     * One medicine line as kept on journeys and dispense records.
+     */
+    private function medicationLine(array $row): array
+    {
+        $repeats = trim((string) ($row['repeats'] ?? ''));
+        $left = trim((string) ($row['repeat_number'] ?? ''));
+
+        return [
+            'name' => trim($row['item_description'] ?? ''),
+            'nappi_code' => trim($row['nappi_code'] ?? ''),
+            'quantity' => (float) ($row['sales_quantity'] ?? 0),
+            'value' => (int) round((float) ($row['sales_value'] ?? 0) * 100),
+            'schedule' => $row['schedule'] ?? null,
+            'supplier' => $row['supplier'] ?? null,
+            'brand_name' => $row['brand_name'] ?? null,
+            'repeats' => is_numeric($repeats) ? (int) $repeats : null,
+            'repeats_left' => is_numeric($left) ? (int) $left : null,
+            'paid_by' => trim((string) ($row['transaction_type'] ?? '')) ?: null,
+        ];
     }
 
     /**
@@ -644,6 +819,149 @@ class SparImportService
             throw new \RuntimeException('File too large. Maximum 50MB allowed.');
         }
 
+        $this->incompleteLines = 0;
+
+        if ($this->isSpreadsheet($filePath)) {
+            [$headers, $valueRows] = $this->readSpreadsheetGrid($filePath);
+        } else {
+            [$headers, $valueRows] = $this->readDelimitedGrid($filePath);
+        }
+
+        // Validate we have expected columns
+        if (count($headers) < 5) {
+            throw new \RuntimeException('Invalid file format: too few columns detected.');
+        }
+
+        $rows = [];
+        foreach ($valueRows as $values) {
+            // Map to our internal field names
+            $mapped = [];
+            foreach ($headers as $i => $header) {
+                $internalField = self::COLUMN_MAP[$header] ?? Str::snake($header);
+                // SECURITY: Strip any null bytes and control characters
+                $value = trim((string) ($values[$i] ?? ''));
+                $value = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F]/', '', $value);
+                $mapped[$internalField] = $value;
+            }
+
+            // Lines cut off in the export (no quantity AND no profile code)
+            // carry no usable data: ignore them and report the count once.
+            if (($mapped['sales_quantity'] ?? '') === '' && ($mapped['profile_code'] ?? '') === ''
+                && array_key_exists('sales_quantity', $mapped)) {
+                $this->incompleteLines++;
+                continue;
+            }
+
+            $rows[] = $mapped;
+        }
+
+        return $rows;
+    }
+
+    /**
+     * True when the file is an Excel workbook (by extension, else by zip magic bytes).
+     */
+    private function isSpreadsheet(string $filePath): bool
+    {
+        $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+        if (in_array($ext, ['xlsx', 'xls'], true)) {
+            return true;
+        }
+        if (in_array($ext, ['csv', 'txt'], true)) {
+            return false;
+        }
+
+        $fh = @fopen($filePath, 'rb');
+        $magic = $fh ? fread($fh, 2) : '';
+        if ($fh) {
+            fclose($fh);
+        }
+
+        return $magic === 'PK';
+    }
+
+    /**
+     * Read the first sheet of an Excel sales extract into [headers, rows].
+     * Dates (stored as Excel serials) become Y-m-d; whole numbers lose the
+     * ".0" so barcodes / codes match the text export.
+     *
+     * @return array{0: array<int,string>, 1: array<int, array<int, string>>}
+     */
+    private function readSpreadsheetGrid(string $filePath): array
+    {
+        // Read in row chunks: loading a whole 6,000+ row x 39 column sheet at once
+        // exhausts PHP's default 128MB memory limit (PhpSpreadsheet keeps a cell
+        // object per cell). Each chunk is loaded, converted, then freed.
+        $reader = IOFactory::createReaderForFile($filePath);
+        $reader->setReadDataOnly(true);
+        $filter = new class implements IReadFilter {
+            public int $start = 1;
+            public int $end = 1;
+
+            public function readCell(string $columnAddress, int $row, string $worksheetName = ''): bool
+            {
+                return $row >= $this->start && $row <= $this->end;
+            }
+        };
+        $reader->setReadFilter($filter);
+
+        $chunkSize = 500;
+        $headers = [];
+        $dateCols = [];
+        $rows = [];
+
+        for ($start = 1; ; $start += $chunkSize) {
+            $filter->start = $start;
+            $filter->end = $start + $chunkSize - 1;
+
+            $spreadsheet = $reader->load($filePath);
+            $sheet = $spreadsheet->getActiveSheet();
+            $lastCol = $sheet->getHighestColumn();
+            $highest = $sheet->getHighestRow();
+
+            if ($start > 1 && $highest < $start) {
+                $spreadsheet->disconnectWorksheets();
+                unset($spreadsheet);
+                break; // no cells in this chunk: end of data
+            }
+
+            $grid = $sheet->rangeToArray("A{$start}:{$lastCol}{$highest}", null, true, false, false);
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet, $sheet);
+
+            if ($start === 1) {
+                $headers = array_map(fn ($c) => trim((string) $c), (array) array_shift($grid));
+                $dateCols = array_keys(array_filter($headers, fn ($h) => $h === 'Date'));
+            }
+
+            foreach ($grid as $raw) {
+                $values = [];
+                foreach ($raw as $i => $cell) {
+                    if (in_array($i, $dateCols, true) && is_numeric($cell)) {
+                        $values[$i] = ExcelDate::excelToDateTimeObject((float) $cell)->format('Y-m-d');
+                    } elseif (is_float($cell) && floor($cell) === $cell && abs($cell) < 1e15) {
+                        $values[$i] = number_format($cell, 0, '', '');
+                    } else {
+                        $values[$i] = $cell === null ? '' : trim((string) $cell);
+                    }
+                }
+                if (implode('', $values) === '') {
+                    continue; // fully blank row
+                }
+                $rows[] = $values;
+            }
+        }
+
+        return [$headers, $rows];
+    }
+
+    /**
+     * Read a pipe/comma delimited sales extract into [headers, rows].
+     *
+     * @return array{0: array<int,string>, 1: array<int, array<int, string>>}
+     */
+    private function readDelimitedGrid(string $filePath): array
+    {
         $content = file_get_contents($filePath);
 
         // Strip a UTF-8 BOM if present — otherwise the first header (Store Name)
@@ -677,13 +995,8 @@ class SparImportService
             $headers[$lastIdx] = trim(rtrim(trim($headers[$lastIdx]), ','));
         }
 
-        // Validate we have expected columns
-        if (count($headers) < 5) {
-            throw new \RuntimeException('Invalid file format: too few columns detected.');
-        }
-
         $rows = [];
-        foreach ($lines as $lineNumber => $line) {
+        foreach ($lines as $line) {
             $line = trim($line);
             if (empty($line)) continue;
 
@@ -697,20 +1010,10 @@ class SparImportService
                 $values[$lastVal] = rtrim(trim((string) $values[$lastVal]), ',');
             }
 
-            // Map to our internal field names
-            $mapped = [];
-            foreach ($headers as $i => $header) {
-                $internalField = self::COLUMN_MAP[$header] ?? Str::snake($header);
-                // SECURITY: Strip any null bytes and control characters
-                $value = trim($values[$i] ?? '');
-                $value = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F]/', '', $value);
-                $mapped[$internalField] = $value;
-            }
-
-            $rows[] = $mapped;
+            $rows[] = $values;
         }
 
-        return $rows;
+        return [$headers, $rows];
     }
 
     /**

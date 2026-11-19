@@ -20,8 +20,8 @@
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
         <h3 class="text-lg font-semibold text-gray-900 mb-4">Import SPAR Files</h3>
         <p class="text-sm text-gray-500 mb-4">
-            Upload the <strong>Sales Extract</strong> (dispense transactions, pipe- or comma-delimited CSV) and,
-            optionally, the <strong>Drug Usage report</strong> (patient names &amp; contact details, .xlsx).
+            Upload the <strong>Sales Extract</strong> (dispense transactions, Excel or pipe/comma-delimited CSV) and,
+            optionally, the <strong>member / Drug Usage report</strong> (patient names &amp; contact details, Excel or pipe/comma-delimited CSV).
             When both are supplied they are linked on <strong>Profile Code + Dependent Code</strong>, so patients
             are created with full contact details. Sales extract alone still imports dispense history.
         </p>
@@ -29,13 +29,13 @@
         <form wire:submit="import" class="space-y-4">
             <div class="grid gap-4 md:grid-cols-2">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Sales Extract (CSV) <span class="text-red-500">*</span></label>
-                    <input type="file" wire:model="csvFile" accept=".csv,.txt" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-green-50 file:text-green-700 hover:file:bg-green-100" />
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Sales Extract (Excel or CSV) <span class="text-red-500">*</span></label>
+                    <input type="file" wire:model="csvFile" accept=".csv,.txt,.xlsx,.xls" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-green-50 file:text-green-700 hover:file:bg-green-100" />
                     @error('csvFile') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Drug Usage report (XLSX) <span class="text-gray-400 text-xs">— optional</span></label>
-                    <input type="file" wire:model="drugUsageFile" accept=".xlsx,.xls" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Member / Drug Usage report (Excel or CSV) <span class="text-gray-400 text-xs">— optional</span></label>
+                    <input type="file" wire:model="drugUsageFile" accept=".xlsx,.xls,.csv,.txt" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
                     @error('drugUsageFile') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
                 </div>
             </div>

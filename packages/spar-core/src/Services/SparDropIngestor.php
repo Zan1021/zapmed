@@ -46,8 +46,8 @@ class SparDropIngestor
             fn ($f) => !in_array($f, ['.', '..'], true) && is_file($directory . DIRECTORY_SEPARATOR . $f)
         ));
 
-        $salesFile = $this->newestMatching($directory, $files, $salesMatch, ['csv', 'txt']);
-        $drugFile = $this->newestMatching($directory, $files, $drugMatch, ['xlsx', 'xls']);
+        $salesFile = $this->newestMatching($directory, $files, $salesMatch, ['csv', 'txt', 'xlsx']);
+        $drugFile = $this->newestMatching($directory, $files, $drugMatch, ['xlsx', 'xls', 'csv', 'txt']);
 
         if ($salesFile === null) {
             return ['status' => 'skipped', 'message' => 'No sales extract file found in drop directory.', 'batch_id' => null];
