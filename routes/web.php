@@ -211,6 +211,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('water', \App\Livewire\Coach\Water::class)->name('coach.water');
         Route::get('reminders', \App\Livewire\Coach\Reminders::class)->name('coach.reminders');
         Route::get('messages', \App\Livewire\Coach\Messages::class)->name('coach.messages');
+        Route::get('book', \App\Livewire\Coach\BookCall::class)->name('coach.book');
     });
 
     Route::get('subscription/checkout', [SubscriptionController::class, 'checkout'])

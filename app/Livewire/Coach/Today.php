@@ -4,6 +4,7 @@ namespace App\Livewire\Coach;
 
 use App\Models\CoachProfile;
 use App\Models\WaterEntry;
+use App\Services\Coach\CoachCalls;
 use App\Services\Coach\CoachClock;
 use App\Services\Coach\CoachOnboarding;
 use App\Services\Coach\CoachUnits;
@@ -46,6 +47,8 @@ class Today extends Component
         $profile = CoachProfile::where('user_id', $user->id)->first();
         $units = CoachUnits::normalise($profile?->units);
 
+        $calls = app(CoachCalls::class);
+        $nextCall = $calls->upcomingFor($user);
         $weight = WeightStats::forUser($user);
         $med = MedicationLevel::forUser($user);
         [$from, $to] = CoachClock::todayRangeUtc();
@@ -63,6 +66,8 @@ class Today extends Component
             'cycleOn' => CycleCalendar::enabled($profile),
             'cycle' => CycleCalendar::status($profile),
             'reminders' => NextReminder::phrases($user),
+            'nextCall' => $nextCall,
+            'nextCallText' => $nextCall ? $calls->when($nextCall) : null,
             'waterToday' => $waterToday,
             'waterGoal' => $waterGoal,
             'quickAdd' => (int) (config('coach.water.quick_adds_ml')['Glass'] ?? 250),

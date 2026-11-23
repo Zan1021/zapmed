@@ -13,7 +13,9 @@ class Inbox extends Component
     {
         $threads = $messaging->inboxFor(Auth::user())->sortByDesc(fn ($t) => [$t['unread'] > 0, $t['last']->id])->values();
 
-        return view('livewire.coach.inbox', ['threads' => $threads, 'tz' => config('coach.timezone')])
+        $calls = app(\App\Services\Coach\CoachCalls::class);
+
+        return view('livewire.coach.inbox', ['threads' => $threads, 'tz' => config('coach.timezone'), 'calls' => $calls->upcomingForCoach(Auth::user()), 'callsSvc' => $calls])
             ->layout('layouts.coach', ['title' => 'Coach inbox', 'hideTabs' => true]);
     }
 }

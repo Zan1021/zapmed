@@ -67,6 +67,20 @@ class Onboarding extends Component
         return $this->redirectRoute('coach.today');
     }
 
+    /** Finish set-up and go straight to booking the welcome call. */
+    public function finishAndBook(CoachOnboarding $onboarding)
+    {
+        if (! $this->worry) {
+            $this->step = 1;
+
+            return;
+        }
+
+        $onboarding->complete(Auth::user(), $this->worry, $this->trackCycle);
+
+        return $this->redirectRoute('coach.book', ['for' => 'welcome']);
+    }
+
     public function render(CoachOnboarding $onboarding)
     {
         return view('livewire.coach.onboarding', [
@@ -76,6 +90,7 @@ class Onboarding extends Component
             'targets' => config('coach.targets'),
             'intro' => config('coach.onboarding.amy_intro'),
             'planNote' => config('coach.onboarding.plan_note'),
+            'hasCoach' => (bool) app(\App\Services\Coach\CoachMessaging::class)->coachFor(Auth::user()),
         ])->layout('layouts.coach', ['title' => 'Welcome', 'hideTabs' => true]);
     }
 }

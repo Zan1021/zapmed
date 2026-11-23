@@ -15,6 +15,14 @@
         </div>
         <span aria-hidden="true">&#8250;</span>
     </a>
+    {{-- Booked call --}}
+    @if ($nextCall)
+        <a href="{{ route('coach.book') }}" class="zc-card zc-row zc-between" data-card="call">
+            <div><b>Your call</b><div class="zc-sub">{{ $nextCallText }} &middot; {{ $nextCall->length_minutes }} minutes</div></div>
+            <span aria-hidden="true">&#8250;</span>
+        </a>
+    @endif
+
     {{-- Weight --}}
     <a href="{{ route('coach.weight') }}" class="zc-card" data-card="weight">
         <div class="zc-row zc-between">

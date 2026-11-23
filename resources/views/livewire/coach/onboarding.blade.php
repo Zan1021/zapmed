@@ -57,7 +57,12 @@
             <div class="zc-sub" style="color:var(--zc-forest)">{{ $intro }}</div>
         </div>
 
-        <button type="button" class="zc-btn" wire:click="finish">Go to my tracker</button>
-        <p class="zc-note" style="text-align:center;margin-top:10px">Booking a welcome call opens soon. Amy will also message you here.</p>
+        @if ($hasCoach)
+            <button type="button" class="zc-btn" wire:click="finishAndBook" data-action="book-welcome">Book a welcome call</button>
+            <button type="button" class="zc-btn ghost" style="margin-top:10px" wire:click="finish">Go to my tracker</button>
+        @else
+            <button type="button" class="zc-btn" wire:click="finish">Go to my tracker</button>
+            <p class="zc-note" style="text-align:center;margin-top:10px">Your coach will be assigned soon and will message you here.</p>
+        @endif
     @endif
 </div>

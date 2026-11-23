@@ -15,7 +15,11 @@
         <span class="zc-opt" style="opacity:.55" aria-disabled="true" data-option="message">&#128172; Message your coach<small>Your coach will be assigned soon</small></span>
     @endif
 
-    <span class="zc-opt" style="opacity:.55" aria-disabled="true" data-option="call">&#128222; Book a call<small>Booking opens soon</small></span>
+    @if ($hasCoach)
+        <a href="{{ route('coach.book') }}" class="zc-opt" data-option="call">&#128222; Book a call<small>15 or 30 minutes</small></a>
+    @else
+        <span class="zc-opt" style="opacity:.55" aria-disabled="true" data-option="call">&#128222; Book a call<small>Your coach will be assigned soon</small></span>
+    @endif
 
     @if ($doctorReached)
         <div class="zc-card" data-state="reached" style="background:var(--zc-ok-l)">

@@ -202,9 +202,22 @@ return [
     ],
 
     /* Call booking with the coach. */
+    /*
+     * Calls with the coach (build guide 5.15). Slots start on the half hour inside the coach's call hours and skip the
+     * breaks. "days_ahead" counts working days from today. A member holds one upcoming call at a time.
+     * Confirmation and reminder messages stay OFF until COACH_CALL_NOTIFY=true.
+     */
     'calls' => [
         'lengths_minutes' => [15, 30],
         'days_ahead' => 5,
+        'step_minutes' => 30,
+        'min_notice_hours' => 2,
+        'hours' => ['days' => ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], 'from' => '08:30', 'until' => '16:30'],
+        'breaks' => [['12:00', '13:00']],
+        'reminder_minutes_before' => 60,
+        'notify_enabled' => env('COACH_CALL_NOTIFY', false),
+        'purposes' => ['welcome', 'check_in', 'maintenance', 'support'],
+        'fully_booked_note' => 'Greyed times are already taken. If nothing suits, send a message and your coach will find a time.',
     ],
 
     /*
