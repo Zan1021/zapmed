@@ -194,10 +194,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware('role:health_coach')->group(function () {
         Route::get('coach-inbox', \App\Livewire\Coach\Inbox::class)->name('coach.inbox');
         Route::get('coach-inbox/{patient}', \App\Livewire\Coach\Thread::class)->name('coach.inbox.thread');
+        Route::get('coach-board', \App\Livewire\Coach\Board::class)->name('coach.board');
     });
 
     // Coach safety flags for staff (doctors, coaches). Not under /coach: those routes are for members with the add-on.
     Route::get('coach-flags', \App\Livewire\Coach\FlagsInbox::class)->middleware('role:doctor,health_coach')->name('coach.flags');
+    // One member's tracking summary: the assigned coach and a doctor who has seen the member (checked in the component).
+    Route::get('coach-board/{patient}', \App\Livewire\Coach\PatientView::class)->middleware('role:doctor,health_coach')->name('coach.board.patient');
 
     // Coach App (weight-loss membership): patient tracking + health coaching. Design: .kiro/specs/dietitian-coach/
     Route::prefix('coach')->middleware(['role:patient', 'onboarding', 'coach.addon'])->group(function () {
@@ -212,6 +215,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('reminders', \App\Livewire\Coach\Reminders::class)->name('coach.reminders');
         Route::get('messages', \App\Livewire\Coach\Messages::class)->name('coach.messages');
         Route::get('book', \App\Livewire\Coach\BookCall::class)->name('coach.book');
+        Route::get('profile', \App\Livewire\Coach\Profile::class)->name('coach.profile');
+        Route::get('milestone', \App\Livewire\Coach\Milestone::class)->name('coach.milestone');
     });
 
     Route::get('subscription/checkout', [SubscriptionController::class, 'checkout'])

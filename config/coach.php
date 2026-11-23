@@ -254,4 +254,56 @@ return [
         'bmi' => 'BMI is a general guide and does not diagnose any condition.',
         'cycle' => 'Predictions are estimates. Tell your doctor if your cycle changes a lot on treatment.',
     ],
+
+    /*
+     * Profile (design screen 22) choices. Lists are fixed so saved values are always known keys.
+     * PROVISIONAL until Amy / Dr Anke review. The diet and allergy lists feed the meal plan later.
+     */
+    'profile' => [
+        'target_months' => [3, 6, 9, 12],
+        'height_cm' => [100, 230],
+        'health_concerns' => [
+            'pcos' => 'PCOS',
+            'type2_diabetes' => 'Type 2 diabetes',
+            'high_blood_pressure' => 'High blood pressure',
+            'thyroid' => 'Thyroid condition',
+        ],
+        'diets' => [
+            'everything' => 'I eat everything',
+            'vegetarian' => 'Vegetarian',
+            'vegan' => 'Vegan',
+            'pescatarian' => 'Pescatarian',
+            'halal' => 'Halal',
+            'low_carb' => 'Low carb',
+        ],
+        'allergies' => [
+            'gluten' => 'Gluten', 'dairy' => 'Dairy', 'eggs' => 'Eggs', 'nuts' => 'Nuts',
+            'peanuts' => 'Peanuts', 'soy' => 'Soy', 'fish' => 'Fish', 'shellfish' => 'Shellfish',
+        ],
+        'avoids' => [
+            'red_meat' => 'Red meat', 'pork' => 'Pork', 'chicken' => 'Chicken', 'fish' => 'Fish',
+            'dairy' => 'Dairy', 'eggs' => 'Eggs', 'spicy' => 'Spicy food', 'sugar' => 'Added sugar',
+        ],
+        'activity_levels' => [
+            'sedentary' => 'Sedentary',
+            'light' => 'Lightly active',
+            'moderate' => 'Moderately active',
+            'active' => 'Active',
+            'very_active' => 'Very active',
+        ],
+    ],
+
+    /* Staff board (coach portal + doctor summary). */
+    'board' => [
+        'quiet_days' => 7,            // no weigh-in for this many days = "quiet" badge on the coach board
+        'history_count' => 8,
+        'side_effect_days' => 30,
+        'note_max_length' => 2000,
+    ],
+
+    /* Milestone (design screen 25). PROVISIONAL wording; {coach} is the coach's first name. */
+    'milestone' => [
+        'note' => "I'm proud of you. Every log you make is part of this. Keep going, and tell me if anything gets in the way.",
+        'empty' => 'Your first milestone is on its way. Log your weight and keep going. Every entry counts.',
+    ],
 ];

@@ -1,6 +1,7 @@
 <div wire:poll.30s>
     <div class="zc-top"><h2>Coach inbox</h2></div>
     <p class="zc-sub">Messages from the members assigned to you.</p>
+    <a href="{{ route('coach.board') }}" class="zc-chip" data-link="board">My members</a>
 
     @if ($calls->isNotEmpty())
         <div class="zc-card" data-upcoming-calls>

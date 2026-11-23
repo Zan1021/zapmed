@@ -86,6 +86,40 @@
             </div>
             @endif
 
+            <!-- Coaching summary (Coach App) -->
+            @php $cs = $this->coachSummary; @endphp
+            @if($cs)
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4" data-coach-summary>
+                <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Coaching summary</h4>
+                @if($cs['openFlags'])
+                    <div class="mb-2 rounded-lg bg-red-50 text-red-700 text-xs font-medium px-2 py-1" data-coach-flag>{{ $cs['openFlags'] }} open safety {{ $cs['openFlags'] === 1 ? 'flag' : 'flags' }}</div>
+                @endif
+                <div class="space-y-1 text-xs">
+                    <div class="flex justify-between"><span class="text-gray-500">Start</span><span class="text-gray-700">{{ \App\Services\Coach\CoachUnits::format($cs['weight']->start, $cs['units']) ?? '-' }}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Now</span><span class="text-gray-700">{{ \App\Services\Coach\CoachUnits::format($cs['weight']->current, $cs['units']) ?? '-' }}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Goal</span><span class="text-gray-700">{{ \App\Services\Coach\CoachUnits::format($cs['weight']->goal, $cs['units']) ?? 'not set' }}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Last 7 days</span><span class="text-gray-700">{{ $cs['weekLossKg'] === null ? '-' : ($cs['weekLossKg'] >= 0 ? '-' : '+').number_format(abs($cs['weekLossKg']), 1).' kg' }}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Last dose logged</span><span class="text-gray-700">{{ $cs['lastDose']?->taken_at?->setTimezone(config('coach.timezone'))->format('j M') ?? 'none' }}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Coach</span><span class="text-gray-700">{{ $cs['coach']?->first_name ?? 'not assigned' }}</span></div>
+                </div>
+                @if($cs['recentSideEffects']->isNotEmpty())
+                    <div class="mt-2 text-xs text-gray-500">Side effects, last 7 days</div>
+                    <ul class="text-xs text-gray-700 mt-1 space-y-0.5">
+                        @foreach($cs['recentSideEffects'] as $se)
+                            <li>{{ $se->symptom }} {{ $se->score }}/10 <span class="text-gray-400">{{ $se->logged_on->format('j M') }}</span></li>
+                        @endforeach
+                    </ul>
+                @endif
+                @if($cs['sharedNotes']->isNotEmpty())
+                    <div class="mt-2 text-xs text-gray-500">Shared coach notes</div>
+                    @foreach($cs['sharedNotes'] as $n)
+                        <p class="text-xs text-gray-700 mt-1" data-coach-note>{{ $n->body }} <span class="text-gray-400">{{ $n->author?->first_name }}, {{ $n->created_at->format('j M') }}</span></p>
+                    @endforeach
+                @endif
+                <a href="{{ route('coach.board.patient', $appointment->patient) }}" class="inline-block mt-3 text-xs font-medium text-zapmed-600 hover:text-zapmed-700">Full coaching view</a>
+            </div>
+            @endif
+
             <!-- Assessment Answers -->
             @php $av = $this->assessmentView; @endphp
             @if($av['has'])

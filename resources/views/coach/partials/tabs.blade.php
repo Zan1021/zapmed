@@ -7,7 +7,7 @@
         ['Plans', null, '<rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/>'],
         ['Insight', null, '<path d="M12 3a6 6 0 0 0-4 10.5V17h8v-3.5A6 6 0 0 0 12 3zM9 20h6"/>'],
         ['Coach', 'sheet', '<path d="M4 5h16v11H9l-5 4z"/>'],
-        ['Profile', null, '<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/>'],
+        ['Profile', 'coach.profile', '<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/>'],
     ];
 @endphp
 <nav class="zc-tabs" aria-label="Coach app">

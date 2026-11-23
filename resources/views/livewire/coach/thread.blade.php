@@ -1,7 +1,7 @@
 <div wire:poll.15s>
     <div class="zc-top">
         <a href="{{ route('coach.inbox') }}" class="zc-back" aria-label="Back to inbox">&#8592;</a>
-        <div style="flex:1"><h2>{{ $patient->first_name }} {{ $patient->last_name }}</h2><div class="zc-sub">{{ $patient->member_number }}</div></div>
+        <div style="flex:1"><h2><a href="{{ route('coach.board.patient', $patient) }}" data-link="member">{{ $patient->first_name }} {{ $patient->last_name }}</a></h2><div class="zc-sub">{{ $patient->member_number }}</div></div>
     </div>
 
     <div data-thread style="margin:12px 0">

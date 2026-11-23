@@ -260,6 +260,12 @@ class ConsultationScreen extends Component
     /**
      * Get patient age.
      */
+    /** Coaching summary for the doctor (null when the member has no coach app data or access is not allowed). */
+    public function getCoachSummaryProperty(): ?array
+    {
+        return app(\App\Services\Coach\CoachPatientBoard::class)->doctorSummary(Auth::user(), $this->appointment->patient);
+    }
+
     public function getPatientAgeProperty(): ?int
     {
         $dob = $this->appointment->patient->date_of_birth;
