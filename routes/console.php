@@ -16,3 +16,5 @@ Schedule::command('subscriptions:run-due')->dailyAt('03:00')->withoutOverlapping
 Schedule::command('analytics:snapshot')->dailyAt('02:00')->withoutOverlapping();
 Schedule::command('compliance:scan')->dailyAt('01:00')->withoutOverlapping();
 
+// Charge-at-booking: free up slots whose payment hold expired (patient didn't complete PayFast).
+Schedule::command('onboarding:release-expired-reservations')->everyFiveMinutes()->withoutOverlapping();
