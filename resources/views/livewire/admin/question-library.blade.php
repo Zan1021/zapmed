@@ -124,6 +124,8 @@
                                 <option value="number">Number</option>
                                 <option value="date">Date</option>
                                 <option value="upload">File upload</option>
+                                <option value="medicines">Medicines list (add several, can skip)</option>
+                                <option value="measurements">Weight + height sliders</option>
                             </select>
                         </div>
                         <div>

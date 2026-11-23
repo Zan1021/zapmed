@@ -25,10 +25,14 @@ return [
         'treatments' => [
             'weight-loss' => [
                 'name' => 'Weight Loss',
-                'price' => 'From R450/month',
-                'price_once_off' => null,
+                // Craig's final handoff (26 Nov): R700 first doctor consultation (45 min), then the
+                // R450/month Health Coach membership. Medication is charged separately.
+                'price' => 'R700 first consultation, then R450/month',
+                'price_once_off' => 70000,
                 'price_monthly' => 45000,
-                'duration' => 30,
+                'duration' => 45,
+                // Booking-journey fee/duration come from THIS treatment, not the doctor-profile default.
+                'fixed_consultation' => true,
                 'tagline' => 'Doctor-guided GLP-1 weight loss with personalised coaching.',
                 'description' => 'Medical weight-loss programme using clinically approved GLP-1 medication (such as semaglutide), prescribed by a licensed doctor after a private medical assessment. Includes ongoing health coaching from a registered dietitian.',
             ],

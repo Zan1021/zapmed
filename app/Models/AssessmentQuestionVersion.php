@@ -18,6 +18,8 @@ class AssessmentQuestionVersion extends Model
         'helper_text',
         'why_we_ask',
         'type',
+        'layout',
+        'screen_title',
         'options',
         'icon',
         'branch_rules',

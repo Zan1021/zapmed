@@ -1,0 +1,28 @@
+
+.hero-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.hero-how{padding:10px 19px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);font-size:15px;font-weight:600}
+.hero-how:hover{background:#f4f0e780;color:var(--ink)}
+.hero-start{min-width:190px;text-align:center;justify-content:center;background:var(--ink);color:var(--ivory);border:1px solid #ffffff9c;box-shadow:0 5px 28px #153f4050}
+.hero-start:hover{background:var(--teal)}
+@media(max-width:620px){.hero-actions{gap:10px}.hero-how{padding:9px 16px;font-size:14px}.hero-start{min-width:170px}}
+.hero-conversion{margin-top:clamp(40px,7vw,96px)}
+#programme-features h2{max-width:none;font-size:clamp(32px,3.6vw,56px)}
+#programme-features h2 em{display:inline-block;margin-top:8px}
+#programme-features .deck article img{width:100%;height:240px;aspect-ratio:auto;padding:0;object-fit:cover;object-position:center top}
+#programme-features .deck article:nth-child(2) img,#programme-features .deck article:nth-child(7) img{object-fit:cover;object-position:center}
+#programme-features .deck article img.coach-phone{object-fit:contain;padding:8px;background:#d7e2e6}
+#membership-cards article:nth-child(3) img,#membership-cards article:nth-child(4) img{object-fit:contain;aspect-ratio:auto;height:auto;max-height:none;width:100%;align-self:end}
+#membership-cards article{grid-template-rows:auto 1fr}
+.comparison{width:100%;min-width:0}.comparison table{width:100%;table-layout:fixed}.comparison th,.comparison td{overflow-wrap:anywhere}
+#wl-floating-start{max-width:calc(100vw - 32px);width:max-content;text-align:center;font-size:clamp(14px,1.4vw,18px);white-space:normal;line-height:1.35}
+@media(max-width:600px){.comparison thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}.comparison table,.comparison tbody{display:block}.comparison tr{display:grid;grid-template-columns:1fr 1fr;margin-bottom:16px;border:1px solid var(--line)}.comparison th{grid-column:1/-1;width:auto!important;background:#e3e8e0;padding:12px;font-size:16px}.comparison td{display:block;padding:14px;font-size:14px}.comparison td:before{content:attr(data-label);display:block;font-weight:700;font-size:12px;margin-bottom:8px}.hero-conversion{margin-top:40px}#programme-features .deck article img{height:220px}}
+#options #health-coach{display:grid;grid-template-columns:1.1fr .9fr;gap:36px;margin-top:32px;padding:36px;background:#203E3E;color:#F4F0E7;align-items:start}
+#health-coach .coach-content{grid-column:1;grid-row:1;min-width:0}#health-coach .coach-visual{grid-column:2;grid-row:1;position:sticky;top:100px}#health-coach .coach-visual img{width:100%;height:auto;object-fit:contain}#health-coach h2{font-size:clamp(30px,3.5vw,48px);line-height:1.15;margin:14px 0 24px}#health-coach .eyebrow{font-size:14px;letter-spacing:.1em}#health-coach .benefits{margin-top:24px}#health-coach .benefit{border-top:1px solid #ffffff35;padding:20px 0}#health-coach .benefit h3{font-size:23px;margin-bottom:8px}#health-coach .benefit p{font-size:16px}#health-coach .coach-end{font-size:24px;margin-top:24px}#health-coach .pill{margin-top:20px}
+.comparison thead th:nth-child(2){font-size:clamp(21px,2.3vw,30px);line-height:1.2}
+#portraits .doctor-profile:nth-child(2)>img{object-fit:contain;object-position:center bottom;background:#d7e2dc}
+@media(min-width:621px){main>.hero{background-size:auto,auto 140%;background-position:center,right top}}
+@media(max-width:620px){#options #health-coach{grid-template-columns:1fr;padding:24px;gap:26px}#health-coach .coach-content,#health-coach .coach-visual{grid-column:1;grid-row:auto}#health-coach .coach-visual{position:static;max-width:280px;justify-self:center}main>.hero{background-size:auto,auto 400px;background-position:center,80% top}}
+main>.hero::before{background-size:auto 140%;background-position:75% top}
+@media(max-width:720px){main>.hero::before{background-size:cover;background-position:center 24%;aspect-ratio:2/1}}
+
+.guide-banner{display:grid;grid-template-columns:42% 58%;border-radius:32px;overflow:hidden;background:#1d3e3d;color:#f4f0e7}.guide-banner>div{padding:clamp(24px,5vw,70px)}.guide-banner h2{color:inherit}.guide-banner>img{width:100%;height:100%;object-fit:cover}.guide-banner .light{background:#f4f0e7;color:#1d3e3d}#guide-preview{max-width:760px;width:90%;border:0;border-radius:24px;padding:28px;background:#f4f0e7;color:#1d3e3d}#guide-preview img{width:100%}#guide-preview::backdrop{background:#102e2dcc}@media(max-width:650px){.guide-banner{grid-template-columns:1fr}.guide-banner>img{max-height:350px}}

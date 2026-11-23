@@ -9,12 +9,21 @@
     ]
   },
   "resources/css/zapmed-home.css": {
-    "file": "assets/zapmed-home-CscK54ov.css",
+    "file": "assets/zapmed-home-BfP6lN7n.css",
     "src": "resources/css/zapmed-home.css",
     "isEntry": true,
     "name": "zapmed-home",
     "names": [
       "zapmed-home.css"
+    ]
+  },
+  "resources/css/zapmed-journey.css": {
+    "file": "assets/zapmed-journey-OPR41ezO.css",
+    "src": "resources/css/zapmed-journey.css",
+    "isEntry": true,
+    "name": "zapmed-journey",
+    "names": [
+      "zapmed-journey.css"
     ]
   },
   "resources/css/zapmed-onboarding.css": {
@@ -33,7 +42,7 @@
     "isEntry": true
   },
   "resources/js/zapmed-home.js": {
-    "file": "assets/zapmed-home-Byi7mdo3.js",
+    "file": "assets/zapmed-home-BrHiT004.js",
     "name": "zapmed-home",
     "src": "resources/js/zapmed-home.js",
     "isEntry": true

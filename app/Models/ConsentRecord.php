@@ -11,6 +11,7 @@ class ConsentRecord extends Model
         'user_id',
         'consent_type',
         'version',
+        'wording',
         'granted',
         'ip_address',
         'granted_at',

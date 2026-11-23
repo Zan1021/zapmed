@@ -58,6 +58,17 @@ class QuestionBankService
         }
 
         return DB::transaction(function () use ($question, $versionAttrs, $actor) {
+            // Carry forward what the editor form does not expose (branching, flags, layout, ...) so an
+            // edit in the admin portal never silently drops a question's logic.
+            $current = $question->currentVersion;
+            if ($current) {
+                foreach (['branch_rules', 'flag_rule', 'profile_card', 'icon', 'layout', 'screen_title'] as $carry) {
+                    if (! array_key_exists($carry, $versionAttrs)) {
+                        $versionAttrs[$carry] = $current->{$carry};
+                    }
+                }
+            }
+
             $next = ((int) $question->versions()->max('version')) + 1;
             $version = $this->newVersion($question, $versionAttrs, $next);
 
@@ -227,6 +238,8 @@ class QuestionBankService
             'helper_text' => $attrs['helper_text'] ?? null,
             'why_we_ask' => $attrs['why_we_ask'] ?? null,
             'type' => $attrs['type'] ?? 'single',
+            'layout' => $attrs['layout'] ?? null,
+            'screen_title' => $attrs['screen_title'] ?? null,
             'options' => $attrs['options'] ?? null,
             'icon' => $attrs['icon'] ?? null,
             'branch_rules' => $attrs['branch_rules'] ?? null,

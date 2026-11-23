@@ -88,18 +88,29 @@ class DoctorProfile extends Model
         // Get already-booked times for this doctor on this date. whereDate() for the
         // same date-cast reason above — otherwise booked slots leak back into
         // availability and the doctor can be double-booked.
-        $bookedTimes = Appointment::where('doctor_id', $this->user_id)
+        $booked = Appointment::where('doctor_id', $this->user_id)
             ->whereDate('appointment_date', $date)
             ->whereNotIn('status', ['cancelled'])
-            ->pluck('start_time')
-            ->map(fn ($time) => substr($time, 0, 5))
-            ->toArray();
+            ->get(['start_time', 'end_time']);
+
+        // A booking blocks every 15-minute slot it overlaps (a 45-minute consultation holds three
+        // slots), not only the slot it starts in.
+        $isBooked = function (string $time) use ($booked): bool {
+            foreach ($booked as $b) {
+                $start = substr((string) $b->start_time, 0, 5);
+                $end = $b->end_time ? substr((string) $b->end_time, 0, 5) : null;
+                if ($time === $start || ($end && $end > $start && $time > $start && $time < $end)) {
+                    return true;
+                }
+            }
+            return false;
+        };
 
         // Each slot row IS a 15-min slot (start_time to end_time)
         $available = [];
         foreach ($slots as $slot) {
             $time = substr($slot->start_time, 0, 5);
-            if (!in_array($time, $bookedTimes)) {
+            if (! $isBooked($time)) {
                 $available[] = $time;
             }
         }
@@ -107,6 +118,34 @@ class DoctorProfile extends Model
         sort($available);
 
         return $available;
+    }
+
+    /**
+     * Start times that can hold a consultation of $minutes: every 15-minute slot it needs must be free.
+     * (Weight loss is a 45-minute first consultation, so 09:00 is only offered when 09:00, 09:15 and
+     * 09:30 are all free.)
+     *
+     * @return array<int,string>
+     */
+    public function availableStartTimes(string $date, int $minutes = 15): array
+    {
+        $free = $this->getAvailableSlotsForDate($date);
+        $set = array_flip($free);
+        $steps = max(1, (int) ceil($minutes / 15));
+        $out = [];
+        foreach ($free as $time) {
+            $ok = true;
+            for ($k = 1; $k < $steps; $k++) {
+                if (! isset($set[date('H:i', strtotime($time) + $k * 900)])) {
+                    $ok = false;
+                    break;
+                }
+            }
+            if ($ok) {
+                $out[] = $time;
+            }
+        }
+        return $out;
     }
 
     /**

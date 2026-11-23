@@ -240,6 +240,18 @@ class AssessmentService
             $shape['helper'] = $v->helper_text;
         }
 
+        if (! empty($v?->why_we_ask)) {
+            $shape['why_we_ask'] = $v->why_we_ask;
+        }
+
+        // Screen grouping (Craig's journey): follow-ups / grouped questions share the parent's screen.
+        if (! empty($v?->layout)) {
+            $shape['layout'] = $v->layout;
+        }
+        if (! empty($v?->screen_title)) {
+            $shape['screen_title'] = $v->screen_title;
+        }
+
         if (! empty($v?->icon)) {
             $shape['icon'] = $v->icon;
         }
@@ -280,7 +292,7 @@ class AssessmentService
             'single' => 'radio',
             'multi' => 'checkbox',
             'upload' => 'file',
-            default => $type, // text, textarea, number, date, select pass through
+            default => $type, // text, textarea, number, date, select, medicines, measurements pass through
         };
     }
 }

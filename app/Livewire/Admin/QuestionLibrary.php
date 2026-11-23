@@ -46,7 +46,7 @@ class QuestionLibrary extends Component
     {
         return [
             'text' => 'required|string|max:500',
-            'type' => 'required|in:single,multi,text,textarea,number,date,select,upload',
+            'type' => 'required|in:single,multi,text,textarea,number,date,select,upload,medicines,measurements',
             'scope' => 'required|in:core,category',
             'question_key' => 'nullable|string|max:64',
             'helper_text' => 'nullable|string|max:500',

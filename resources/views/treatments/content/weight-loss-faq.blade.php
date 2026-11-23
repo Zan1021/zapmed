@@ -22,11 +22,11 @@
 
         <div class="border border-gray-200 rounded-xl overflow-hidden">
             <button @click="open = open === 3 ? null : 3" class="w-full flex items-center justify-between p-5 text-left">
-                <span class="text-sm font-semibold text-gray-900">Is the medication cost included in R450/month?</span>
+                <span class="text-sm font-semibold text-gray-900">Is the medication cost included in the R450/month?</span>
                 <svg class="w-5 h-5 text-gray-400 transition-transform" :class="open === 3 ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
             </button>
             <div x-show="open === 3" x-collapse class="px-5 pb-5">
-                <p class="text-sm text-gray-600">No. The R450/month covers your doctor consultation, dietitian coaching, and programme management. Medication is billed separately based on what is prescribed and your current dosage. This allows us to keep the programme fee affordable while offering the right medication for your needs.</p>
+                <p class="text-sm text-gray-600">No. Your first doctor consultation is R700. The R450/month covers your registered dietitian Health Coach (WhatsApp check-ins), tracking tools and programme management. Medication is billed separately based on what is prescribed and your current dosage. This allows us to keep the programme fee affordable while offering the right medication for your needs.</p>
             </div>
         </div>
 

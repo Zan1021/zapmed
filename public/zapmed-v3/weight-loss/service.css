@@ -181,13 +181,13 @@
 }
 .coach-card p span { display: block; margin-top: .6em; max-width: 20ch; }
 
-#step-image[src="../assets/review-woman-teal.png"] { object-fit: contain; background: #dce5da; }
+#step-image[src="../assets/review-woman-teal.webp"] { object-fit: contain; background: #dce5da; }
 .deck img.full-portrait { box-sizing: border-box; padding: 10px 0 0; object-fit: contain; object-position: center; }
 
 #step-image[src="book4/check-in.webp"] { object-fit: contain; background: #a3cbbf; }
 .deck img.original-scene { box-sizing: border-box; padding-top: 6px; object-fit: cover; object-position: center top; }
 
-#step-image[src="book4/parcel-delivery.png"] { object-fit: contain; background: #304d43; }
+#step-image[src="book4/parcel-delivery.webp"] { object-fit: contain; background: #304d43; }
 
 .research-footnote { font-size: 0.6875rem; line-height: 1.5; margin-block: 1rem; }
 .research-footnote a, .research-footnote strong { font-size: inherit; }

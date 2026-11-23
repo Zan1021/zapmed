@@ -79,13 +79,16 @@ class OnboardingJourneyTest extends TestCase
             'consultation_fee' => 45000,
             'consultation_duration' => 30,
         ]);
-        DoctorAvailability::create([
-            'doctor_profile_id' => $profile->id,
-            'day_of_week' => (int) Carbon::parse($date)->dayOfWeek,
-            'start_time' => $time,
-            'end_time' => Carbon::parse($time)->addHour()->format('H:i'),
-            'is_active' => true,
-        ]);
+        // each availability row is one 15-minute slot; weight loss needs three in a row (45 minutes)
+        foreach ([0, 15, 30, 45] as $offset) {
+            DoctorAvailability::create([
+                'doctor_profile_id' => $profile->id,
+                'day_of_week' => (int) Carbon::parse($date)->dayOfWeek,
+                'start_time' => Carbon::parse($time)->addMinutes($offset)->format('H:i'),
+                'end_time' => Carbon::parse($time)->addMinutes($offset + 15)->format('H:i'),
+                'is_active' => true,
+            ]);
+        }
 
         return $user;
     }
@@ -100,19 +103,22 @@ class OnboardingJourneyTest extends TestCase
         $c = Livewire::test(BookingJourney::class, ['slug' => 'weight-loss']);
 
         // fee disclosed, starts on assessment
-        $c->assertSet('stage', 'assessment')->assertSet('feeCents', 45000);
+        $c->assertSet('stage', 'assessment')->assertSet('feeCents', 70000);
 
         // answer the two questions
         $c->set('answers.WL_TAKEN', 'yes')->call('nextQuestion')
           ->set('answers.WL_WEIGHT', '90')->call('nextQuestion')
           ->assertSet('stage', 'review');
 
-        // review -> details
-        $c->call('toDetails')->assertSet('stage', 'details');
+        // review -> details (both statements must be ticked)
+        $c->call('toDetails')->assertSet('stage', 'review')->assertHasErrors('review');
+        $c->set('reviewTruth', true)->set('reviewSideEffects', true)->call('toDetails')->assertSet('stage', 'details');
 
         // details + OTP (the code is never exposed in page state; capture it via the SMS fake)
-        $c->set('firstName', 'Thabo')->set('lastName', 'Mokoena')
-          ->set('email', 'thabo@example.com')->set('cell', '0820000000')
+        $c->set('name', 'Thabo Mokoena')
+          ->set('email', 'thabo@example.com')->set('cell', '82 000 0000')
+          ->set('idNumber', '8001015009087')->set('communication', 'WhatsApp')
+          ->set('password', 'CorrectHorse99')->set('passwordConfirm', 'CorrectHorse99')
           ->set('consentCare', true)->call('sendOtp')->assertSet('otpSent', true);
         $code = $this->captureOtp();
         $c->set('otp', $code)->call('verifyOtp')
@@ -126,6 +132,10 @@ class OnboardingJourneyTest extends TestCase
         $c->set('selectedDate', $date)->call('selectTime', $time)->set('mode', 'video')
           ->call('toPay')->assertSet('stage', 'pay');
 
+        // prescribing consent is required before paying
+        $c->call('confirmAndPay')->assertHasErrors('pay');
+        $c->set('prescribingConsent', true);
+
         // confirm & pay -> redirect to payment.checkout; Appointment + Payment created, UNPAID
         $c->call('confirmAndPay')->assertRedirect();
 
@@ -133,11 +143,11 @@ class OnboardingJourneyTest extends TestCase
         $this->assertNotNull($appt);
         $this->assertFalse((bool) $appt->is_paid);
         $this->assertSame('pending_payment', $appt->status);
-        $this->assertSame(45000, (int) $appt->fee_amount); // fee bound server-side
+        $this->assertSame(70000, (int) $appt->fee_amount); // fee bound server-side (weight loss = R700)
 
         $payment = Payment::first();
         $this->assertSame('pending', $payment->status);
-        $this->assertSame(45000, (int) $payment->amount);
+        $this->assertSame(70000, (int) $payment->amount);
         $this->assertSame($appt->id, $payment->appointment_id);
 
         // simulate a PayFast COMPLETE ITN (test_mode skips IP/server checks; signature still required)
@@ -145,7 +155,7 @@ class OnboardingJourneyTest extends TestCase
             'm_payment_id' => $payment->reference,
             'pf_payment_id' => '111222',
             'payment_status' => 'COMPLETE',
-            'amount_gross' => '450.00',
+            'amount_gross' => '700.00',
         ];
         $itn['signature'] = app(\App\Services\PayFastService::class)->generateSignature($itn);
         $this->post(route('payment.notify'), $itn)->assertOk();
@@ -165,18 +175,21 @@ class OnboardingJourneyTest extends TestCase
 
         $c = Livewire::test(BookingJourney::class, ['slug' => 'weight-loss']);
         $c->set('answers.WL_TAKEN', 'no')->call('nextQuestion')
-          ->set('answers.WL_WEIGHT', '80')->call('nextQuestion')->call('toDetails')
-          ->set('firstName', 'A')->set('lastName', 'B')->set('email', 'a@b.com')
-          ->set('cell', '0820000001')->set('consentCare', true)->call('sendOtp');
+          ->set('answers.WL_WEIGHT', '80')->call('nextQuestion')
+          ->set('reviewTruth', true)->set('reviewSideEffects', true)->call('toDetails')
+          ->set('name', 'A B')->set('email', 'a@b.com')
+          ->set('cell', '82 000 0001')->set('idNumber', '8001015009087')
+          ->set('password', 'CorrectHorse99')->set('passwordConfirm', 'CorrectHorse99')
+          ->set('consentCare', true)->call('sendOtp');
         $c->set('otp', $this->captureOtp())->call('verifyOtp');
 
         // tamper the client-side fee
         $c->set('feeCents', 1)
           ->set('selectedDate', $date)->call('selectTime', '09:00')->set('mode', 'video')
-          ->call('toPay')->call('confirmAndPay');
+          ->call('toPay')->set('prescribingConsent', true)->call('confirmAndPay');
 
-        // server bound the REAL doctor fee, ignoring the tampered value
-        $this->assertSame(45000, (int) Payment::first()->amount);
+        // server bound the REAL treatment fee (R700), ignoring the tampered value
+        $this->assertSame(70000, (int) Payment::first()->amount);
     }
 
     public function test_disabled_slug_is_404(): void
