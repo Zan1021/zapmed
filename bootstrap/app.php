@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\EnsureUserHasRole::class,
             'onboarding' => \App\Http\Middleware\EnsureOnboardingComplete::class,
             'two-factor' => \App\Http\Middleware\EnsureTwoFactorVerified::class,
+            'coach.addon' => \App\Http\Middleware\EnsureCoachAddon::class,
             'doctor.availability' => \App\Http\Middleware\EnsureDoctorHasAvailability::class,
             'spar.scope' => \Zapmed\SparCore\Http\Middleware\EnsureSparPharmacyScope::class,
             'spar.timeout' => \Zapmed\SparCore\Http\Middleware\SparSessionTimeout::class,

@@ -1,11 +1,20 @@
 {
   "resources/css/app.css": {
-    "file": "assets/app-C9WyOTdn.css",
+    "file": "assets/app-DHJ34rFx.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
     "names": [
       "app.css"
+    ]
+  },
+  "resources/css/zapmed-coach.css": {
+    "file": "assets/zapmed-coach-CPFj0sUV.css",
+    "src": "resources/css/zapmed-coach.css",
+    "isEntry": true,
+    "name": "zapmed-coach",
+    "names": [
+      "zapmed-coach.css"
     ]
   },
   "resources/css/zapmed-home.css": {

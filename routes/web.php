@@ -190,6 +190,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware(['role:patient', 'onboarding'])
         ->name('patient.progress');
 
+    // Coach safety flags for staff (doctors, coaches). Not under /coach: those routes are for members with the add-on.
+    Route::get('coach-flags', \App\Livewire\Coach\FlagsInbox::class)->middleware('role:doctor,health_coach')->name('coach.flags');
+
+    // Coach App (weight-loss membership): patient tracking + health coaching. Design: .kiro/specs/dietitian-coach/
+    Route::prefix('coach')->middleware(['role:patient', 'onboarding', 'coach.addon'])->group(function () {
+        Route::get('/', \App\Livewire\Coach\Today::class)->name('coach.today');
+        Route::get('start', \App\Livewire\Coach\Onboarding::class)->name('coach.start');
+        Route::get('weight', \App\Livewire\Coach\Weight::class)->name('coach.weight');
+        Route::get('weight/log', \App\Livewire\Coach\LogWeight::class)->name('coach.weight.log');
+        Route::get('medication', \App\Livewire\Coach\Medication::class)->name('coach.medication');
+        Route::get('medication/log', \App\Livewire\Coach\LogDose::class)->name('coach.medication.log');
+        Route::get('side-effects', \App\Livewire\Coach\LogSideEffect::class)->name('coach.side-effects');
+    });
+
     Route::get('subscription/checkout', [SubscriptionController::class, 'checkout'])
         ->middleware(['role:patient'])
         ->name('subscription.checkout');
