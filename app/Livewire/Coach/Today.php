@@ -10,6 +10,7 @@ use App\Services\Coach\CoachUnits;
 use App\Services\Coach\CycleCalendar;
 use App\Services\Coach\MedicationLevel;
 use App\Services\Coach\NextReminder;
+use App\Services\Coach\WaterLogger;
 use App\Services\Coach\WeightStats;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -35,7 +36,7 @@ class Today extends Component
             return;
         }
 
-        WaterEntry::create(['user_id' => Auth::id(), 'logged_at' => now(), 'ml' => $ml]);
+        app(WaterLogger::class)->add(Auth::user(), $ml);
         $this->dispatch('coach-toast', message: "Added {$ml} mL");
     }
 

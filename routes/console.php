@@ -9,8 +9,10 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('appointments:send-reminders')->everyFiveMinutes();
+Schedule::command('coach:send-reminders')->everyFiveMinutes()->withoutOverlapping();
 Schedule::command('prescriptions:remind')->dailyAt('09:00');
 Schedule::command('alerts:scan')->everyFiveMinutes()->withoutOverlapping();
 Schedule::command('subscriptions:run-due')->dailyAt('03:00')->withoutOverlapping();
 Schedule::command('analytics:snapshot')->dailyAt('02:00')->withoutOverlapping();
 Schedule::command('compliance:scan')->dailyAt('01:00')->withoutOverlapping();
+

@@ -7,16 +7,14 @@
     </div>
 
     {{-- Next reminder --}}
-    @if ($reminders)
-        <div class="zc-card zc-row">
-            <span style="font-size:22px" aria-hidden="true">&#128276;</span>
-            <div style="flex:1">
-                <b>Next reminder</b>
-                <div class="zc-sub">{{ implode(' · ', $reminders) }}</div>
-            </div>
+    <a href="{{ route('coach.reminders') }}" class="zc-card zc-row" data-card="reminders">
+        <span style="font-size:22px" aria-hidden="true">&#128276;</span>
+        <div style="flex:1">
+            <b>Next reminder</b>
+            <div class="zc-sub">{{ $reminders ? implode(' · ', $reminders) : 'Reminders are off. Tap to set them up.' }}</div>
         </div>
-    @endif
-
+        <span aria-hidden="true">&#8250;</span>
+    </a>
     {{-- Weight --}}
     <a href="{{ route('coach.weight') }}" class="zc-card" data-card="weight">
         <div class="zc-row zc-between">
@@ -110,7 +108,7 @@
     {{-- Water --}}
     <div class="zc-card" data-card="water">
         <div class="zc-row zc-between">
-            <h3>Water</h3>
+            <a href="{{ route('coach.water') }}"><h3>Water &#8250;</h3></a>
             <button type="button" class="zc-btn sm" wire:click="addWater({{ $quickAdd }})" wire:loading.attr="disabled">+{{ $quickAdd }} mL</button>
         </div>
         <div class="zc-sub"><b>{{ number_format($waterToday) }}</b> / {{ number_format($waterGoal) }} mL today</div>

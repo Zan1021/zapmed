@@ -114,6 +114,9 @@ return [
     'water' => [
         'quick_adds_ml' => ['Glass' => 250, 'Bottle' => 350, 'Large' => 500, 'Flask' => 1000],
         'recent_log_count' => 5,
+        'exact_min_ml' => 10,
+        'exact_max_ml' => 3000,
+        'luteal_tip' => 'In your luteal phase, drinking enough water helps with water retention.',
     ],
 
     'cycle' => [
@@ -139,13 +142,64 @@ return [
 
     /* Reminder types and their defaults. Copy never names the medication or any health detail. */
     'reminders' => [
-        'hydration' => ['enabled' => true, 'every_hours' => 2, 'from' => '08:00', 'until' => '20:00', 'smart_skip' => true, 'channel' => 'both'],
-        'weigh_in' => ['enabled' => true, 'day' => 'monday', 'frequency' => 'weekly'],
+        'hydration' => ['enabled' => true, 'every_hours' => 2, 'from' => '08:00', 'until' => '20:00', 'smart_skip' => true, 'channel' => 'whatsapp'],
+        'weigh_in' => ['enabled' => true, 'day' => 'monday', 'frequency' => 'weekly', 'time' => '08:00'],
         'dose_day' => ['enabled' => true, 'time' => '20:00'],
         'meals' => ['enabled' => true],
         'cycle' => ['enabled' => true],
     ],
-    'reminder_channels' => ['push', 'whatsapp', 'both'],
+
+    /* What a member can pick (build guide 5.7). Push is not built; WhatsApp falls back to email until Meta is set up. */
+    'reminder_options' => [
+        'every_hours' => [1, 2, 3],
+        'from' => ['06:00', '07:00', '08:00', '09:00', '10:00'],
+        'until' => ['18:00', '19:00', '20:00', '21:00', '22:00'],
+        'days' => ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
+        'frequencies' => ['weekly', 'daily'],
+        'dose_times' => ['08:00', '12:00', '18:00', '20:00'],
+        'channels' => ['whatsapp' => 'WhatsApp (email if it cannot be sent)', 'email' => 'Email', 'sms' => 'SMS'],
+    ],
+
+    /*
+     * Sending. MASTER SWITCH is off until Captain Zan turns it on (COACH_REMINDERS_SEND=true), so nobody is messaged
+     * by accident while the app is being tested. Meal nudges stay off until meal logging exists.
+     */
+    'reminder_sending' => [
+        'enabled' => env('COACH_REMINDERS_SEND', false),
+        'window_minutes' => 10,          // a slot is sent if the scheduler sees it within this many minutes after it
+        'meal_times' => ['12:30', '18:30'],
+        'meals_enabled' => false,
+        'cycle_time' => '09:00',
+        'cycle_days_before_period' => 2,
+    ],
+
+    /* Reminder wording. Never names the medication, carries no health detail (build guide section 8). PROVISIONAL. */
+    'reminder_text' => [
+        'subject' => 'Zapmed reminder',
+        'hydration' => 'Time for a glass of water.',
+        'weigh_in' => 'Weigh-in day. Log your weight in the app.',
+        'dose_day' => 'Zapmed: you have a reminder waiting in the app.',
+        'meals' => 'Time to log your meal.',
+        'cycle' => 'Zapmed: you have a heads-up waiting in the app.',
+    ],
+
+    /*
+     * Messaging between a member and their coach (in-app thread). Hours are the coach's published reply hours,
+     * in South African time; "online" on screen means inside these hours (PROVISIONAL, not live presence).
+     * Notifications about new messages are OFF until COACH_MESSAGE_NOTIFY=true; they never carry the message text.
+     */
+    'messaging' => [
+        'coach_name' => 'Amy',
+        'hours' => ['days' => ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], 'from' => '08:00', 'until' => '17:00'],
+        'max_length' => 1000,
+        'per_hour_limit' => 20,
+        'notify_enabled' => env('COACH_MESSAGE_NOTIFY', false),
+        'thread_limit' => 100,
+        'online_text' => 'Online now',
+        'offline_text' => 'Replies within one working day',
+        'urgent_text' => "Messages are answered on weekdays from 08:00 to 17:00. If something feels wrong, use \"Something feels wrong\" in the coach menu.",
+        'unassigned_text' => 'Your coach will be assigned soon. If something feels wrong, use "Something feels wrong" in the coach menu.',
+    ],
 
     /* Call booking with the coach. */
     'calls' => [

@@ -190,6 +190,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware(['role:patient', 'onboarding'])
         ->name('patient.progress');
 
+    // Coach inbox for staff: the member threads of the coach's assigned members.
+    Route::middleware('role:health_coach')->group(function () {
+        Route::get('coach-inbox', \App\Livewire\Coach\Inbox::class)->name('coach.inbox');
+        Route::get('coach-inbox/{patient}', \App\Livewire\Coach\Thread::class)->name('coach.inbox.thread');
+    });
+
     // Coach safety flags for staff (doctors, coaches). Not under /coach: those routes are for members with the add-on.
     Route::get('coach-flags', \App\Livewire\Coach\FlagsInbox::class)->middleware('role:doctor,health_coach')->name('coach.flags');
 
@@ -202,6 +208,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('medication', \App\Livewire\Coach\Medication::class)->name('coach.medication');
         Route::get('medication/log', \App\Livewire\Coach\LogDose::class)->name('coach.medication.log');
         Route::get('side-effects', \App\Livewire\Coach\LogSideEffect::class)->name('coach.side-effects');
+        Route::get('water', \App\Livewire\Coach\Water::class)->name('coach.water');
+        Route::get('reminders', \App\Livewire\Coach\Reminders::class)->name('coach.reminders');
+        Route::get('messages', \App\Livewire\Coach\Messages::class)->name('coach.messages');
     });
 
     Route::get('subscription/checkout', [SubscriptionController::class, 'checkout'])

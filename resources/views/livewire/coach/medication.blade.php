@@ -67,9 +67,9 @@
         </div>
     @endif
 
-    <div class="zc-card zc-row zc-between">
+    <a href="{{ route('coach.reminders') }}" class="zc-card zc-row zc-between" data-link="reminders">
         <span>Dose reminder</span>
         <span class="zc-tag">{{ $reminderText }}</span>
-    </div>
+    </a>
     <p class="zc-note">{{ config('coach.medication.no_dose_advice') }}</p>
 </div>

@@ -73,10 +73,10 @@
         </div>
     @endif
 
-    <div class="zc-card zc-row zc-between">
+    <a href="{{ route('coach.reminders') }}" class="zc-card zc-row zc-between" data-link="reminders">
         <span>Weigh-in reminder</span>
         <span class="zc-tag">{{ $weighInDay ? $weighInDay.'s' : 'Off' }}</span>
-    </div>
+    </a>
 
     <button type="button" class="zc-card zc-row zc-between" style="width:100%;text-align:left" wire:click="openGoal">
         <span>Weight goal</span><b>{{ $goalText ?? 'Set a goal' }}</b>

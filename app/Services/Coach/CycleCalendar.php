@@ -43,6 +43,20 @@ class CycleCalendar
         ];
     }
 
+    /** First day of the luteal phase for this member's cycle and period length. */
+    public static function lutealStartDay(CoachProfile $profile): int
+    {
+        $length = max(1, (int) $profile->cycle_length);
+
+        for ($d = 1; $d <= $length; $d++) {
+            if (self::phaseFor($d, $length, (int) $profile->period_length) === 'luteal') {
+                return $d;
+            }
+        }
+
+        return $length;
+    }
+
     public static function phaseFor(int $day, int $length, int $period): string
     {
         if ($day <= $period) {
