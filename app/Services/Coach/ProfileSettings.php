@@ -51,8 +51,32 @@ class ProfileSettings
     {
         $this->assertKnown('diets', $diet);
         $this->profile($user)->update(['diet' => $diet]);
+        app(MealPlanner::class)->afterProfileChange($user);
     }
 
+    /**
+     * Save diet, allergies and avoids together (the Personalise plan screen). Unlike the single setters this does not
+     * touch the meal plan: the caller rebuilds it once afterwards.
+     *
+     * @param  array<int,string>  $allergies
+     * @param  array<int,string>  $avoids
+     */
+    public function setDietary(User $user, string $diet, array $allergies, array $avoids): void
+    {
+        $this->assertKnown('diets', $diet);
+        foreach ($allergies as $key) {
+            $this->assertKnown('allergies', (string) $key);
+        }
+        foreach ($avoids as $key) {
+            $this->assertKnown('avoids', (string) $key);
+        }
+
+        $this->profile($user)->update([
+            'diet' => $diet,
+            'allergies' => array_values(array_unique($allergies)),
+            'avoids' => array_values(array_unique($avoids)),
+        ]);
+    }
     public function setActivity(User $user, string $level): void
     {
         $this->assertKnown('activity_levels', $level);
@@ -75,6 +99,11 @@ class ProfileSettings
             : array_values(array_unique(array_merge($current, [$key])));
 
         $profile->update([$field => $current]);
+
+        // Diet-related lists change what the meal plan may contain: ban meals at once.
+        if (in_array($field, ['allergies', 'avoids'], true)) {
+            app(MealPlanner::class)->afterProfileChange($user);
+        }
     }
 
     public function setTrackCycle(User $user, bool $on): void

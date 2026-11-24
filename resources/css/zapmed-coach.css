@@ -106,3 +106,30 @@
 /* women's cycle items hide with the switch */
 .zc .cyc.off { display: none !important; }
 [x-cloak] { display: none !important; }
+
+/* Recipes and meal plan (design screens 16 to 18) */
+.zc-hscroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; margin: 0 -2px; scrollbar-width: none; }
+.zc-hscroll::-webkit-scrollbar { display: none; }
+.zc-rcard { flex: 0 0 150px; background: var(--zc-white); border-radius: 18px; box-shadow: var(--zc-shadow); overflow: hidden; position: relative; display: block; text-align: left; }
+.zc-rcard .zc-tile { height: 78px; display: grid; place-items: center; font-size: 34px; }
+.zc-rcard .zc-rbody { padding: 9px 10px 11px; font-size: 13px; }
+.zc-rcard b { display: block; font-size: 13.5px; line-height: 1.25; margin-bottom: 3px; }
+.zc-heart { position: absolute; top: 6px; right: 6px; width: 34px; height: 34px; border-radius: 50%; background: rgba(255, 255, 255, .92); display: grid; place-items: center; font-size: 18px; color: var(--zc-muted); }
+.zc-heart.on { color: #C2417A; }
+.zc-pinknote { background: #FBE9F1; color: #8A2F58; border-radius: 16px; padding: 11px 13px; font-size: 13px; margin-bottom: 12px; }
+.zc-days { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 10px; scrollbar-width: none; }
+.zc-days::-webkit-scrollbar { display: none; }
+.zc-day { flex: 0 0 52px; border-radius: 16px; background: var(--zc-white); box-shadow: inset 0 0 0 1.5px var(--zc-line); padding: 8px 0; text-align: center; font-size: 12px; font-weight: 600; }
+.zc-day b { display: block; font-size: 17px; }
+.zc-day.on { background: var(--zc-forest); color: #fff; box-shadow: none; }
+.zc-day.today:not(.on) { box-shadow: inset 0 0 0 2px var(--zc-teal); }
+.zc-meal { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-top: 1px solid var(--zc-line); }
+.zc-meal:first-child { border-top: 0; }
+.zc-meal .zc-eat { flex: 0 0 28px; width: 28px; height: 28px; border-radius: 50%; box-shadow: inset 0 0 0 2px var(--zc-teal-200, #9CC3C7); display: grid; place-items: center; color: #fff; font-size: 14px; }
+.zc-meal .zc-eat.on { background: var(--zc-ok); box-shadow: none; }
+.zc-meal .zc-mbody { flex: 1; min-width: 0; text-align: left; background: transparent; padding: 0; }
+.zc-meal .zc-mbody small { display: block; color: var(--zc-muted); font-size: 12px; }
+.zc-meal .zc-slot { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--zc-muted); }
+.zc-stepper { display: inline-flex; align-items: center; gap: 12px; }
+.zc-stepper button { width: 40px; height: 40px; border-radius: 50%; background: var(--zc-white); box-shadow: inset 0 0 0 1.5px var(--zc-line); font-size: 20px; font-weight: 700; }
+.zc-stepper button[disabled] { opacity: .35; }

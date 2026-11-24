@@ -324,4 +324,66 @@ return [
         'note' => "I'm proud of you. Every log you make is part of this. Keep going, and tell me if anything gets in the way.",
         'empty' => 'Your first milestone is on its way. Log your weight and keep going. Every entry counts.',
     ],
+
+    /*
+     * Recipes (design screen 16). Members only ever see recipes a dietitian has approved. Serving stepper 1 to 4.
+     */
+    'recipes' => [
+        'servings_min' => 1,
+        'servings_max' => 4,
+        'slots' => ['breakfast' => 'Breakfast', 'lunch' => 'Lunch', 'dinner' => 'Dinner', 'snack' => 'Snack'],
+        'diet_tags' => ['vegetarian' => 'Vegetarian', 'vegan' => 'Vegan', 'pescatarian' => 'Pescatarian', 'halal' => 'Halal'],
+        'demo_note' => 'Sample recipe. Real recipes and nutrition values are checked by our dietitian before launch.',
+        'estimate_note' => 'Nutrition values are estimates.',
+    ],
+
+    /*
+     * Meal plan (design screens 17 and 18, build guide 5.12). PROVISIONAL: the template limits and the "on target"
+     * band are working numbers for Amy to set. Hard rules from the guide (diet, allergies, avoids, locks, no repeat of
+     * yesterday's meal in a slot, protein boost) are in code and are NOT settings.
+     *
+     * Template limits (all optional):
+     *   max_kcal    per slot, upper limit for one serving
+     *   min_protein per slot, lower limit for one serving (protein in grams)
+     *   max_carbs   per slot, upper limit for one serving (carbs in grams)
+     * A limit is dropped for a slot when it would leave nothing to choose from; diet, allergy and avoid rules never are.
+     */
+    'meal_plan' => [
+        'default_template' => 'treatment_friendly',
+        'days' => 7,
+        'new_meals_per_day' => [1, 2],         // non-favourite meals added each day (breakfast, lunch or dinner)
+        'new_meal_slots' => ['breakfast', 'lunch', 'dinner'],
+        'low_carb_diet_max_carbs_g' => 28,     // the "Low carb" diet uses the same limit as the Low Carb template
+        'on_target' => [
+            'kcal_min_pct' => 85, 'kcal_max_pct' => 110, 'protein_min_pct' => 90,
+        ],
+        'templates' => [
+            'treatment_friendly' => [
+                'label' => 'Treatment Friendly',
+                'blurb' => 'Gentle, smaller portions with steady protein.',
+                'limits' => [
+                    'breakfast' => ['max_kcal' => 350], 'lunch' => ['max_kcal' => 430],
+                    'dinner' => ['max_kcal' => 450], 'snack' => ['max_kcal' => 200],
+                ],
+            ],
+            'balanced' => [
+                'label' => 'Balanced',
+                'blurb' => 'An even mix of carbs, protein and fat.',
+                'limits' => [],
+            ],
+            'high_protein' => [
+                'label' => 'High Protein',
+                'blurb' => 'Lunch and dinner have 30 g or more protein.',
+                'limits' => ['lunch' => ['min_protein' => 30], 'dinner' => ['min_protein' => 30]],
+            ],
+            'low_carb' => [
+                'label' => 'Low Carb',
+                'blurb' => 'Meals have 28 g carbs or less.',
+                'limits' => [
+                    'breakfast' => ['max_carbs' => 28], 'lunch' => ['max_carbs' => 28],
+                    'dinner' => ['max_carbs' => 28], 'snack' => ['max_carbs' => 28],
+                ],
+            ],
+        ],
+    ],
 ];

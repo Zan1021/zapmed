@@ -106,6 +106,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // but is gated on role:admin,health_coach rather than the admin-only group above.
     Route::middleware('role:admin,health_coach')->group(function () {
         Route::get('admin/coach-console', \App\Livewire\Admin\CoachConsole::class)->name('admin.coach-console');
+        Route::get('admin/coach-recipes', \App\Livewire\Admin\CoachRecipes::class)->name('admin.coach-recipes');
     });
 
     // Doctor dashboard (Livewire - real data)
@@ -220,6 +221,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('book', \App\Livewire\Coach\BookCall::class)->name('coach.book');
         Route::get('profile', \App\Livewire\Coach\Profile::class)->name('coach.profile');
         Route::get('milestone', \App\Livewire\Coach\Milestone::class)->name('coach.milestone');
+        Route::get('plan', \App\Livewire\Coach\Plan::class)->name('coach.plan');
+        Route::get('plan/personalise', \App\Livewire\Coach\Personalise::class)->name('coach.plan.personalise');
+        Route::get('recipes', \App\Livewire\Coach\Recipes::class)->name('coach.recipes');
+        Route::get('recipes/{recipe}', \App\Livewire\Coach\RecipeShow::class)->name('coach.recipe');
     });
 
     Route::get('subscription/checkout', [SubscriptionController::class, 'checkout'])
