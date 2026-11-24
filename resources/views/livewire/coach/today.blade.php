@@ -95,7 +95,7 @@
     @if ($cycleOn)
         <div class="zc-card" data-card="cycle">
             <div class="zc-row zc-between">
-                <h3>Cycle</h3>
+                <a href="{{ route('coach.cycle') }}" data-cycle-link><h3>Cycle &#8250;</h3></a>
                 @if ($cycle)<span class="zc-tag sage">{{ $cycle['label'] }}</span>@endif
             </div>
             @if ($cycle)

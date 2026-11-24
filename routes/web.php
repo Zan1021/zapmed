@@ -229,6 +229,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('nutrition/log', \App\Livewire\Coach\LogMeal::class)->name('coach.nutrition.log');
         Route::get('activity', \App\Livewire\Coach\Activity::class)->name('coach.activity');
         Route::get('activity/log', \App\Livewire\Coach\LogActivity::class)->name('coach.activity.log');
+        Route::get('cycle', \App\Livewire\Coach\Cycle::class)->name('coach.cycle');
     });
 
     Route::get('subscription/checkout', [SubscriptionController::class, 'checkout'])

@@ -152,6 +152,45 @@ return [
             'ovulation' => ['weight' => 'steady', 'hunger' => 'down', 'water' => 'steady', 'mood' => 'up'],
             'luteal' => ['weight' => 'up', 'hunger' => 'up', 'water' => 'up', 'mood' => 'down'],
         ],
+        /* PROVISIONAL one-sentence effects for the four cards and Amy's tip per phase. No medicine names, no dose advice. */
+        'phase_text' => [
+            'menstrual' => [
+                'weight' => 'Water weight can be a little higher. It is not fat gain.',
+                'hunger' => 'Appetite may be higher.',
+                'water' => 'Keep sipping through the day.',
+                'mood' => 'Mood can dip. Be kind to yourself.',
+            ],
+            'follicular' => [
+                'weight' => 'Weight is often steadier or a little lower.',
+                'hunger' => 'Appetite is usually lower.',
+                'water' => 'Your usual amount works well.',
+                'mood' => 'Energy and mood often lift.',
+            ],
+            'ovulation' => [
+                'weight' => 'Weight is usually steady.',
+                'hunger' => 'Appetite is often lower.',
+                'water' => 'Your usual amount works well.',
+                'mood' => 'Mood and energy are often good.',
+            ],
+            'luteal' => [
+                'weight' => 'Water retention can push the scale up. It is temporary.',
+                'hunger' => 'Cravings and appetite can rise.',
+                'water' => 'Aim for your full goal. It can ease bloating.',
+                'mood' => 'Mood can dip before your period.',
+            ],
+        ],
+        'tips' => [
+            'menstrual' => 'Go gently. A walk and iron-rich meals can help you feel better. Weigh in as usual but read the scale with the cycle in mind.',
+            'follicular' => 'A good time to try something new. Plan your protein early in the day and keep your water up.',
+            'ovulation' => 'Energy is often highest now. Keep your meals regular and your protein steady.',
+            'luteal' => 'Cravings are normal now. Plan a protein snack, keep your water up, and do not judge the scale this week.',
+        ],
+        'phase_colours' => ['menstrual' => '#E7B7B0', 'follicular' => '#DCE5DA', 'ovulation' => '#9CC3C7', 'luteal' => '#729D94'],
+        'min_period' => 2,
+        'max_period' => 10,
+        'moods' => [1 => ['label' => 'Very low', 'emoji' => '😞'], 2 => ['label' => 'Low', 'emoji' => '🙁'], 3 => ['label' => 'Okay', 'emoji' => '😐'], 4 => ['label' => 'Good', 'emoji' => '🙂'], 5 => ['label' => 'Great', 'emoji' => '😄']],
+        'symptoms' => ['cramps' => 'Cramps', 'bloating' => 'Bloating', 'cravings' => 'Cravings', 'headache' => 'Headache', 'tender' => 'Tender', 'low_mood' => 'Low mood', 'poor_sleep' => 'Poor sleep'],
+        'notice' => 'These are estimates. Cycles vary. Tell your doctor if your cycle changes a lot while you are on treatment.',
         'phase_labels' => [
             'menstrual' => 'Period', 'follicular' => 'Follicular phase',
             'ovulation' => 'Ovulation', 'luteal' => 'Luteal phase',
