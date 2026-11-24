@@ -24,7 +24,7 @@ Tabs live under `/my/*` (role patient, onboarding done), with a shared tab bar (
 - **Operations assigning a coupon to a patient** (`PatientRewards::assign` is ready): phase 4 per-order coupon work.
 - **Community**: requirements still undefined by Craig.
 - **Pause / cancel of non-repeat orders**: only repeat (subscription) orders can be paused or cancelled by the patient.
-- Browser click-through on zapdev not done yet: covered by feature tests only.
+- Browser check on zapdev (2026-11-25, Playwright, patient test account): all six tabs load, tab bar shows, no console errors. Button-by-button clicking was not done; the actions are covered by feature tests.
 
 ## Decisions / assumptions (provisional, to confirm with Craig)
 1. "Repeats left" is derived (authorisation length / pack length); the guide gives the example "4 of 6" but no formula.
