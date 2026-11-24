@@ -90,6 +90,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/contro-import', \App\Livewire\Admin\ControImport::class)->name('admin.contro-import');
         Route::get('/crm-analytics', \App\Livewire\Admin\AnalyticsDashboard::class)->name('admin.crm-analytics');
         Route::get('/finance', \App\Livewire\Admin\FinanceReports::class)->name('admin.finance');
+        Route::get('/reports', \App\Livewire\Admin\OperationsReportsPage::class)->name('admin.reports');
+        Route::get('/reports/{report}/export', \App\Http\Controllers\OperationsReportExportController::class)->where('report', '[a-z_]+')->name('admin.reports.export');
         Route::get('/ai-nudges', \App\Livewire\Admin\AiNudges::class)->name('admin.ai-nudges');
         Route::get('/compliance', \App\Livewire\Admin\ComplianceConsole::class)->name('admin.compliance');
         Route::get('/question-bank', \App\Livewire\Admin\QuestionLibrary::class)->name('admin.question-bank');
