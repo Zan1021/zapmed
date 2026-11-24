@@ -75,4 +75,8 @@ return [
         // PROVISIONAL reading of "renew for six months": confirm with Craig. Orders with no authorisation record are never held.
         'block_when_expired' => env('DOCTOR_AUTH_BLOCK_EXPIRED', true),
     ],
+    'notes' => [
+        // Tell addressees about a new staff note. OFF until DOCTOR_NOTE_NOTIFY=true. The message never carries the note.
+        'notify_enabled' => env('DOCTOR_NOTE_NOTIFY', false),
+    ],
 ];

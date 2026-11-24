@@ -168,6 +168,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Authorisations: patients nearing their six-month renewal (Craig's guide 4.1).
     Route::get('doctor/authorisations', \App\Livewire\Doctor\Authorisations::class)->middleware('role:doctor')->name('doctor.authorisations');
 
+    // Staff notes addressed to me (doctors, Operations, coaches). Writing a note happens inside a patient screen.
+    Route::get('staff-notes', \App\Livewire\Doctor\StaffNotes::class)->middleware('role:doctor,admin,health_coach')->name('staff.notes');
+
     // Doctor time tracking (Craig's guide 4.2, 8.1). The export is also open to Operations for the invoice.
     Route::get('doctor/time', \App\Livewire\Doctor\TimeSheet::class)->middleware('role:doctor')->name('doctor.time');
     Route::get('doctor/time/export', \App\Http\Controllers\DoctorTimeExportController::class)->middleware('role:doctor,admin')->name('doctor.time.export');

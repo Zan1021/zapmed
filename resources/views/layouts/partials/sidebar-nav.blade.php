@@ -369,6 +369,10 @@
         Authorisations
     </a>
 
+    <a href="{{ route('staff.notes') }}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors border-b border-slate-700/50 {{ request()->routeIs('staff.notes') ? 'bg-sidebar-active text-white' : 'text-slate-300 hover:bg-slate-700/50 hover:text-white' }}">
+        Notes for me
+    </a>
+
     <div class="mt-6 mb-2 px-3">
         <p class="text-xs font-semibold text-zapmed-400 uppercase tracking-wider">Communication</p>
     </div>
@@ -384,6 +388,10 @@
 @if(auth()->user()->isAdmin() || auth()->user()->isHealthCoach())
     <a href="{{ route('doctor.requests') }}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors {{ request()->routeIs('doctor.requests*') ? 'bg-sidebar-active text-white' : 'text-slate-300 hover:bg-slate-700/50 hover:text-white' }}">
         Doctor Requests
+    </a>
+
+    <a href="{{ route('staff.notes') }}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors {{ request()->routeIs('staff.notes') ? 'bg-sidebar-active text-white' : 'text-slate-300 hover:bg-slate-700/50 hover:text-white' }}">
+        Notes for me
     </a>
 @endif
 

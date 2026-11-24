@@ -50,6 +50,9 @@
             <!-- Authorisation (Craig's guide 4.1) -->
             <livewire:doctor.authorisation-panel :patient-id="$appointment->patient_id" :key="'au-'.$appointment->patient_id" />
 
+            <!-- Notes (Craig's guide 4.3) -->
+            <livewire:doctor.notes-panel :patient-id="$appointment->patient_id" :key="'nt-'.$appointment->patient_id" />
+
             <!-- Allergies -->
             @php $profile = $appointment->patient->patientProfile; @endphp
             @if($profile && $profile->allergies->count() > 0)
