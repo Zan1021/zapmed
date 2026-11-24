@@ -147,6 +147,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('role:doctor')
         ->name('doctor.prescription');
 
+    // Doctor Requests: shared work items between doctors, Operations and coaches (Craig's guide 4.1, 8.1).
+    Route::middleware('role:doctor,admin,health_coach')->prefix('doctor/requests')->group(function () {
+        Route::get('/', \App\Livewire\Doctor\Requests::class)->name('doctor.requests');
+        Route::get('{doctorRequest}', \App\Livewire\Doctor\RequestDetail::class)->whereNumber('doctorRequest')->name('doctor.requests.show');
+        Route::get('{doctorRequest}/files/{file}', \App\Http\Controllers\DoctorRequestFileController::class)
+            ->whereNumber(['doctorRequest', 'file'])->name('doctor.requests.file');
+    });
+
+    // Doctor time tracking (Craig's guide 4.2, 8.1). The export is also open to Operations for the invoice.
+    Route::get('doctor/time', \App\Livewire\Doctor\TimeSheet::class)->middleware('role:doctor')->name('doctor.time');
+    Route::get('doctor/time/export', \App\Http\Controllers\DoctorTimeExportController::class)->middleware('role:doctor,admin')->name('doctor.time.export');
+
     // Doctor availability management
     Route::get('doctor/availability', \App\Livewire\Doctor\ManageAvailability::class)
         ->middleware('role:doctor')

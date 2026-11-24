@@ -344,6 +344,16 @@
         Availability
     </a>
 
+    <a href="{{ route('doctor.requests') }}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors border-b border-slate-700/50 {{ request()->routeIs('doctor.requests*') ? 'bg-sidebar-active text-white' : 'text-slate-300 hover:bg-slate-700/50 hover:text-white' }}">
+        <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+        Requests
+    </a>
+
+    <a href="{{ route('doctor.time') }}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors border-b border-slate-700/50 {{ request()->routeIs('doctor.time*') ? 'bg-sidebar-active text-white' : 'text-slate-300 hover:bg-slate-700/50 hover:text-white' }}">
+        <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        My time
+    </a>
+
     <div class="mt-6 mb-2 px-3">
         <p class="text-xs font-semibold text-zapmed-400 uppercase tracking-wider">Communication</p>
     </div>
@@ -353,6 +363,12 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
         </svg>
         Messages
+    </a>
+@endif
+
+@if(auth()->user()->isAdmin() || auth()->user()->isHealthCoach())
+    <a href="{{ route('doctor.requests') }}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors {{ request()->routeIs('doctor.requests*') ? 'bg-sidebar-active text-white' : 'text-slate-300 hover:bg-slate-700/50 hover:text-white' }}">
+        Doctor Requests
     </a>
 @endif
 

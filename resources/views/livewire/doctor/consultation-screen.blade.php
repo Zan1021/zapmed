@@ -22,6 +22,7 @@
                         </p>
                     </div>
                 </div>
+                <div class="mb-3"><livewire:doctor.timer-button :patient-id="$appointment->patient_id" :key="'t-'.$appointment->patient_id" /></div>
                 <div class="space-y-2 text-xs">
                     <div class="flex justify-between">
                         <span class="text-gray-500">Appointment</span>
