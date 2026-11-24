@@ -19,5 +19,5 @@
             You have no rewards right now. When we have a discount for you, it will show here.
         </div>
     @endforelse
-    <p class="mt-3 text-xs text-gray-400">Type the code in at checkout to use it.</p>
+    <p class="mt-3 text-xs text-gray-400">Mention a code when you contact us and we will apply it to your order.</p>
 </div>

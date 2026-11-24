@@ -28,7 +28,7 @@ class Order extends Model
         'delivery_address', 'delivery_city', 'delivery_province', 'delivery_postal_code',
         'delivery_phone', 'delivery_instructions', 'ordered_at', 'metadata',
         'upstream_id', 'upstream_source', 'upstream_synced_at',
-        'source_type', 'source_ref', 'archived_at',
+        'source_type', 'source_ref', 'archived_at', 'abandoned_followup_at',
     ];
 
     protected $attributes = [
@@ -48,6 +48,7 @@ class Order extends Model
             'cancelled_at' => 'datetime',
             'paused_at' => 'datetime',
             'archived_at' => 'datetime',
+            'abandoned_followup_at' => 'datetime',
             'ordered_at' => 'datetime',
             'upstream_synced_at' => 'datetime',
             'metadata' => 'array',

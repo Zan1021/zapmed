@@ -16,6 +16,8 @@ Schedule::command('prescriptions:remind')->dailyAt('09:00');
 Schedule::command('followups:prompt')->dailyAt('09:00')->timezone('Africa/Johannesburg')->withoutOverlapping();
 // Doctor authorisations that have ended are marked expired before the 09:30 repeat run.
 Schedule::command('authorisations:expire')->dailyAt('08:00')->timezone('Africa/Johannesburg')->withoutOverlapping();
+// Patients who left an order unpaid for a day get one reminder (OFF until OPS_ABANDONED_NOTIFY=true).
+Schedule::command('checkouts:follow-up')->hourly()->withoutOverlapping();
 Schedule::command('alerts:scan')->everyFiveMinutes()->withoutOverlapping();
 // Repeats and payment retries run at 09:30 South African time (Craig's guide), not 03:00 server time.
 Schedule::command('subscriptions:run-due')->dailyAt('09:30')->timezone('Africa/Johannesburg')->withoutOverlapping();

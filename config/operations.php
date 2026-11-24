@@ -52,4 +52,20 @@ return [
             'failed' => 'Delivery did not work out',
         ],
     ],
+
+    'abandoned_checkout' => [
+        // Remind a patient who started an order and did not pay (Craig's guide 6.1). OFF until OPS_ABANDONED_NOTIFY=true.
+        'notify_enabled' => env('OPS_ABANDONED_NOTIFY', false),
+        // How long an unpaid order sits before the reminder, and how old it can be and still get one. The upper limit means that
+        // switching the reminder on later does not message everybody who ever left a cart.
+        'after_hours' => 24,
+        'max_age_days' => 3,
+        // An optional thank-you coupon made for that patient. OFF: there is no coupon box at checkout yet, so a code could not be
+        // used by the patient on their own. Turn on only once checkout can take a code (then the patient sees it under Rewards).
+        'coupon' => [
+            'enabled' => env('OPS_ABANDONED_COUPON', false),
+            'percent' => 10,
+            'valid_days' => 7,
+        ],
+    ],
 ];
