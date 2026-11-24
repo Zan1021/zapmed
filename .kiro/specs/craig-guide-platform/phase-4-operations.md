@@ -1,4 +1,4 @@
-# Craig's build guide, platform phase 4: Operations portal
+﻿# Craig's build guide, platform phase 4: Operations portal
 
 **Date:** 2026-11-25 - **Owner:** Naz for Captain Zan - Staging only (zapdev.co.za). Source: Craig's System Build Guide section 6 (text copy `C:\workspace\zapmed-guide\guide.md`). Captain Zan said "proceed" on 2026-11-25.
 "Operations" = the `admin` role. Config: `config/operations.php`.
@@ -16,18 +16,18 @@
 - [x] **4.4 User Admin** (`/admin/users/{user}/staff`, `StaffAdmin`): give a signed-up user the Operations, Doctor or Health Coach role (not yourself, never back to patient), staff profile (registration number, board, practice address, registration status, country, booking and authorisation check-in links), doctor signature upload (private, image only). "Verified" switches the doctor's `is_verified` on so patients can book them. 16 tests.
 - [x] **4.5 Product list** (`/admin/product-list`, `ProductCatalogIO`): export the catalogue as CSV, edit it, check the file (nothing is written), then load it: all or nothing, matched by NAPPI or name + strength + form, blank cell = leave alone, rand in the file and cents in the database. 15 tests.
 
-## NOT built (needs a decision, an outside service or a later piece of work)
-- **Category configuration extras** (exclusive categories, one-off vs recurring service fee, store collection, hex colour, image upload) and **B2B partner management** (Emeris, IV Bar: discounts, codes, stores, auto-enrolment, HR sick-note routing, service-fee waiver). The existing Category builder and Partners (affiliate commissions) screens were left as they are: the guide's partner model is different from the affiliate one and needs a design decision first.
-- **Integration log with safe resend** (RX Hub / Scriptwise, about ten automatic retries, never a duplicate charge) and the **patient integration history**.
-- **DPS Laser courier tracking** (needs API access). The My Orders card already shows a tracking link when `metadata.tracking_url` exists.
-- **Configurable notification templates and triggers** (WhatsApp first, email fallback, delivery/open/click status). The messenger and the fallback exist (phase 3.4); the template editor does not.
-- **Add-ons add / pause / cancel from the order** and categories where each add-on is offered.
-- **Abandoned-checkout follow-up with a coupon.** The reward coupons exist (`PatientRewards::assign`) but nothing creates or sends one.
-- **Dashboard extras** (daily order chart by category, revenue segments, cancelled-order reasons, coaching oversight metrics). The reports cover part of it.
-- **Multiple doctors / coaches per patient with start and end dates** (guide 6.2 "Review"). The coach assignment table already records start and end for coaches only.
-- **Booking-link expiry settings** (about 3 uses and 2 weeks).
-- **Electronic prescription PDF using the uploaded signature**: the signature is stored and shown to Operations and the doctor, but nothing prints it on a prescription yet.
-- Browser check on zapdev as an admin (see the session notes).
+## Built as "leftovers" (after the first phase 4 deploy)
+- Signature printed on the prescription PDF; courier tracking (manual entry, `source` column leaves room for a DPS feed); abandoned-checkout reminder (`checkouts:follow-up`, notify and coupon both OFF by default); Operations overview at `/admin/operations`.
+- Add-ons (add / pause / cancel, patient pause/cancel on My Orders, charged with the repeat); editable patient message templates with versions and a banned-word check; several doctors/coaches per patient with start and end dates (never crosses the clinical-note walls).
+- Integration log (`/admin/integration-log`): definite failures retried automatically up to 10 times, unknown outcomes (timeouts) never auto-retried, a prescription the pharmacy may already have is never resent.
+- Booking links: hash-only storage, shown once, default 3 uses / 14 days, resend switches the old link off, patient must be signed in as themselves.
+
+## NOT built (needs a decision or an outside service)
+- **Category configuration extras** (exclusive categories, service fee, hex colour, image): categories live in static `config/treatments.php`; moving them to the database is a bigger change.
+- **B2B partner management** (Emeris, IV Bar): the guide's partner model differs from the affiliate Partners screen and needs a design decision.
+- **DPS Laser live tracking feed**: needs API access. Manual tracking is recorded in the same table.
+- **Dashboard extras** (daily order chart by category, revenue segments, coaching oversight metrics).
+- **Notification delivery / open / click status** per template.
 
 ## Decisions / assumptions (provisional, to confirm with Craig)
 1. **Batch day** = the next Monday or Wednesday on or after the repeat date (`operations.reports.batch_weekdays`). Craig's wording ("batch to nearest Monday/Wednesday") is loose.
