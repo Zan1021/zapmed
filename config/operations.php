@@ -19,4 +19,22 @@ return [
         // The most rows one report shows on screen or in a CSV.
         'max_rows' => 5000,
     ],
+
+    'staff' => [
+        // Roles Operations can give a signed-up user (Craig's guide 6.4: Operations, Doctor or Health Coach).
+        'assignable_roles' => ['admin', 'doctor', 'health_coach'],
+
+        // Where a staff member is registered. A suggestion list: the board is saved as typed.
+        'boards' => ['HPCSA', 'SANC', 'SAPC'],
+
+        // verified lets a doctor appear in booking (it switches DoctorProfile.is_verified on).
+        'registration_statuses' => ['pending' => 'Waiting to be checked', 'verified' => 'Verified', 'lapsed' => 'Registration lapsed', 'not_required' => 'Not required'],
+
+        // Signature image used on prescriptions. Private disk, random file name.
+        'signature' => [
+            'disk' => env('STAFF_SIGNATURE_DISK', 'local'),
+            'allowed_extensions' => ['png', 'jpg', 'jpeg', 'webp'],
+            'max_kb' => 2048,
+        ],
+    ],
 ];

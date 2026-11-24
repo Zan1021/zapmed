@@ -106,7 +106,8 @@
                         <td class="px-6 py-4 whitespace-nowrap text-right">
                             @if($user->id !== auth()->id())
                             <div class="flex items-center justify-end gap-2">
-                                <button wire:click="toggleActive({{ $user->id }})"
+                                @if($user->role->value !== 'pharmacy_staff')<a href="{{ route('admin.staff-profile', $user) }}" class="text-indigo-600 hover:underline mr-3" data-action="staff-profile">Role and staff profile</a>@endif
+                            <button wire:click="toggleActive({{ $user->id }})"
                                     class="text-xs font-medium {{ $user->is_active ? 'text-amber-600 hover:text-amber-800' : 'text-green-600 hover:text-green-800' }} transition-colors">
                                     {{ $user->is_active ? 'Deactivate' : 'Activate' }}
                                 </button>

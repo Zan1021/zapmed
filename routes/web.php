@@ -92,6 +92,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/finance', \App\Livewire\Admin\FinanceReports::class)->name('admin.finance');
         Route::get('/reports', \App\Livewire\Admin\OperationsReportsPage::class)->name('admin.reports');
         Route::get('/repeat-cycles', \App\Livewire\Admin\RepeatCycleSettings::class)->name('admin.repeat-cycles');
+        Route::get('/users/{user}/staff', \App\Livewire\Admin\StaffProfileEditor::class)->whereNumber('user')->name('admin.staff-profile');
         Route::get('/reports/{report}/export', \App\Http\Controllers\OperationsReportExportController::class)->where('report', '[a-z_]+')->name('admin.reports.export');
         Route::get('/ai-nudges', \App\Livewire\Admin\AiNudges::class)->name('admin.ai-nudges');
         Route::get('/compliance', \App\Livewire\Admin\ComplianceConsole::class)->name('admin.compliance');
@@ -170,6 +171,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // A patient's uploaded records and results: the patient and treating doctors only (checked in the controller).
     Route::get('health-records/{record}', \App\Http\Controllers\HealthRecordFileController::class)->middleware('role:doctor,patient')->whereNumber('record')->name('health-records.show');
+
+    // A doctor's signature image: Operations and that doctor only (checked in the controller).
+    Route::get('staff-signature/{user}', \App\Http\Controllers\StaffSignatureController::class)->middleware('role:doctor,admin')->whereNumber('user')->name('admin.staff-signature');
 
     // Authorisations: patients nearing their six-month renewal (Craig's guide 4.1).
     Route::get('doctor/authorisations', \App\Livewire\Doctor\Authorisations::class)->middleware('role:doctor')->name('doctor.authorisations');
