@@ -1,6 +1,6 @@
 <div wire:poll.60s>
     <div class="zc-top"><h2>My members</h2></div>
-    <p class="zc-sub">Members assigned to you. Safety flags first, then new messages, then the quietest.</p>
+    <p class="zc-sub">Members assigned to you. Safety flags first, then members who feel worse today, then new messages, then the quietest.</p>
 
     <div class="zc-row" style="gap:8px;margin-bottom:12px">
         <a href="{{ route('coach.inbox') }}" class="zc-chip" data-link="inbox">Messages and calls</a>
@@ -15,7 +15,8 @@
                 <b>{{ $p->first_name }} {{ $p->last_name }}</b>
                 <span class="zc-row" style="gap:6px">
                     @if ($r['openFlags'])<span class="zc-tag red" data-flag>{{ $r['openFlags'] }} {{ $r['openFlags'] === 1 ? 'flag' : 'flags' }}</span>@endif
-                    @if ($r['unread'])<span class="zc-tag red" data-unread>{{ $r['unread'] }} new</span>@endif
+                    @if ($r['worse'])<span class="zc-tag red" data-worse>feels worse today</span>@endif
+    @if ($r['unread'])<span class="zc-tag red" data-unread>{{ $r['unread'] }} new</span>@endif
                     @if ($r['quiet'])<span class="zc-tag" data-quiet>quiet</span>@endif
                 </span>
             </div>

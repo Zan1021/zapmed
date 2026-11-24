@@ -466,4 +466,44 @@ return [
             'golf' => ['name' => 'Golf (walking)', 'group' => 'sports', 'met' => 4.3, 'emoji' => '⛳'],
         ],
     ],
+
+    /*
+     * Insights (design screen 21, build guide 5.13). Rule-based text written from the member's own data. PROVISIONAL:
+     * Amy and the doctor review these rules and wording before real members. No medicine names, never a dose change.
+     * Placeholders: {symptom} {when} {kg}.
+     */
+    'insights' => [
+        'notify_enabled' => env('COACH_CHECKIN_NOTIFY', false),   // tell the coach by message when a member says "Worse"
+        'recent_symptom_days' => 3,
+        'weigh_in_days' => 7,
+        'answers' => ['better' => 'Better', 'same' => 'Same', 'worse' => 'Worse', 'gone' => 'Gone'],
+        'answer_replies' => [
+            'better' => 'Good to hear. Keep doing what is working.',
+            'same' => 'Thanks. Keep logging so we can spot any change.',
+            'gone' => 'Great news. Keep your meals and water steady.',
+        ],
+        'worse_reply_with_coach' => 'Thanks for telling us. {coach} has been told and will follow up. If something feels wrong, use "Something feels wrong" in the Coach menu.',
+        'worse_reply_no_coach' => 'Thanks for telling us. We have noted it. If something feels wrong, use "Something feels wrong" in the Coach menu.',
+        'headlines' => [
+            'tough_symptom' => ['You logged a hard symptom', 'This one needs a closer look. Message your coach, or use "Something feels wrong" in the Coach menu so a doctor can see it.'],
+            'symptom_recent' => ['Side effects usually settle', 'You logged {symptom} {when}. These often ease as your body adjusts. Small meals, protein first and your water goal can help.'],
+            'dose_day' => ['Today is your usual dose day', 'Log your dose once you have taken it so your plan stays accurate.'],
+            'after_dose' => ['A few days after your dose', 'Appetite is often lower for a day or two. Protein first, then vegetables, and keep sipping water.'],
+            'weigh_in' => ['Time for a weigh-in', 'It has been a while. One number a week is enough to see the trend.'],
+            'steady' => ['You are on track', 'Keep logging. Small steady habits add up.'],
+        ],
+        'goals' => [
+            'weigh' => ['Log your weight today', 'Log weight'],
+            'meal' => ['Log your first meal today', 'Log a meal'],
+            'water' => ['Have a glass of water', 'Add water'],
+            'protein' => ['Add a protein snack', 'Log a snack'],
+            'walk' => ['Take a short walk', 'Log activity'],
+        ],
+        'water_nudge_after_hour' => 14,   // local hour after which low water becomes the goal
+        'headlines_weekly' => [
+            'strong' => 'A strong week',
+            'steady' => 'A steady week',
+            'start' => 'Every log counts',
+        ],
+    ],
 ];

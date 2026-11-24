@@ -27,7 +27,7 @@ class CoachPatientBoard
     }
 
     /**
-     * One row per actively assigned member, those with open safety flags first, then those with unread messages,
+     * One row per actively assigned member, those with open safety flags first, then those who said they feel worse today, then those with unread messages,
      * then the longest since a weigh-in.
      *
      * @return Collection<int,array<string,mixed>>
@@ -49,6 +49,7 @@ class CoachPatientBoard
                 'daysSinceWeighIn' => $daysSince,
                 'quiet' => $daysSince === null || $daysSince >= (int) config('coach.board.quiet_days', 7),
                 'openFlags' => CoachFlag::open()->where('patient_id', $p->id)->count(),
+                'worse' => \App\Models\InsightEntry::where('user_id', $p->id)->whereDate('entry_date', CoachClock::today()->toDateString())->where('answer', 'worse')->exists(),
                 'unread' => CoachMessage::where('patient_id', $p->id)->where('from', CoachMessage::FROM_PATIENT)->whereNull('read_at')->count(),
                 'nextCall' => CoachCall::booked()->where('patient_id', $p->id)->where('starts_at', '>=', now())->orderBy('starts_at')->first(),
             ];
@@ -56,6 +57,7 @@ class CoachPatientBoard
 
         return $rows->sortBy([
             fn ($a, $b) => $b['openFlags'] <=> $a['openFlags'],
+            fn ($a, $b) => $b['worse'] <=> $a['worse'],
             fn ($a, $b) => $b['unread'] <=> $a['unread'],
             fn ($a, $b) => ($b['daysSinceWeighIn'] ?? PHP_INT_MAX) <=> ($a['daysSinceWeighIn'] ?? PHP_INT_MAX),
         ])->values();
