@@ -14,6 +14,35 @@ class MyOrders extends Component
     public string $mode = '';          // pause | cancel
     public string $reason = '';
 
+    // an add-on being paused or cancelled
+    public ?int $addonActing = null;
+    public string $addonMode = '';          // paused | cancelled
+    public string $addonReason = '';
+
+    public function askAddon(int $orderAddonId, string $mode): void
+    {
+        $this->resetErrorBag();
+        abort_unless(in_array($mode, ['paused', 'cancelled'], true), 422);
+        $this->addonActing = $orderAddonId;
+        $this->addonMode = $mode;
+        $this->addonReason = '';
+    }
+
+    public function closeAddon(): void
+    {
+        $this->reset(['addonActing', 'addonMode', 'addonReason']);
+        $this->resetErrorBag();
+    }
+
+    public function confirmAddon(PatientOrders $orders): void
+    {
+        $this->resetErrorBag();
+        abort_unless($this->addonActing, 422);
+
+        $orders->changeAddon(Auth::user(), $this->addonActing, $this->addonMode, $this->addonReason);
+        $this->closeAddon();
+    }
+
     public function ask(int $orderId, string $mode): void
     {
         $this->resetErrorBag();

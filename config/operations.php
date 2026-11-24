@@ -68,4 +68,9 @@ return [
             'valid_days' => 7,
         ],
     ],
+
+    'addons' => [
+        // Tell the patient when an add-on is added, paused or cancelled. OFF until OPS_ADDON_NOTIFY=true. No health detail.
+        'notify_enabled' => env('OPS_ADDON_NOTIFY', false),
+    ],
 ];

@@ -166,6 +166,8 @@ class RepeatChargeService
 
         // Operations may have put a coupon on this order's monthly SERVICE fee (Craig's guide 6.2). It is capped at the
         // service fee, so the medication part is never reduced.
-        return max(0, $base - app(\App\Services\Operations\OrderControls::class)->discountCentsForSubscription($sub));
+        // Active add-ons on the order (for example health coach support) are charged with it; paused and cancelled ones are not.
+        return max(0, $base - app(\App\Services\Operations\OrderControls::class)->discountCentsForSubscription($sub))
+            + app(\App\Services\Operations\Addons::class)->activeCentsForSubscription($sub);
     }
 }

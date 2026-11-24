@@ -301,12 +301,28 @@ class OperationsReports
             ];
         })->all();
 
-        $monthly = $subs->where('status', 'active')->sum(fn ($s) => (int) ($s->plan?->price ?? 0));
+        // add-ons put on an order by Operations (see Add-ons)
+        $extras = \App\Models\OrderAddon::with(['addon', 'order.patient'])->whereBetween('created_at', [$from->utc(), $to->utc()])->orderByDesc('id')->get();
+        foreach ($extras as $x) {
+            $rows[] = [
+                $x->order?->patient?->name ?? '-',
+                $x->order?->patient?->email ?? '-',
+                $x->order?->reference ?? '-',
+                ucfirst($x->status),
+                $x->order?->service_category ?? '-',
+                $x->addon?->name ?? 'Add-on',
+                'R'.number_format($x->price_cents / 100, 2),
+                $x->started_on?->format('Y-m-d') ?? '-',
+            ];
+        }
+        $extraMonthly = $extras->where('status', 'active')->sum('price_cents');
+
+        $monthly = $subs->where('status', 'active')->sum(fn ($s) => (int) ($s->plan?->price ?? 0)) + $extraMonthly;
 
         return [
             'columns' => ['Patient', 'Email', 'Order', 'Status', 'Category', 'Add-on', 'Charge', 'Started'],
             'rows' => $rows,
-            'summary' => ['Add-ons started in this period' => count($rows), 'Active now' => $subs->where('status', 'active')->count(), 'Monthly value of the active ones' => 'R'.number_format($monthly / 100, 2)],
+            'summary' => ['Add-ons started in this period' => count($rows), 'Active now' => $subs->where('status', 'active')->count() + $extras->where('status', 'active')->count(), 'Monthly value of the active ones' => 'R'.number_format($monthly / 100, 2)],
         ];
     }
 

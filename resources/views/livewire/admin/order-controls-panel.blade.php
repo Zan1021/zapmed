@@ -58,6 +58,29 @@
     </div>
     @endif
 
+    <div class="rounded-lg border border-gray-200 p-4" data-section="addons">
+        <h4 class="mb-2 text-sm font-semibold text-gray-700">Add-ons</h4>
+        @error('addon') <p class="mb-1 text-xs text-red-600" data-error="addon">{{ $message }}</p> @enderror
+        @error('status') <p class="mb-1 text-xs text-red-600" data-error="status">{{ $message }}</p> @enderror
+        @foreach($orderAddons as $oa)
+            <div class="mb-1 flex items-center justify-between text-sm" data-order-addon="{{ $oa->id }}">
+                <span>{{ $oa->addon->name }}, R{{ number_format($oa->price_cents / 100, 2) }} a month: <strong>{{ $oa->status }}</strong>@if($oa->reason) <span class="text-xs text-gray-500">({{ $oa->initiator }}: {{ $oa->reason }})</span>@endif</span>
+                <span class="text-xs">
+                    @if($oa->status === 'active')<button type="button" wire:click="changeAddon({{ $oa->id }}, 'paused')" data-action="pause-addon" class="mr-2 text-gray-600">Pause</button>@endif
+                    @if($oa->status === 'paused')<button type="button" wire:click="changeAddon({{ $oa->id }}, 'active')" data-action="continue-addon" class="mr-2 text-gray-600">Continue</button>@endif
+                    @if($oa->status !== 'cancelled')<button type="button" wire:click="changeAddon({{ $oa->id }}, 'cancelled')" data-action="cancel-addon" class="text-red-600">Cancel</button>@endif
+                </span>
+            </div>
+        @endforeach
+        <input type="text" wire:model="addonReason" placeholder="Reason (for pause or cancel)" class="mt-2 w-full rounded-lg border-gray-300 text-sm">
+        @if($offeredAddons->isNotEmpty())
+            <div class="mt-2 flex gap-2 text-sm">
+                <select wire:model="addonId" class="rounded-lg border-gray-300 text-sm"><option value="">Add an add-on...</option>@foreach($offeredAddons as $a)<option value="{{ $a->id }}">{{ $a->name }} (R{{ number_format($a->price_cents / 100, 2) }})</option>@endforeach</select>
+                <button type="button" wire:click="addAddon" data-action="add-addon" class="rounded-lg bg-indigo-600 px-3 py-2 text-white">Add</button>
+            </div>
+        @endif
+    </div>
+
     <div class="rounded-lg border border-gray-200 p-4" data-section="tracking">
         <h4 class="mb-2 text-sm font-semibold text-gray-700">Courier tracking</h4>
         @if($tracking)

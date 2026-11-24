@@ -73,6 +73,9 @@ class PatientOrders
                 'due' => $this->authorisations->isDueForReview($auth),
             ] : null,
             'follow_up' => $openFollowUp ? ['due_at' => $openFollowUp->due_at, 'status' => $openFollowUp->status, 'is_free' => $openFollowUp->is_free] : null,
+            'addons' => \App\Models\OrderAddon::with('addon')->where('order_id', $order->id)->where('status', '!=', 'cancelled')->orderBy('id')->get()->map(fn ($a) => [
+                'id' => $a->id, 'name' => $a->addon->name, 'price_cents' => $a->price_cents, 'status' => $a->status,
+            ])->all(),
             'tracking_url' => $tracking?->url ?? ($order->metadata['tracking_url'] ?? null),
             'tracking' => $tracking ? [
                 'courier' => $tracking->courier,
@@ -128,6 +131,13 @@ class PatientOrders
         }
 
         app(\App\Services\Subscriptions\SubscriptionCheckout::class)->begin($patient, $sub->plan, $sub);
+    }
+
+    public function changeAddon(User $patient, int $orderAddonId, string $to, string $reason): void
+    {
+        $oa = \App\Models\OrderAddon::with(['order', 'addon'])->whereHas('order', fn ($q) => $q->where('patient_id', $patient->id))->findOrFail($orderAddonId);
+
+        app(\App\Services\Operations\Addons::class)->change($patient, $oa, $to, $reason);
     }
 
     public function archive(User $patient, int $orderId): void

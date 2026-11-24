@@ -38,6 +38,10 @@ class OrderControlsPanel extends Component
     public string $trackUrl = '';
     public string $trackPharmacyRef = '';
 
+    // add-ons
+    public string $addonId = '';
+    public string $addonReason = '';
+
     public function mount(): void
     {
         abort_unless(Auth::user()?->isAdmin(), 403);
@@ -82,6 +86,29 @@ class OrderControlsPanel extends Component
         $this->reset('resetReason');
     }
 
+    public function addAddon(\App\Services\Operations\Addons $addons): void
+    {
+        $this->resetErrorBag();
+        $order = Order::findOrFail($this->orderId);
+        if ($this->addonId === '') {
+            $this->addError('addon', 'Choose an add-on first.');
+
+            return;
+        }
+
+        $addons->add(Auth::user(), $order, \App\Models\Addon::findOrFail((int) $this->addonId));
+        $this->reset('addonId');
+    }
+
+    public function changeAddon(int $orderAddonId, string $to, \App\Services\Operations\Addons $addons): void
+    {
+        $this->resetErrorBag();
+        $oa = \App\Models\OrderAddon::where('order_id', $this->orderId)->findOrFail($orderAddonId);
+
+        $addons->change(Auth::user(), $oa, $to, $this->addonReason);
+        $this->reset('addonReason');
+    }
+
     public function recordTracking(\App\Services\Operations\OrderTrackingService $tracking): void
     {
         $this->resetErrorBag();
@@ -110,6 +137,8 @@ class OrderControlsPanel extends Component
             'off' => $controls->discountCents($order),
             'isRepeat' => $order->source_type === 'subscription',
             'nextRepeat' => \App\Models\SubscriptionCycle::where('subscription_id', (int) $order->source_ref)->where('status', 'scheduled')->when($order->source_type !== 'subscription', fn ($q) => $q->whereRaw('1 = 0'))->orderBy('scheduled_for')->first()?->scheduled_for?->setTimezone(config('doctor.time.timezone'))->format('j M Y'),
+            'offeredAddons' => app(\App\Services\Operations\Addons::class)->offeredFor($order),
+            'orderAddons' => \App\Models\OrderAddon::with('addon')->where('order_id', $order->id)->orderByDesc('id')->get(),
             'tracking' => app(\App\Services\Operations\OrderTrackingService::class)->latest($order),
             'trackingStatuses' => config('operations.tracking.statuses'),
             'audit' => OrderAuditEvent::with('user')->where('order_id', $order->id)->orderByDesc('id')->limit(50)->get(),

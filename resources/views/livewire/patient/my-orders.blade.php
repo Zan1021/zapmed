@@ -8,7 +8,7 @@
         </button>
     </div>
 
-    @foreach(['order', 'reason'] as $f) @error($f) <p class="mb-3 text-sm text-red-600" data-error="{{ $f }}">{{ $message }}</p> @enderror @endforeach
+    @foreach(['order', 'reason', 'status'] as $f) @error($f) <p class="mb-3 text-sm text-red-600" data-error="{{ $f }}">{{ $message }}</p> @enderror @endforeach
 
     @forelse($cards as $o)
         <div class="mb-4 rounded-xl border border-gray-200 bg-white p-5" data-order="{{ $o['id'] }}">
@@ -51,6 +51,22 @@
                     @if($o['follow_up']['status'] === 'requested')<a href="{{ route('patient.follow-up') }}" class="font-medium text-zapmed-700 hover:underline">Book it</a>@else Booked. @endif
                 </p>
             @endif
+
+            @foreach($o['addons'] as $ad)
+                <div class="mt-2 text-sm text-gray-800" data-addon-row="{{ $ad['id'] }}">
+                    {{ $ad['name'] }}, R{{ number_format($ad['price_cents'] / 100, 2) }} a month: <strong>{{ $ad['status'] === 'paused' ? 'Paused' : 'Active' }}</strong>
+                    @if($addonActing === $ad['id'])
+                        <div class="mt-1" data-form="addon-{{ $addonMode }}">
+                            <input type="text" wire:model="addonReason" placeholder="Why?" class="w-56 rounded-lg border-gray-300 text-sm">
+                            <button type="button" wire:click="confirmAddon" data-action="confirm-addon" class="ml-2 rounded-lg bg-zapmed-600 px-3 py-1 text-xs text-white">{{ $addonMode === 'cancelled' ? 'Cancel it' : 'Pause it' }}</button>
+                            <button type="button" wire:click="closeAddon" class="ml-1 text-xs text-gray-500">Never mind</button>
+                        </div>
+                    @else
+                        @if($ad['status'] === 'active')<button type="button" wire:click="askAddon({{ $ad['id'] }}, 'paused')" data-action="pause-addon" class="ml-2 text-xs text-gray-600 hover:underline">Pause</button>@endif
+                        <button type="button" wire:click="askAddon({{ $ad['id'] }}, 'cancelled')" data-action="cancel-addon" class="ml-2 text-xs text-gray-600 hover:underline">Cancel</button>
+                    @endif
+                </div>
+            @endforeach
 
             @if($o['tracking'])
                 <p class="mt-1 text-sm text-gray-800" data-tracking>Delivery: <strong>{{ $o['tracking']['status'] }}</strong> ({{ $o['tracking']['courier'] }} {{ $o['tracking']['number'] }}, {{ $o['tracking']['at']->setTimezone('Africa/Johannesburg')->format('j M') }})@if($o['tracking_url']) &middot; <a href="{{ $o['tracking_url'] }}" target="_blank" rel="noopener" class="text-zapmed-700 hover:underline">Track your delivery</a>@endif</p>
