@@ -32,6 +32,8 @@ class PdfController extends Controller
 
         $pdf = Pdf::loadView('pdf.prescription', [
             'prescription' => $prescription,
+            // the doctor's signature image, when Operations have uploaded one (private file, embedded here)
+            'signatureImage' => $prescription->doctor ? app(\App\Services\Operations\StaffAdmin::class)->signatureDataUri($prescription->doctor) : null,
         ])->setPaper('a4');
 
         return $pdf->download("prescription-{$prescription->reference}.pdf");

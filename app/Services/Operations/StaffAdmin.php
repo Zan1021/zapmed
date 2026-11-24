@@ -155,6 +155,26 @@ class StaffAdmin
         });
     }
 
+    /**
+     * The doctor's signature as an inline image for a PDF ("data:image/png;base64,..."), or null when there is none or the
+     * file is missing. Read from the private disk here, so the PDF never needs a public link to it.
+     */
+    public function signatureDataUri(User $doctor): ?string
+    {
+        $path = StaffProfile::where('user_id', $doctor->id)->value('signature_path');
+        if (! $path || ! $this->disk()->exists($path)) {
+            return null;
+        }
+
+        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        $mime = ['png' => 'image/png', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'webp' => 'image/webp'][$ext] ?? null;
+        if (! $mime || $this->disk()->size($path) > config('operations.staff.signature.max_kb') * 1024) {
+            return null;
+        }
+
+        return 'data:'.$mime.';base64,'.base64_encode($this->disk()->get($path));
+    }
+
     /** Keep the doctor's own profile in step: verified switches booking on, the registration number is the HPCSA number. */
     private function syncDoctorProfile(User $user, array $values): void
     {

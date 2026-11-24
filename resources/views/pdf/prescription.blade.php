@@ -308,6 +308,7 @@
 
     <!-- Signature -->
     <div class="signature-section">
+        @if(!empty($signatureImage))<img src="{{ $signatureImage }}" alt="Signature" style="max-height: 60px; max-width: 220px; margin-bottom: 4px;"><br>@endif
         <div class="signature-name">{{ $prescription->prescriber_name ?? ('Dr ' . $prescription->doctor->first_name . ' ' . $prescription->doctor->last_name) }}</div>
         <div class="signature-detail">
             Digitally signed via Zapmed on {{ $prescription->signed_at ? $prescription->signed_at->format('d F Y \a\t H:i') : now()->format('d F Y \a\t H:i') }}
