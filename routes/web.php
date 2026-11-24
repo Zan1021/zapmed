@@ -155,6 +155,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->whereNumber(['doctorRequest', 'file'])->name('doctor.requests.file');
     });
 
+    // Doctor follow-up requests: the list. Requesting is done from the consultation screen.
+    Route::get('doctor/follow-ups', \App\Livewire\Doctor\FollowUps::class)->middleware('role:doctor')->name('doctor.follow-ups');
+
     // Doctor time tracking (Craig's guide 4.2, 8.1). The export is also open to Operations for the invoice.
     Route::get('doctor/time', \App\Livewire\Doctor\TimeSheet::class)->middleware('role:doctor')->name('doctor.time');
     Route::get('doctor/time/export', \App\Http\Controllers\DoctorTimeExportController::class)->middleware('role:doctor,admin')->name('doctor.time.export');

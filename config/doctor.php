@@ -25,4 +25,17 @@ return [
         'manual_back_days' => 62,
         'timezone' => 'Africa/Johannesburg',
     ],
+    'followups' => [
+        // Days a doctor can ask for (Craig's guide 4.2).
+        'days' => [7, 14, 20, 30, 60, 90],
+        // The patient is prompted to book this many days before the follow-up is due.
+        'prompt_days_before' => 3,
+        // OFF until DOCTOR_FOLLOWUP_NOTIFY=true. Messages never name a medicine or give health detail.
+        'notify_enabled' => env('DOCTOR_FOLLOWUP_NOTIFY', false),
+        // Operations is told too: comma separated emails in DOCTOR_FOLLOWUP_OPS_EMAIL.
+        'ops_emails' => array_values(array_filter(array_map('trim', explode(',', (string) env('DOCTOR_FOLLOWUP_OPS_EMAIL', ''))))),
+        // Order statuses where the order itself moves to Pending follow-up request. In any other status (a script still
+        // being prepared or posted) the order is left alone and only the open follow-up blocks the next repeat.
+        'move_order_from' => ['Delivered', 'Completed'],
+    ],
 ];

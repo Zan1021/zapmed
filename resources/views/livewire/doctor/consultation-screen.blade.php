@@ -41,6 +41,9 @@
                 </div>
             </div>
 
+            <!-- Follow-up request (Craig's guide 4.2) -->
+            <livewire:doctor.follow-up-panel :patient-id="$appointment->patient_id" :consultation-id="$consultation?->id" :key="'fu-'.$appointment->patient_id" />
+
             <!-- Allergies -->
             @php $profile = $appointment->patient->patientProfile; @endphp
             @if($profile && $profile->allergies->count() > 0)

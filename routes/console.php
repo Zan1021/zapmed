@@ -12,6 +12,8 @@ Schedule::command('appointments:send-reminders')->everyFiveMinutes();
 Schedule::command('coach:send-reminders')->everyFiveMinutes()->withoutOverlapping();
 Schedule::command('coach:assign-pending')->hourly()->withoutOverlapping();
 Schedule::command('prescriptions:remind')->dailyAt('09:00');
+// Doctor follow-ups: prompt the patient to book a few days before it is due (messages OFF until DOCTOR_FOLLOWUP_NOTIFY).
+Schedule::command('followups:prompt')->dailyAt('09:00')->timezone('Africa/Johannesburg')->withoutOverlapping();
 Schedule::command('alerts:scan')->everyFiveMinutes()->withoutOverlapping();
 // Repeats and payment retries run at 09:30 South African time (Craig's guide), not 03:00 server time.
 Schedule::command('subscriptions:run-due')->dailyAt('09:30')->timezone('Africa/Johannesburg')->withoutOverlapping();

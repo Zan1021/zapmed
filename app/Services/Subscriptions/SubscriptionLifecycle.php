@@ -3,6 +3,7 @@
 namespace App\Services\Subscriptions;
 
 use App\Enums\CycleStatus;
+use App\Models\FollowUpRequest;
 use App\Models\Order;
 use App\Models\Subscription;
 use App\Models\SubscriptionCycle;
@@ -238,8 +239,17 @@ class SubscriptionLifecycle
     public function repeatBlockedBy(Subscription $sub): ?string
     {
         $order = Order::where('source_type', 'subscription')->where('source_ref', (string) $sub->id)->first();
+        if (! $order) {
+            return null;
+        }
 
-        return $order && OrderStatusMachine::blocksRepeat((string) $order->status) ? (string) $order->status : null;
+        if (OrderStatusMachine::blocksRepeat((string) $order->status)) {
+            return (string) $order->status;
+        }
+
+        // A doctor's follow-up request blocks the next repeat even when the order itself is still mid-delivery
+        // and so was not moved to Pending follow-up request (Craig's guide 4.2: block until review is complete).
+        return FollowUpRequest::open()->where('order_id', $order->id)->exists() ? 'PendingFollowUpRequest' : null;
     }
     // ---- follow-up (+180d) ----------------------------------------------------------------------
 

@@ -116,6 +116,15 @@ return [
         ['PendingFollowUpProfileBook', 'PendingConsulation', 'calendar'],
         ['PendingFollowUpRequest', 'Processing', 'doctor'],      // doctor reviewed and submitted
         ['PendingFollowUpProfileBook', 'Processing', 'doctor'],
+        // the follow-up is cancelled: the order goes back to where it was
+        ['PendingFollowUpRequest', 'Delivered', 'doctor'],
+        ['PendingFollowUpRequest', 'Completed', 'doctor'],
+        ['PendingFollowUpProfileBook', 'Delivered', 'doctor'],
+        ['PendingFollowUpProfileBook', 'Completed', 'doctor'],
+        ['PendingFollowUpRequest', 'Delivered', 'admin'],
+        ['PendingFollowUpRequest', 'Completed', 'admin'],
+        ['PendingFollowUpProfileBook', 'Delivered', 'admin'],
+        ['PendingFollowUpProfileBook', 'Completed', 'admin'],
     ],
 
     /**
