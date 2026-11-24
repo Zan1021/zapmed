@@ -42,6 +42,32 @@ class OrderControlsPanel extends Component
     public string $addonId = '';
     public string $addonReason = '';
 
+    // care team
+    public string $staffId = '';
+    public string $teamNote = '';
+
+    public function assignStaff(\App\Services\Operations\StaffAssignments $team): void
+    {
+        $this->resetErrorBag();
+        $order = Order::with('patient')->findOrFail($this->orderId);
+        if ($this->staffId === '') {
+            $this->addError('staff', 'Choose a doctor or health coach first.');
+
+            return;
+        }
+
+        $team->assign(Auth::user(), $order->patient, \App\Models\User::findOrFail((int) $this->staffId), $this->teamNote);
+        $this->reset(['staffId', 'teamNote']);
+    }
+
+    public function endAssignment(int $id, \App\Services\Operations\StaffAssignments $team): void
+    {
+        $this->resetErrorBag();
+        $order = Order::findOrFail($this->orderId);
+
+        $team->end(Auth::user(), \App\Models\StaffAssignment::where('patient_id', $order->patient_id)->findOrFail($id));
+    }
+
     public function mount(): void
     {
         abort_unless(Auth::user()?->isAdmin(), 403);
@@ -137,6 +163,8 @@ class OrderControlsPanel extends Component
             'off' => $controls->discountCents($order),
             'isRepeat' => $order->source_type === 'subscription',
             'nextRepeat' => \App\Models\SubscriptionCycle::where('subscription_id', (int) $order->source_ref)->where('status', 'scheduled')->when($order->source_type !== 'subscription', fn ($q) => $q->whereRaw('1 = 0'))->orderBy('scheduled_for')->first()?->scheduled_for?->setTimezone(config('doctor.time.timezone'))->format('j M Y'),
+            'careTeam' => app(\App\Services\Operations\StaffAssignments::class)->historyFor($order->patient),
+            'assignableStaff' => app(\App\Services\Operations\StaffAssignments::class)->assignable(),
             'offeredAddons' => app(\App\Services\Operations\Addons::class)->offeredFor($order),
             'orderAddons' => \App\Models\OrderAddon::with('addon')->where('order_id', $order->id)->orderByDesc('id')->get(),
             'tracking' => app(\App\Services\Operations\OrderTrackingService::class)->latest($order),

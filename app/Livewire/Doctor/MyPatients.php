@@ -21,9 +21,8 @@ class MyPatients extends Component
 
     public function getPatientsProperty()
     {
-        $patientIds = Appointment::where('doctor_id', Auth::id())
-            ->distinct()
-            ->pluck('patient_id');
+        // patients with an appointment plus the ones Operations assigned to this doctor
+        $patientIds = app(\App\Services\Coach\CoachAccess::class)->doctorPatientIds(Auth::user());
 
         $query = User::whereIn('id', $patientIds)
             ->with('patientProfile');
@@ -42,7 +41,7 @@ class MyPatients extends Component
     public function getStatsProperty(): array
     {
         $doctorId = Auth::id();
-        $patientIds = Appointment::where('doctor_id', $doctorId)->distinct()->pluck('patient_id');
+        $patientIds = collect(app(\App\Services\Coach\CoachAccess::class)->doctorPatientIds(Auth::user()));
 
         return [
             'total' => $patientIds->count(),

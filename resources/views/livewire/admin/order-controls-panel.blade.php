@@ -58,6 +58,24 @@
     </div>
     @endif
 
+    <div class="rounded-lg border border-gray-200 p-4" data-section="care-team">
+        <h4 class="mb-2 text-sm font-semibold text-gray-700">Care team (doctors and coaches for this patient)</h4>
+        @error('staff') <p class="mb-1 text-xs text-red-600" data-error="staff">{{ $message }}</p> @enderror
+        @error('assignment') <p class="mb-1 text-xs text-red-600" data-error="assignment">{{ $message }}</p> @enderror
+        @forelse($careTeam as $a)
+            <div class="mb-1 flex items-center justify-between text-sm" data-assignment="{{ $a->id }}">
+                <span>{{ $a->staff?->name }} ({{ $a->role === 'doctor' ? 'doctor' : 'health coach' }}) since {{ $a->started_at->setTimezone(config('doctor.time.timezone'))->format('j M Y') }}@if($a->ended_at), ended {{ $a->ended_at->setTimezone(config('doctor.time.timezone'))->format('j M Y') }}@endif</span>
+                @unless($a->ended_at)<button type="button" wire:click="endAssignment({{ $a->id }})" data-action="end-assignment" class="text-xs text-red-600">End</button>@endunless
+            </div>
+        @empty
+            <p class="text-xs text-gray-400" data-empty="care-team">Nobody is assigned yet.</p>
+        @endforelse
+        <div class="mt-2 flex gap-2 text-sm">
+            <select wire:model="staffId" class="rounded-lg border-gray-300 text-sm"><option value="">Assign someone...</option>@foreach($assignableStaff as $s)<option value="{{ $s->id }}">{{ $s->name }} ({{ $s->role === \App\Enums\UserRole::Doctor ? 'doctor' : 'coach' }})</option>@endforeach</select>
+            <button type="button" wire:click="assignStaff" data-action="assign-staff" class="rounded-lg bg-indigo-600 px-3 py-2 text-white">Assign</button>
+        </div>
+    </div>
+
     <div class="rounded-lg border border-gray-200 p-4" data-section="addons">
         <h4 class="mb-2 text-sm font-semibold text-gray-700">Add-ons</h4>
         @error('addon') <p class="mb-1 text-xs text-red-600" data-error="addon">{{ $message }}</p> @enderror

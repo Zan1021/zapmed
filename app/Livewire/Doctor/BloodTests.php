@@ -67,7 +67,7 @@ class BloodTests extends Component
         $me = Auth::user();
 
         return BloodTestRequest::query()->where(fn ($q) => $q->where('requested_by', $me->id)
-            ->orWhereIn('patient_id', Appointment::where('doctor_id', $me->id)->select('patient_id')));
+            ->orWhereIn('patient_id', app(\App\Services\Coach\CoachAccess::class)->doctorPatientIds($me)));
     }
 
     public function render()

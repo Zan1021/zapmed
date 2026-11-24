@@ -54,7 +54,7 @@ class Authorisations extends Component
     private function visible()
     {
         return OrderAuthorisation::query()
-            ->whereIn('patient_id', Appointment::where('doctor_id', Auth::id())->select('patient_id'));
+            ->whereIn('patient_id', app(\App\Services\Coach\CoachAccess::class)->doctorPatientIds(Auth::user()));
     }
 
     public function render(AuthorisationService $service)

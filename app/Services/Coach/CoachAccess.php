@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Models\Appointment;
 use App\Models\CoachFlag;
 use App\Models\CoachingAssignment;
+use App\Models\StaffAssignment;
 use App\Models\Subscription;
 use App\Models\User;
 
@@ -44,7 +45,12 @@ class CoachAccess
             return $patient->role === UserRole::Patient;
         }
 
-        return match ($viewer->role) {
+        // A person Operations assigned (several doctors or coaches per patient, with start and end) has access while the
+        // assignment is active, on top of the usual routes: a coach's own coaching assignment, a doctor's appointment.
+        $assigned = in_array($viewer->role, [UserRole::Doctor, UserRole::HealthCoach], true)
+            && StaffAssignment::active()->where('patient_id', $patient->id)->where('staff_id', $viewer->id)->where('role', $viewer->role->value)->exists();
+
+        return $assigned || match ($viewer->role) {
             UserRole::HealthCoach => CoachingAssignment::active()
                 ->where('patient_id', $patient->id)
                 ->where('coach_id', $viewer->id)
@@ -70,6 +76,19 @@ class CoachAccess
 
         return $viewer->role === UserRole::Doctor
             && in_array($viewer->email, config('coach.flags.notify_emails', []), true);
+    }
+
+    /**
+     * Every patient this doctor looks after: the ones they have an appointment with and the ones Operations assigned to them.
+     * Used to fill the doctor's lists.
+     *
+     * @return int[]
+     */
+    public function doctorPatientIds(User $doctor): array
+    {
+        return Appointment::where('doctor_id', $doctor->id)->pluck('patient_id')
+            ->merge(StaffAssignment::active()->where('staff_id', $doctor->id)->where('role', 'doctor')->pluck('patient_id'))
+            ->unique()->values()->all();
     }
 
     public function assignedCoachId(User $patient): ?int

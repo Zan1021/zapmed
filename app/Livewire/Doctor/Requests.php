@@ -88,7 +88,7 @@ class Requests extends Component
                 ->orWhere('member_number', 'like', "%{$term}%"));
 
         if ($me->role === UserRole::Doctor) {
-            $q->whereIn('id', Appointment::where('doctor_id', $me->id)->select('patient_id'));
+            $q->whereIn('id', app(\App\Services\Coach\CoachAccess::class)->doctorPatientIds($me));
         } elseif ($me->role === UserRole::HealthCoach) {
             $q->whereIn('id', CoachingAssignment::active()->where('coach_id', $me->id)->select('patient_id'));
         }

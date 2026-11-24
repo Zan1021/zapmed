@@ -89,7 +89,7 @@ class TimeSheet extends Component
         return view('livewire.doctor.time-sheet', [
             'summary' => $tracker->monthlySummary($me, $this->month),
             'running' => $tracker->running($me)?->load(['patient', 'request']),
-            'patients' => User::whereIn('id', Appointment::where('doctor_id', $me->id)->select('patient_id'))
+            'patients' => User::whereIn('id', app(\App\Services\Coach\CoachAccess::class)->doctorPatientIds($me))
                 ->orderBy('first_name')->limit(300)->get(['id', 'first_name', 'last_name']),
             'openRequests' => $requests->visibleTo($me)->where('status', '!=', 'completed')->limit(100)->get(),
             'tz' => config('doctor.time.timezone'),
