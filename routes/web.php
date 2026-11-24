@@ -92,6 +92,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/finance', \App\Livewire\Admin\FinanceReports::class)->name('admin.finance');
         Route::get('/reports', \App\Livewire\Admin\OperationsReportsPage::class)->name('admin.reports');
         Route::get('/repeat-cycles', \App\Livewire\Admin\RepeatCycleSettings::class)->name('admin.repeat-cycles');
+        Route::get('/product-list', \App\Livewire\Admin\ProductListImport::class)->name('admin.product-list');
+        Route::get('/product-list/export', \App\Http\Controllers\ProductListExportController::class)->name('admin.product-list.export');
         Route::get('/users/{user}/staff', \App\Livewire\Admin\StaffProfileEditor::class)->whereNumber('user')->name('admin.staff-profile');
         Route::get('/reports/{report}/export', \App\Http\Controllers\OperationsReportExportController::class)->where('report', '[a-z_]+')->name('admin.reports.export');
         Route::get('/ai-nudges', \App\Livewire\Admin\AiNudges::class)->name('admin.ai-nudges');
