@@ -10,7 +10,7 @@
     @endif
 
     <div class="zc-card" style="padding:0;overflow:hidden">
-        <div class="zc-tile" style="height:110px;display:grid;place-items:center;font-size:52px;background:{{ $recipe->colour ?: '#DCE5DA' }}">{{ $recipe->emoji }}</div>
+        <div class="zc-tile" style="height:150px;display:grid;place-items:center;font-size:52px;background:{{ $recipe->colour ?: '#DCE5DA' }}">@if ($recipe->photoUrl())<img src="{{ $recipe->photoUrl() }}" alt="{{ $recipe->name }}" style="width:100%;height:100%;object-fit:cover" data-photo>@else{{ $recipe->emoji }}@endif</div>
         <div style="padding:12px 16px">
             <span class="zc-tag">{{ config('coach.recipes.slots')[$recipe->slot] ?? ucfirst($recipe->slot) }}</span>
             <span class="zc-sub">&nbsp;{{ $recipe->minutes }} min</span>
@@ -72,6 +72,7 @@
             @endforeach
         </select>
         <button type="button" class="zc-btn" wire:click="addToPlan" wire:loading.attr="disabled" data-add>Add to plan</button>
+        <button type="button" class="zc-btn ghost" style="margin-top:10px" wire:click="logNow" wire:loading.attr="disabled" data-log-now>Log as eaten now</button>
         <p class="zc-note" style="margin-top:8px">This replaces the {{ strtolower($recipe->slot) }} on that day.</p>
     </div>
 </div>

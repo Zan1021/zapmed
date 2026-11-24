@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 /** A recipe members can favourite and the meal plan can use. Nutrition columns are per ONE serving. */
 class Recipe extends Model
@@ -46,6 +47,12 @@ class Recipe extends Model
     public function scopeUsable($query)
     {
         return $query->where('is_active', true)->whereNotNull('approved_at');
+    }
+
+    /** Public URL of the photo, or null when the recipe has none (the app then shows a colour tile). */
+    public function photoUrl(): ?string
+    {
+        return $this->image_path ? Storage::disk(config('coach.recipes.photo_disk'))->url($this->image_path) : null;
     }
 
     public function isApproved(): bool

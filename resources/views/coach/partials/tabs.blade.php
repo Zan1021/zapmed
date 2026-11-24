@@ -18,7 +18,7 @@
                 @if ($unread)<span data-badge style="position:absolute;top:2px;right:calc(50% - 20px);min-width:16px;height:16px;border-radius:99px;background:var(--zc-alert);color:#fff;font-size:10px;line-height:16px;text-align:center">{{ $unread }}</span>@endif
             </button>
         @elseif ($route)
-            <a href="{{ route($route) }}" class="zc-tab {{ ($route === 'coach.today' ? request()->routeIs('coach.today', 'coach.weight*', 'coach.medication*', 'coach.side-effects*', 'coach.water*') : ($route === 'coach.plan' ? request()->routeIs('coach.plan*', 'coach.recipe*') : request()->routeIs($route))) ? 'on' : '' }}">
+            <a href="{{ route($route) }}" class="zc-tab {{ ($route === 'coach.today' ? request()->routeIs('coach.today', 'coach.weight*', 'coach.medication*', 'coach.side-effects*', 'coach.water*', 'coach.nutrition*') : ($route === 'coach.plan' ? request()->routeIs('coach.plan*', 'coach.recipe*') : request()->routeIs($route))) ? 'on' : '' }}">
                 <svg viewBox="0 0 24 24">{!! $icon !!}</svg>{{ $label }}
             </a>
         @else

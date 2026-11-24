@@ -333,6 +333,8 @@ return [
         'servings_max' => 4,
         'slots' => ['breakfast' => 'Breakfast', 'lunch' => 'Lunch', 'dinner' => 'Dinner', 'snack' => 'Snack'],
         'diet_tags' => ['vegetarian' => 'Vegetarian', 'vegan' => 'Vegan', 'pescatarian' => 'Pescatarian', 'halal' => 'Halal'],
+        'photo_disk' => env('COACH_RECIPE_DISK', 'public'),   // where recipe photos are stored
+        'photo_max_kb' => 2048,
         'demo_note' => 'Sample recipe. Real recipes and nutrition values are checked by our dietitian before launch.',
         'estimate_note' => 'Nutrition values are estimates.',
     ],

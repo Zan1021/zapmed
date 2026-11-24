@@ -20,7 +20,7 @@
                 @php $fav = in_array($r->id, $favouriteIds, true); @endphp
                 <div class="zc-rcard" data-recipe="{{ $r->id }}">
                     <a href="{{ route('coach.recipe', $r) }}" aria-label="{{ $r->name }}">
-                        <div class="zc-tile" style="background:{{ $r->colour ?: '#DCE5DA' }}">{{ $r->emoji }}</div>
+                        <div class="zc-tile" style="background:{{ $r->colour ?: '#DCE5DA' }}">@if ($r->photoUrl())<img src="{{ $r->photoUrl() }}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover" data-photo>@else{{ $r->emoji }}@endif</div>
                         <div class="zc-rbody">
                             <b>{{ $r->name }}</b>
                             <span class="zc-sub">{{ $r->kcal }} kcal &middot; {{ rtrim(rtrim(number_format($r->protein_g, 1), '0'), '.') }} g protein</span>

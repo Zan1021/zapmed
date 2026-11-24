@@ -6,7 +6,9 @@ use App\Enums\UserRole;
 use App\Models\Recipe;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 /**
  * Recipe editor for the Coach App (admin and health coaches). Amy owns the real recipes and nutrition values.
@@ -18,6 +20,8 @@ use Livewire\Component;
  */
 class CoachRecipes extends Component
 {
+    use WithFileUploads;
+
     public string $filter = 'all';        // all | waiting | approved | off | demo
 
     public string $search = '';
@@ -61,6 +65,13 @@ class CoachRecipes extends Component
 
     public bool $is_active = true;
 
+    /** New photo chosen in the form (temporary upload). */
+    public $photo = null;
+
+    public ?string $currentPhoto = null;
+
+    public bool $removePhoto = false;
+
     public function mount(): void
     {
         abort_unless($this->canEdit(), 403);
@@ -99,6 +110,7 @@ class CoachRecipes extends Component
         $this->allergens = (array) $r->allergens;
         $this->avoid_tags = (array) $r->avoid_tags;
         $this->is_active = $r->is_active;
+        $this->currentPhoto = $r->photoUrl();
         $this->showForm = true;
     }
 
@@ -122,6 +134,7 @@ class CoachRecipes extends Component
             'carbs_g' => ['required', 'numeric', 'min:0', 'max:500'],
             'fat_g' => ['required', 'numeric', 'min:0', 'max:300'],
             'sugars_g' => ['required', 'numeric', 'min:0', 'max:300'],
+            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.config('coach.recipes.photo_max_kb', 2048)],
             'diet_tags.*' => [Rule::in(array_keys(config('coach.recipes.diet_tags')))],
             'allergens.*' => [Rule::in(array_keys(config('coach.profile.allergies')))],
             'avoid_tags.*' => [Rule::in(array_keys(config('coach.profile.avoids')))],
@@ -155,12 +168,24 @@ class CoachRecipes extends Component
             'approved_by' => null, 'approved_at' => null,
         ];
 
+        $disk = config('coach.recipes.photo_disk');
+        $newPath = $this->photo ? $this->photo->store('recipes', $disk) : null;
+
         if ($this->editingId) {
             $recipe = Recipe::findOrFail($this->editingId);
+            $old = $recipe->image_path;
+            if ($newPath) {
+                $data['image_path'] = $newPath;
+            } elseif ($this->removePhoto) {
+                $data['image_path'] = null;
+            }
             // Editing a sample recipe turns it into a real one.
             $recipe->update($data + ['source' => $recipe->isDemo() ? 'amy' : $recipe->source]);
+            if ($old && ($newPath || $this->removePhoto)) {
+                Storage::disk($disk)->delete($old);
+            }
         } else {
-            Recipe::create($data + ['source' => 'amy', 'created_by' => Auth::id()]);
+            Recipe::create($data + ['source' => 'amy', 'created_by' => Auth::id(), 'image_path' => $newPath]);
         }
 
         session()->flash('message', 'Recipe saved. It needs approval by a dietitian before members see it.');
@@ -194,6 +219,9 @@ class CoachRecipes extends Component
             return;
         }
 
+        if ($r->image_path) {
+            Storage::disk(config('coach.recipes.photo_disk'))->delete($r->image_path);
+        }
         $r->delete();
         session()->flash('message', 'Recipe deleted.');
     }
@@ -250,6 +278,7 @@ class CoachRecipes extends Component
         $this->reset([
             'editingId', 'showForm', 'slot', 'name', 'summary', 'minutes', 'kcal', 'protein_g', 'fibre_g', 'carbs_g',
             'fat_g', 'sugars_g', 'ingredients', 'steps', 'diet_tags', 'allergens', 'avoid_tags', 'is_active',
+            'photo', 'currentPhoto', 'removePhoto',
         ]);
     }
 }

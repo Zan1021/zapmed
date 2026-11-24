@@ -5,6 +5,7 @@ namespace App\Livewire\Coach;
 use App\Models\CoachProfile;
 use App\Models\Recipe;
 use App\Services\Coach\CoachClock;
+use App\Services\Coach\MealLogger;
 use App\Services\Coach\MealPlanner;
 use App\Services\Coach\RecipeCatalog;
 use Illuminate\Support\Facades\Auth;
@@ -55,6 +56,21 @@ class RecipeShow extends Component
     public function toggleFavourite(RecipeCatalog $catalog): void
     {
         $catalog->toggleFavourite(Auth::user(), $this->recipe);
+    }
+
+    /** Log this recipe as eaten now, at the chosen number of servings. */
+    public function logNow(MealLogger $logger): void
+    {
+        try {
+            $logger->logRecipe(Auth::user(), $this->recipe, null, $this->servings);
+        } catch (InvalidArgumentException $e) {
+            $this->error = $e->getMessage();
+
+            return;
+        }
+
+        session()->flash('coach_toast', 'Meal logged');
+        $this->redirect(route('coach.nutrition'));
     }
 
     public function addToPlan(MealPlanner $planner): void

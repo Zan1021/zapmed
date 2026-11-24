@@ -18,7 +18,7 @@ use Livewire\Component;
 
 /**
  * Coach App "Track" home (design screen 3): next reminder, weight, medication, cycle (women who switched it on)
- * and water. Meals and activity cards arrive with the v2 nutrition work.
+ * and water. Meals show today's calories and protein; the activity card arrives later.
  */
 class Today extends Component
 {
@@ -68,6 +68,8 @@ class Today extends Component
             'reminders' => NextReminder::phrases($user),
             'nextCall' => $nextCall,
             'nextCallText' => $nextCall ? $calls->when($nextCall) : null,
+            'meals' => app(\App\Services\Coach\MealLogger::class)->todayTotals($user),
+            'kcalGoal' => (int) config('coach.targets.kcal'),
             'waterToday' => $waterToday,
             'waterGoal' => $waterGoal,
             'quickAdd' => (int) (config('coach.water.quick_adds_ml')['Glass'] ?? 250),

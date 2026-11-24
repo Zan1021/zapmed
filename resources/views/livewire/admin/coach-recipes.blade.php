@@ -72,6 +72,18 @@
                 </fieldset>
             </div>
 
+            <div class="mt-5" data-photo>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Photo (JPG, PNG or WebP, up to 2 MB)</label>
+                @if($photo && $photo->isPreviewable())
+                    <img src="{{ $photo->temporaryUrl() }}" alt="New photo" class="h-24 rounded-lg mb-2">
+                @elseif(! $photo && $currentPhoto && ! $removePhoto)
+                    <img src="{{ $currentPhoto }}" alt="Current photo" class="h-24 rounded-lg mb-2">
+                @endif
+                <input type="file" wire:model="photo" accept="image/jpeg,image/png,image/webp" class="text-sm" data-field="photo">
+                @error('photo')<p class="text-xs text-red-600 mt-1" data-error="photo">{{ $message }}</p>@enderror
+                @if($currentPhoto)<label class="flex items-center gap-2 mt-2 text-sm"><input type="checkbox" wire:model="removePhoto" class="rounded border-gray-300"> Remove the current photo</label>@endif
+            </div>
+
             <label class="flex items-center gap-2 mt-5 text-sm"><input type="checkbox" wire:model="is_active" class="rounded border-gray-300"> Switched on</label>
             <p class="text-xs text-gray-500 mt-2">Saving clears the approval. A dietitian approves the recipe from the list before members see it.</p>
 

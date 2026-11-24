@@ -26,7 +26,7 @@ use InvalidArgumentException;
  */
 class MealPlanner
 {
-    public function __construct(private readonly RecipeCatalog $catalog)
+    public function __construct(private readonly RecipeCatalog $catalog, private readonly MealLogger $logger)
     {
     }
 
@@ -170,6 +170,9 @@ class MealPlanner
         }
 
         $existing = $plan->items()->where('day_index', $day)->where('slot', $slot)->first();
+        if ($existing?->eaten_at) {
+            $this->logger->untickPlanItem($existing);   // the meal changed, so the old tick no longer counts
+        }
 
         return $plan->items()->updateOrCreate(
             ['day_index' => $day, 'slot' => $slot],
@@ -204,6 +207,12 @@ class MealPlanner
             $carry = fn (?MealPlanItem $i) => $i ? $i->only(['recipe_id', 'servings', 'locked', 'is_new', 'protein_boost']) + ['eaten_at' => null] : null;
             $fromA = $carry($a);
             $fromB = $carry($b);
+
+            foreach ([$a, $b] as $moved) {
+                if ($moved?->eaten_at) {
+                    $this->logger->untickPlanItem($moved);
+                }
+            }
 
             $a?->delete();
             $b?->delete();
@@ -243,9 +252,17 @@ class MealPlanner
             return null;
         }
 
-        $item->update(['eaten_at' => $item->eaten_at ? null : now()]);
+        if ($item->eaten_at) {
+            $this->logger->untickPlanItem($item);
+            $item->update(['eaten_at' => null]);
 
-        return $item->eaten_at !== null;
+            return false;
+        }
+
+        $this->logger->tickPlanItem($user, $item->load('recipe'));
+        $item->update(['eaten_at' => now()]);
+
+        return true;
     }
 
     // --- The engine ------------------------------------------------------------------------------------------------
@@ -276,7 +293,7 @@ class MealPlanner
             $emptyNewSlots = collect(config('coach.meal_plan.new_meal_slots', []))
                 ->filter(fn ($s) => ! $existing->has($s) && $pools[$s]->isNotEmpty())->values();
             $newCount = $hasFavourites ? min($emptyNewSlots->count(), $this->between($minNew, $maxNew, $daySeed)) : 0;
-            $newSlots = $emptyNewSlots->shuffle($daySeed)->take($newCount)->all();
+            $newSlots = $this->shuffled($emptyNewSlots, $daySeed)->take($newCount)->all();
 
             $created = [];
             foreach (Recipe::SLOTS as $i => $slot) {
@@ -297,7 +314,7 @@ class MealPlanner
                 $others = $candidates->reject(fn (Recipe $r) => in_array($r->id, $favourites, true));
                 $pick = ($wantNew ? ($others->isNotEmpty() ? $others : $favs) : ($favs->isNotEmpty() ? $favs : $others));
 
-                $recipe = $pick->shuffle($daySeed === null ? null : $daySeed + $i)
+                $recipe = $this->shuffled($pick, $daySeed === null ? null : $daySeed + $i)
                     ->sortBy(fn (Recipe $r) => $used[$r->id] ?? 0)->first();   // least used so far; sortBy is stable
                 $isNew = $hasFavourites && ! in_array($recipe->id, $favourites, true);
 
@@ -395,6 +412,16 @@ class MealPlanner
     private function days(): int
     {
         return (int) config('coach.meal_plan.days', 7);
+    }
+
+    /** Shuffle, repeatably when a seed is given (tests), randomly otherwise. Laravel's own shuffle takes no seed. */
+    private function shuffled(Collection $items, ?int $seed): Collection
+    {
+        if ($seed === null) {
+            return $items->shuffle();
+        }
+
+        return new Collection((new \Random\Randomizer(new \Random\Engine\Mt19937($seed)))->shuffleArray($items->values()->all()));
     }
 
     private function between(int $min, int $max, ?int $seed): int

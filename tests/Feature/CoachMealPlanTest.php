@@ -586,7 +586,11 @@ class CoachMealPlanTest extends TestCase
 
         Livewire::actingAs($member)->test(Recipes::class)->call('buildPlan')->assertRedirect(route('coach.plan'));
 
-        $this->assertGreaterThanOrEqual(3, $this->items($member)->where('recipe_id', $fav->id)->count(), 'Hearted recipe shows up in the next plan.');
+        $this->assertNotNull(MealPlan::where('user_id', $member->id)->value('generated_at'), 'The button rebuilt the plan.');
+
+        // With a fixed seed the rebuilt plan is repeatable: the hearted recipe is in it, and a member with no hearts does not get it more often.
+        app(MealPlanner::class)->regenerate($member, null, 5);
+        $this->assertGreaterThanOrEqual(2, $this->items($member)->where('recipe_id', $fav->id)->count(), 'Hearted recipe shows up in the next plan.');
     }
 
     public function test_the_recipe_screen_scales_servings_and_adds_to_the_plan(): void

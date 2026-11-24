@@ -113,6 +113,13 @@
         </div>
     @endif
 
+    {{-- Meals --}}
+    <a href="{{ route('coach.nutrition') }}" class="zc-card" data-card="meals">
+        <div class="zc-row zc-between"><h3>Meals &#8250;</h3><span class="zc-sub">{{ $meals['count'] ? $meals['count'].' logged' : 'Nothing logged yet' }}</span></div>
+        <div class="zc-sub"><b data-meals-kcal>{{ number_format($meals['kcal']) }}</b> / {{ number_format($kcalGoal) }} kcal &middot; <b>{{ rtrim(rtrim(number_format($meals['protein_g'], 1), '0'), '.') }}</b> g protein today</div>
+        <div class="zc-bar" style="margin-top:8px"><i style="width: {{ min(100, $kcalGoal ? round($meals['kcal'] / $kcalGoal * 100) : 0) }}%"></i></div>
+    </a>
+
     {{-- Water --}}
     <div class="zc-card" data-card="water">
         <div class="zc-row zc-between">
