@@ -37,6 +37,10 @@ class PharmacyService
 
         $payload = $this->buildPayload($prescription);
 
+        // Every send is written to the integration log (Operations can see it and, when it is safe, send it again).
+        $log = app(\App\Services\Operations\IntegrationLog::class);
+        $entry = $log->begin($prescription);
+
         // If pharmacy API is not configured, log and simulate success
         if (!$this->isConfigured()) {
             Log::info('Pharmacy dispatch [DEV MODE]', $payload);
@@ -47,6 +51,7 @@ class PharmacyService
                 'mode' => 'development',
                 'dispatched_at' => now()->toISOString(),
             ]);
+            $log->succeed($entry, null, 'Development mode: nothing was really sent.');
 
             return [
                 'success' => true,
@@ -65,6 +70,7 @@ class PharmacyService
                 $reference = $data['reference'] ?? $data['order_id'] ?? null;
 
                 $prescription->markDispatched($reference, $data);
+                $log->succeed($entry, $response->status(), $response->body());
 
                 Log::info('Pharmacy dispatch successful', [
                     'prescription' => $prescription->reference,
@@ -88,6 +94,8 @@ class PharmacyService
                 'pharmacy_status' => 'failed',
                 'pharmacy_response' => ['error' => $response->body(), 'status' => $response->status()],
             ]);
+            // They answered with an error: we are sure it was not accepted, so it can be tried again.
+            $log->fail($entry, $response->status(), 'The pharmacy answered with an error ('.$response->status().').', true, $response->body());
 
             return [
                 'success' => false,
@@ -105,6 +113,8 @@ class PharmacyService
                 'pharmacy_status' => 'failed',
                 'pharmacy_response' => ['exception' => $e->getMessage()],
             ]);
+            // Only "could not resolve / could not connect" (cURL 6 and 7) prove nothing was sent. A timeout might have got through.
+            $log->fail($entry, null, $e->getMessage(), (bool) preg_match('/cURL error (6|7)\b/', $e->getMessage()));
 
             return [
                 'success' => false,

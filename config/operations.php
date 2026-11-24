@@ -124,4 +124,12 @@ return [
             ],
         ],
     ],
+
+    'integrations' => [
+        // Minutes to wait before attempt 2, 3, ... (about ten attempts in all, Craig's guide 6.4). Only a DEFINITE failure is retried
+        // automatically: the pharmacy answered with an error, or we could not reach it at all. If we do not know whether it arrived
+        // (a timeout), the row is "unknown" and a person must check with the pharmacy before sending again, so nothing is ever sent twice.
+        'retry_minutes' => [5, 15, 30, 60, 120, 240, 480, 720, 1440],
+        'max_attempts' => 10,
+    ],
 ];
