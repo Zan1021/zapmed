@@ -91,6 +91,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/crm-analytics', \App\Livewire\Admin\AnalyticsDashboard::class)->name('admin.crm-analytics');
         Route::get('/finance', \App\Livewire\Admin\FinanceReports::class)->name('admin.finance');
         Route::get('/reports', \App\Livewire\Admin\OperationsReportsPage::class)->name('admin.reports');
+        Route::get('/operations', \App\Livewire\Admin\OperationsOverview::class)->name('admin.operations');
         Route::get('/repeat-cycles', \App\Livewire\Admin\RepeatCycleSettings::class)->name('admin.repeat-cycles');
         Route::get('/product-list', \App\Livewire\Admin\ProductListImport::class)->name('admin.product-list');
         Route::get('/product-list/export', \App\Http\Controllers\ProductListExportController::class)->name('admin.product-list.export');
