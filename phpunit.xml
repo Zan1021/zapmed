@@ -18,6 +18,8 @@
         </include>
     </source>
     <php>
+        <!-- The suite is large (900+ tests). The 128M CLI default runs out of memory near the end. -->
+        <ini name="memory_limit" value="1G"/>
         <env name="APP_ENV" value="testing"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
