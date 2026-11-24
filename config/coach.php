@@ -388,4 +388,43 @@ return [
             ],
         ],
     ],
+
+    /*
+     * Activity (design screens 12 and 13, build guide 5.8). Calories for a workout = MET x weight (kg) x hours, using
+     * the member's latest logged weight (default_weight_kg when none). MET values are rounded figures from the public
+     * Compendium of Physical Activities: PROVISIONAL, Amy to review. Steps are typed in by the member for now
+     * (Apple Health / Google Fit sync needs a native app); calories from steps = steps x kcal_per_step.
+     */
+    'activity' => [
+        'default_weight_kg' => 75,
+        'kcal_per_step' => 0.034,
+        'steps_max' => 100000,
+        'minutes' => ['min' => 5, 'max' => 300, 'quick' => [15, 30, 45, 60]],
+        'groups' => ['cardio' => 'Cardio', 'strength' => 'Strength', 'mind_body' => 'Mind and body', 'sports' => 'Sports'],
+        'workouts' => [
+            // Cardio (8)
+            'walk' => ['name' => 'Walk', 'group' => 'cardio', 'met' => 3.5, 'emoji' => '🚶'],
+            'brisk_walk' => ['name' => 'Brisk walk', 'group' => 'cardio', 'met' => 4.3, 'emoji' => '🚶'],
+            'jog' => ['name' => 'Jog', 'group' => 'cardio', 'met' => 7.0, 'emoji' => '🏃'],
+            'run' => ['name' => 'Run', 'group' => 'cardio', 'met' => 9.8, 'emoji' => '🏃'],
+            'cycle' => ['name' => 'Cycling', 'group' => 'cardio', 'met' => 7.5, 'emoji' => '🚴'],
+            'swim' => ['name' => 'Swimming', 'group' => 'cardio', 'met' => 6.0, 'emoji' => '🏊'],
+            'elliptical' => ['name' => 'Elliptical', 'group' => 'cardio', 'met' => 5.0, 'emoji' => '🏋️'],
+            'dance' => ['name' => 'Dance cardio', 'group' => 'cardio', 'met' => 5.5, 'emoji' => '💃'],
+            // Strength (4)
+            'weights' => ['name' => 'Weight training', 'group' => 'strength', 'met' => 3.5, 'emoji' => '🏋️'],
+            'bodyweight' => ['name' => 'Bodyweight circuit', 'group' => 'strength', 'met' => 5.0, 'emoji' => '💪'],
+            'bands' => ['name' => 'Resistance bands', 'group' => 'strength', 'met' => 3.5, 'emoji' => '💪'],
+            'kettlebell' => ['name' => 'Kettlebell', 'group' => 'strength', 'met' => 6.0, 'emoji' => '🏋️'],
+            // Mind and body (3)
+            'yoga' => ['name' => 'Yoga', 'group' => 'mind_body', 'met' => 2.5, 'emoji' => '🧘'],
+            'pilates' => ['name' => 'Pilates', 'group' => 'mind_body', 'met' => 3.0, 'emoji' => '🧘'],
+            'stretch' => ['name' => 'Stretching', 'group' => 'mind_body', 'met' => 2.3, 'emoji' => '🤸'],
+            // Sports (4)
+            'tennis' => ['name' => 'Tennis', 'group' => 'sports', 'met' => 7.3, 'emoji' => '🎾'],
+            'football' => ['name' => 'Football', 'group' => 'sports', 'met' => 7.0, 'emoji' => '⚽'],
+            'netball' => ['name' => 'Netball', 'group' => 'sports', 'met' => 6.5, 'emoji' => '🏀'],
+            'golf' => ['name' => 'Golf (walking)', 'group' => 'sports', 'met' => 4.3, 'emoji' => '⛳'],
+        ],
+    ],
 ];

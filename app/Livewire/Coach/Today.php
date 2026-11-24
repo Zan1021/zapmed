@@ -18,7 +18,7 @@ use Livewire\Component;
 
 /**
  * Coach App "Track" home (design screen 3): next reminder, weight, medication, cycle (women who switched it on)
- * and water. Meals show today's calories and protein; the activity card arrives later.
+ * and water. Meals show today's calories and protein; activity shows calories burned, 7-day bars and steps.
  */
 class Today extends Component
 {
@@ -68,12 +68,27 @@ class Today extends Component
             'reminders' => NextReminder::phrases($user),
             'nextCall' => $nextCall,
             'nextCallText' => $nextCall ? $calls->when($nextCall) : null,
+            'activity' => app(\App\Services\Coach\ActivityLogger::class)->todayTotals($user),
+            'activityBars' => $this->activityBars($user),
             'meals' => app(\App\Services\Coach\MealLogger::class)->todayTotals($user),
             'kcalGoal' => (int) config('coach.targets.kcal'),
             'waterToday' => $waterToday,
             'waterGoal' => $waterGoal,
             'quickAdd' => (int) (config('coach.water.quick_adds_ml')['Glass'] ?? 250),
         ])->layout('layouts.coach', ['title' => 'Today']);
+    }
+
+    /** Bars for the Activity card (height 0 to 40 for the last 7 days). @return array<int,array{x:int,y:int,h:int,today:bool}> */
+    private function activityBars(\App\Models\User $user): array
+    {
+        $week = app(\App\Services\Coach\ActivityLogger::class)->lastSevenDays($user);
+        $max = max(1, max(array_column($week, 'kcal')));
+
+        return array_map(function ($d, $i) use ($max) {
+            $h = $d['kcal'] > 0 ? max(3, (int) round($d['kcal'] / $max * 40)) : 2;
+
+            return ['x' => 10 + $i * 46, 'y' => 44 - $h, 'h' => $h, 'today' => $d['today']];
+        }, $week, array_keys($week));
     }
 
     /** SVG polyline points (130 x 46) for a list of values, or null with fewer than 2 points. */

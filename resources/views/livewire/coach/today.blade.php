@@ -130,5 +130,15 @@
         <div class="zc-bar" style="margin-top:8px"><i style="width: {{ min(100, $waterGoal ? round($waterToday / $waterGoal * 100) : 0) }}%"></i></div>
     </div>
 
+    {{-- Activity --}}
+    <a href="{{ route('coach.activity') }}" class="zc-card" data-card="activity">
+        <div class="zc-row zc-between"><h3>Activity &#8250;</h3><span class="zc-sub">{{ $activity['steps'] ? number_format($activity['steps']).' steps' : 'No steps yet' }}</span></div>
+        <div class="zc-sub"><b data-activity-kcal>{{ number_format($activity['kcal']) }}</b> kcal burned today</div>
+        <svg viewBox="0 0 330 46" width="100%" aria-hidden="true" style="margin-top:6px">
+            @foreach ($activityBars as $b)
+                <rect x="{{ $b['x'] }}" y="{{ $b['y'] }}" width="30" height="{{ $b['h'] }}" rx="5" fill="{{ $b['today'] ? '#2E767F' : '#9CC3C7' }}"/>
+            @endforeach
+        </svg>
+    </a>
     <p class="zc-disc">{{ config('coach.disclaimers.insight') }}</p>
 </div>
