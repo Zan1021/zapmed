@@ -39,38 +39,14 @@ class MySubscription extends Component
         $plan = SubscriptionPlan::active()->findOrFail($planId);
         $user = Auth::user();
 
-        // Create subscription record
-        $subscription = Subscription::create([
-            'user_id' => $user->id,
-            'subscription_plan_id' => $plan->id,
-            'status' => 'pending',
-            'payment_reference' => PayFastService::generateSubscriptionReference(),
-        ]);
-
-        // Generate PayFast data and redirect
-        $payfast = app(PayFastService::class);
-        $paymentData = $payfast->generateSubscriptionData($user, $plan, $subscription);
-        $processUrl = $payfast->getProcessUrl();
-
-        // Task 11: mirror the subscription into the CRM Order aggregate. Guarded so a bridge failure can
-        // never break the customer's subscribe flow.
-        try {
-            app(\App\Services\Commerce\LiveOrderBridge::class)->onSubscriptionStarted($subscription);
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning('LiveOrderBridge onSubscriptionStarted failed', [
-                'subscription_id' => $subscription->id, 'error' => $e->getMessage(),
-            ]);
-        }
-
-        // Store data in session for the checkout view
-        session([
-            'subscription_checkout' => [
-                'payment_data' => $paymentData,
-                'process_url' => $processUrl,
-                'subscription_id' => $subscription->id,
-                'plan_name' => $plan->name,
-            ],
-        ]);
+        // Make (or reuse) the unpaid subscription, build the PayFast form and park it in the session.
+        // A coach add-on offered by a doctor is reused, not duplicated.
+        $pending = Subscription::where('user_id', $user->id)
+            ->where('subscription_plan_id', $plan->id)
+            ->where('status', 'pending')
+            ->latest('id')
+            ->first();
+        app(\App\Services\Subscriptions\SubscriptionCheckout::class)->begin($user, $plan, $pending);
 
         $this->redirect(route('subscription.checkout'));
     }

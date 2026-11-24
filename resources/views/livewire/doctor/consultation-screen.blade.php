@@ -120,6 +120,23 @@
             </div>
             @endif
 
+            <!-- Health coach add-on offer -->
+            @php $co = $this->coachOffer; @endphp
+            @if($co['available'] && ! $co['hasAddon'])
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4" data-coach-offer>
+                <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Health coach</h4>
+                @if(session('coach_offer'))
+                    <p class="text-xs text-zapmed-700 mb-2" data-coach-offer-message>{{ session('coach_offer') }}</p>
+                @endif
+                @if($co['pending'])
+                    <p class="text-xs text-gray-600">Offered. Waiting for the member to pay {{ $co['price'] }}/month.</p>
+                @else
+                    <p class="text-xs text-gray-600 mb-2">Add a registered dietitian coach for this member ({{ $co['price'] }}/month, paid by the member).</p>
+                    <button type="button" wire:click="offerCoach" wire:loading.attr="disabled" data-offer-coach
+                        class="text-xs font-medium px-3 py-1.5 rounded-lg bg-zapmed-600 hover:bg-zapmed-700 text-white">Offer health coach</button>
+                @endif
+            </div>
+            @endif
             <!-- Assessment Answers -->
             @php $av = $this->assessmentView; @endphp
             @if($av['has'])

@@ -202,6 +202,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // One member's tracking summary: the assigned coach and a doctor who has seen the member (checked in the component).
     Route::get('coach-board/{patient}', \App\Livewire\Coach\PatientView::class)->middleware('role:doctor,health_coach')->name('coach.board.patient');
 
+    // Buy the coach add-on (own choice or offered by a doctor). Outside the group below: no add-on needed yet.
+    Route::get('coach/join', \App\Livewire\Coach\Join::class)->middleware(['role:patient', 'onboarding'])->name('coach.join');
+
     // Coach App (weight-loss membership): patient tracking + health coaching. Design: .kiro/specs/dietitian-coach/
     Route::prefix('coach')->middleware(['role:patient', 'onboarding', 'coach.addon'])->group(function () {
         Route::get('/', \App\Livewire\Coach\Today::class)->name('coach.today');

@@ -120,6 +120,10 @@ class SubscriptionController extends Controller
 
         $subscription->recordPayment($amount);
 
+        // First payment on the coach add-on: give the member a coach. Does nothing for other plans or renewals
+        // (assigning is safe to repeat: a member already with a coach keeps them).
+        app(\App\Services\Coach\CoachAddon::class)->onActivated($subscription->fresh(['plan', 'user']));
+
         Log::info('Subscription payment completed', [
             'reference' => $subscription->payment_reference,
             'amount' => $amount,

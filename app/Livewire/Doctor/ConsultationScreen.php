@@ -266,6 +266,31 @@ class ConsultationScreen extends Component
         return app(\App\Services\Coach\CoachPatientBoard::class)->doctorSummary(Auth::user(), $this->appointment->patient);
     }
 
+    /** Where the member stands with the coach add-on, for the doctor's "Health coach" card. */
+    public function getCoachOfferProperty(): array
+    {
+        $patient = $this->appointment->patient;
+        $access = app(\App\Services\Coach\CoachAccess::class);
+        $addon = app(\App\Services\Coach\CoachAddon::class);
+
+        return [
+            'hasAddon' => $access->patientHasAddon($patient),
+            'pending' => $addon->pendingFor($patient) !== null,
+            'available' => $addon->plan() !== null,
+            'price' => $addon->plan()?->formatted_price,
+        ];
+    }
+
+    /** The doctor offers the coach add-on. The member pays on /coach/join; nothing starts before that. */
+    public function offerCoach(): void
+    {
+        try {
+            app(\App\Services\Coach\CoachAddon::class)->attachByDoctor(Auth::user(), $this->appointment);
+            session()->flash('coach_offer', 'Health coach offered. It starts when the member pays.');
+        } catch (\DomainException $e) {
+            session()->flash('coach_offer', $e->getMessage());
+        }
+    }
     public function getPatientAgeProperty(): ?int
     {
         $dob = $this->appointment->patient->date_of_birth;

@@ -29,6 +29,24 @@ return [
     'plan_slug' => env('COACH_PLAN_SLUG', 'weight-loss'),
     'price_cents' => 45000, // R450/month, shown in copy only; billing is the subscription plan
 
+    /*
+     * Buying the add-on. A doctor can attach it at a consultation: that creates an unpaid (pending) membership and
+     * the member pays on /coach/join through PayFast. Nothing is switched on until the first payment clears.
+     * The message telling the member about the doctor's offer is OFF until COACH_ADDON_NOTIFY=true.
+     */
+    'addon' => [
+        'notify_enabled' => env('COACH_ADDON_NOTIFY', false),
+    ],
+
+    /*
+     * Auto-assigning a coach (a registered dietitian with the health_coach role) when the add-on starts. The member
+     * goes to the active coach with the fewest members. max_members 0 = no limit; set a number once capacity is
+     * agreed with Craig. If nobody has room the member waits, and the hourly coach:assign-pending retries.
+     */
+    'assignment' => [
+        'max_members' => (int) env('COACH_MAX_MEMBERS_PER_COACH', 0),
+    ],
+
     /* Daily targets (a starting point; Amy and the doctor set per-patient values later). */
     'targets' => [
         'kcal' => 1450,
