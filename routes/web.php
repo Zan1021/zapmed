@@ -171,6 +171,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Staff notes addressed to me (doctors, Operations, coaches). Writing a note happens inside a patient screen.
     Route::get('staff-notes', \App\Livewire\Doctor\StaffNotes::class)->middleware('role:doctor,admin,health_coach')->name('staff.notes');
 
+    // Appointment lists and the patient history board (Craig's guide 4.1).
+    Route::get('doctor/appointments', \App\Livewire\Doctor\Appointments::class)->middleware('role:doctor')->name('doctor.appointments');
+    Route::get('doctor/patient-history', \App\Livewire\Doctor\PatientHistory::class)->middleware('role:doctor')->name('doctor.patient-history');
+
     // Doctor time tracking (Craig's guide 4.2, 8.1). The export is also open to Operations for the invoice.
     Route::get('doctor/time', \App\Livewire\Doctor\TimeSheet::class)->middleware('role:doctor')->name('doctor.time');
     Route::get('doctor/time/export', \App\Http\Controllers\DoctorTimeExportController::class)->middleware('role:doctor,admin')->name('doctor.time.export');

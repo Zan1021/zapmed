@@ -82,7 +82,13 @@ class TimeTracker
 
         $tz = config('doctor.time.timezone');
         try {
-            $day = CarbonImmutable::parse($date, $tz)->startOfDay();
+            if (! preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+                throw new \InvalidArgumentException('format');
+            }
+            $day = CarbonImmutable::createFromFormat('Y-m-d', $date, $tz)->startOfDay();
+            if ($day->format('Y-m-d') !== $date) {
+                throw new \InvalidArgumentException('overflow');
+            }
         } catch (\Throwable) {
             throw ValidationException::withMessages(['date' => 'Choose a valid date.']);
         }
