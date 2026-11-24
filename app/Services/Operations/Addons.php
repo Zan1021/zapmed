@@ -29,6 +29,7 @@ class Addons
     public function __construct(
         private readonly OrderControls $controls,
         private readonly PatientMessenger $messenger,
+        private readonly MessageTemplates $templates,
     ) {
     }
 
@@ -102,7 +103,7 @@ class Addons
         ]);
 
         $this->controls->audit($order, $ops, 'addon_added', sprintf('Add-on added: %s at R%s a month.', $addon->name, number_format($addon->price_cents / 100, 2)), ['order_addon_id' => $row->id]);
-        $this->tell($order, 'ops.addon_added', 'An add-on was added to your order', 'We added '.$addon->name.' to your order. Sign in to Zapmed and open My Orders to see it.');
+        $this->tell($order, 'ops.addon_added', ['addon' => $addon->name]);
 
         return $row;
     }
@@ -146,7 +147,7 @@ class Addons
         $this->controls->audit($oa->order, $isOps ? $actor : null, 'addon_'.$to, sprintf('Add-on %s: %s%s.', $to === 'active' ? 'continued' : $to, $name, $to === 'active' ? '' : ' ('.($isOps ? 'by Operations' : 'by the patient').": {$reason})"), ['order_addon_id' => $oa->id, 'initiator' => $isOps ? 'operations' : 'patient']);
 
         if ($isOps) {
-            $this->tell($oa->order, 'ops.addon_'.$to, 'Your add-on was updated', 'Your '.$name.' add-on was '.($to === 'active' ? 'continued' : $to).'. Sign in to Zapmed and open My Orders to see it.');
+            $this->tell($oa->order, 'ops.addon_'.$to, ['addon' => $name]);
         }
 
         return $oa->fresh();
@@ -165,15 +166,20 @@ class Addons
         return $order ? $this->activeCents($order) : 0;
     }
 
-    private function tell(Order $order, string $template, string $subject, string $body): void
+    private function tell(Order $order, string $key, array $vars): void
     {
         if (! config('operations.addons.notify_enabled') || ! ($patient = $order->patient)) {
             return;
         }
 
+        $t = $this->templates->render($key, $vars);
+        if ($t === null) {
+            return;   // switched off by Operations
+        }
+
         $this->messenger->send(new OutboundMessage(
-            templateKey: $template, category: 'transactional', user: $patient, phone: $patient->phone,
-            subject: $subject, body: $body, meta: ['order_id' => $order->id],
+            templateKey: $key, category: 'transactional', user: $patient, phone: $patient->phone,
+            subject: $t['subject'], body: $t['body'], meta: ['order_id' => $order->id, 'template_version' => $t['version']],
         ));
     }
 }

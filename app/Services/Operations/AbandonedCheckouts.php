@@ -27,6 +27,7 @@ class AbandonedCheckouts
     public function __construct(
         private readonly PatientMessenger $messenger,
         private readonly PatientRewards $rewards,
+        private readonly MessageTemplates $templates,
     ) {
     }
 
@@ -63,15 +64,20 @@ class AbandonedCheckouts
             $order->forceFill(['abandoned_followup_at' => now()])->save();
 
             $coupon = config('operations.abandoned_checkout.coupon.enabled') ? $this->makeCoupon($patient) : null;
-            $body = 'You started an order with Zapmed and did not finish paying. You can pick up where you left off: sign in and open My Orders.';
-            if ($coupon) {
-                $body .= ' As a thank you, here is a code for you: '.$coupon->code.'. It is valid until '.$coupon->expiry_dt->format('j M Y').'.';
+            $t = $this->templates->render('ops.abandoned_checkout', [
+                'link' => route('patient.orders'),
+                'coupon_text' => $coupon ? ' As a thank you, here is a code for you: '.$coupon->code.'. It is valid until '.$coupon->expiry_dt->format('j M Y').'.' : '',
+            ]);
+            if ($t === null) {
+                $order->forceFill(['abandoned_followup_at' => null])->save();   // switched off by Operations: nothing sent, nothing marked
+
+                continue;
             }
 
             $this->messenger->send(new OutboundMessage(
                 templateKey: 'ops.abandoned_checkout', category: 'transactional', user: $patient, phone: $patient->phone,
-                subject: 'Finish your Zapmed order', body: $body.' '.route('patient.orders'),
-                meta: ['order_id' => $order->id, 'coupon' => $coupon?->code],
+                subject: $t['subject'], body: $t['body'],
+                meta: ['order_id' => $order->id, 'coupon' => $coupon?->code, 'template_version' => $t['version']],
             ));
             $sent++;
         }

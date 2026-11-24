@@ -34,6 +34,7 @@ class FollowUpService
         private readonly CoachAccess $access,
         private readonly NotificationDispatcher $dispatcher,
         private readonly PatientMessenger $messenger,
+        private readonly \App\Services\Operations\MessageTemplates $templates,
     ) {
     }
 
@@ -95,8 +96,7 @@ class FollowUpService
             return $followUp;
         });
 
-        $this->tellPatient($followUp, 'doctor.followup_requested', 'A follow-up appointment is needed',
-            'Your doctor has asked for a follow-up appointment. Sign in to Zapmed to book it.');
+        $this->tellPatient($followUp, 'doctor.followup_requested');
         $this->tellOperations($followUp, 'doctor.followup_requested_ops', 'Follow-up requested',
             'A doctor has requested a follow-up. The next repeat is on hold until it is done. Open the order board in Zapmed to see it.');
 
@@ -193,23 +193,28 @@ class FollowUpService
             ->with('patient')
             ->each(function (FollowUpRequest $f) use (&$count) {
                 $f->update(['reminded_at' => now()]);
-                $this->tellPatient($f, 'doctor.followup_prompt', 'Time to book your follow-up',
-                    'Your follow-up appointment is coming up. Sign in to Zapmed to book it so your next repeat is not delayed.');
+                $this->tellPatient($f, 'doctor.followup_prompt');
                 $count++;
             });
 
         return $count;
     }
 
-    private function tellPatient(FollowUpRequest $f, string $template, string $subject, string $body): void
+    private function tellPatient(FollowUpRequest $f, string $template): void
     {
         if (! config('doctor.followups.notify_enabled') || ! $f->patient) {
             return;
         }
 
+        // The wording (and whether this message is on at all) is Operations' to set, see MessageTemplates.
+        $t = $this->templates->render($template);
+        if ($t === null) {
+            return;
+        }
+
         $this->send($f, new OutboundMessage(
             templateKey: $template, category: 'transactional', user: $f->patient, phone: $f->patient->phone,
-            subject: $subject, body: $body, meta: ['follow_up_request_id' => $f->id],
+            subject: $t['subject'], body: $t['body'], meta: ['follow_up_request_id' => $f->id, 'template_version' => $t['version']],
         ));
     }
 

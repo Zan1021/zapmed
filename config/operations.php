@@ -73,4 +73,55 @@ return [
         // Tell the patient when an add-on is added, paused or cancelled. OFF until OPS_ADDON_NOTIFY=true. No health detail.
         'notify_enabled' => env('OPS_ADDON_NOTIFY', false),
     ],
+
+    'templates' => [
+        // Words a message may never contain: no health detail in any message (Craig's guide 8.3). Medicine names are checked against
+        // the product list as well.
+        'banned_words' => ['diagnosis', 'diagnosed', 'diabetes', 'hiv', 'cancer', 'depression', 'blood pressure', 'dose', 'dosage', 'injection', 'pregnan', 'std', 'sti'],
+
+        // The messages Operations can reword or switch off. The text here is what is sent until somebody saves a different one.
+        // {placeholders} are filled in by the system; only the ones listed can be used, and "required" ones must stay in.
+        'registry' => [
+            'doctor.followup_requested' => [
+                'name' => 'Doctor asked for a follow-up', 'placeholders' => [], 'required' => [],
+                'subject' => 'A follow-up appointment is needed',
+                'body' => 'Your doctor has asked for a follow-up appointment. Sign in to Zapmed to book it.',
+            ],
+            'doctor.followup_prompt' => [
+                'name' => 'Reminder to book a follow-up', 'placeholders' => [], 'required' => [],
+                'subject' => 'Time to book your follow-up',
+                'body' => 'Your follow-up appointment is coming up. Sign in to Zapmed to book it so your next repeat is not delayed.',
+            ],
+            'doctor.bloodtest_requested' => [
+                'name' => 'Doctor asked for tests', 'placeholders' => [], 'required' => [],
+                'subject' => 'Blood tests needed',
+                'body' => 'Your doctor has asked for some tests. Sign in to Zapmed to see what to do next.',
+            ],
+            'ops.abandoned_checkout' => [
+                'name' => 'Unfinished order reminder', 'placeholders' => ['link', 'coupon_text'], 'required' => ['link'],
+                'subject' => 'Finish your Zapmed order',
+                'body' => 'You started an order with Zapmed and did not finish paying. You can pick up where you left off: sign in and open My Orders.{coupon_text} {link}',
+            ],
+            'ops.addon_added' => [
+                'name' => 'Add-on added', 'placeholders' => ['addon'], 'required' => [],
+                'subject' => 'An add-on was added to your order',
+                'body' => 'We added {addon} to your order. Sign in to Zapmed and open My Orders to see it.',
+            ],
+            'ops.addon_paused' => [
+                'name' => 'Add-on paused', 'placeholders' => ['addon'], 'required' => [],
+                'subject' => 'Your add-on was updated',
+                'body' => 'Your {addon} add-on was paused. Sign in to Zapmed and open My Orders to see it.',
+            ],
+            'ops.addon_active' => [
+                'name' => 'Add-on continued', 'placeholders' => ['addon'], 'required' => [],
+                'subject' => 'Your add-on was updated',
+                'body' => 'Your {addon} add-on was continued. Sign in to Zapmed and open My Orders to see it.',
+            ],
+            'ops.addon_cancelled' => [
+                'name' => 'Add-on cancelled', 'placeholders' => ['addon'], 'required' => [],
+                'subject' => 'Your add-on was updated',
+                'body' => 'Your {addon} add-on was cancelled. Sign in to Zapmed and open My Orders to see it.',
+            ],
+        ],
+    ],
 ];

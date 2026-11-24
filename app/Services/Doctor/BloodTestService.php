@@ -34,6 +34,7 @@ class BloodTestService
         private readonly CoachAccess $access,
         private readonly NotificationDispatcher $dispatcher,
         private readonly PatientMessenger $messenger,
+        private readonly \App\Services\Operations\MessageTemplates $templates,
     ) {
     }
 
@@ -104,8 +105,7 @@ class BloodTestService
             return $row;
         });
 
-        $this->tellPatient($row, 'doctor.bloodtest_requested', 'Blood tests needed',
-            'Your doctor has asked for some tests. Sign in to Zapmed to see what to do next.');
+        $this->tellPatient($row, 'doctor.bloodtest_requested');
 
         return $row;
     }
@@ -214,16 +214,21 @@ class BloodTestService
         }
     }
 
-    private function tellPatient(BloodTestRequest $r, string $template, string $subject, string $body): void
+    private function tellPatient(BloodTestRequest $r, string $template): void
     {
         if (! config('doctor.blood_tests.notify_enabled') || ! $r->patient) {
+            return;
+        }
+
+        $t = $this->templates->render($template);
+        if ($t === null) {
             return;
         }
 
         try {
             $this->messenger->send(new OutboundMessage(
                 templateKey: $template, category: 'transactional', user: $r->patient, phone: $r->patient->phone,
-                subject: $subject, body: $body, meta: ['blood_test_request_id' => $r->id],
+                subject: $t['subject'], body: $t['body'], meta: ['blood_test_request_id' => $r->id, 'template_version' => $t['version']],
             ));
         } catch (\Throwable $e) {
             Log::error('blood test: message failed', ['request' => $r->id, 'error' => $e->getMessage()]);
