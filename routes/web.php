@@ -210,6 +210,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware(['role:patient', 'onboarding'])->prefix('my')->group(function () {
         Route::get('orders', \App\Livewire\Patient\MyOrders::class)->name('patient.orders');
         Route::get('health', \App\Livewire\Patient\HealthStats::class)->name('patient.health');
+        Route::get('follow-up', \App\Livewire\Patient\FollowUp::class)->name('patient.follow-up');
     });
 
     // Patient subscription

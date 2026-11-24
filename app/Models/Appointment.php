@@ -144,6 +144,7 @@ class Appointment extends Model
             'follow_up' => 'Follow-up',
             'chronic_renewal' => 'Chronic Med Renewal',
             'new_patient' => 'New Patient Consultation',
+            'authorisation_check_in' => 'Authorisation check-in',
             default => ucfirst($this->type),
         };
     }

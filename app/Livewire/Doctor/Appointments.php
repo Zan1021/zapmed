@@ -56,7 +56,7 @@ class Appointments extends Component
 
         return view('livewire.doctor.appointments', [
             'rows' => $rows,
-            'types' => ['general' => 'General Consultation', 'follow_up' => 'Follow-up', 'chronic_renewal' => 'Chronic Med Renewal', 'new_patient' => 'New Patient Consultation'],
+            'types' => ['general' => 'General Consultation', 'follow_up' => 'Follow-up', 'chronic_renewal' => 'Chronic Med Renewal', 'new_patient' => 'New Patient Consultation', 'authorisation_check_in' => 'Authorisation check-in'],
         ])->layout('layouts.app');
     }
 }

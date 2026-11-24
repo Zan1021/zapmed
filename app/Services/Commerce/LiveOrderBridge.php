@@ -79,8 +79,14 @@ class LiveOrderBridge
             }
             $order ??= Order::where('source_type', 'payment')->where('source_ref', (string) $payment->id)->first();
 
+            // A paid follow-up or check-in booked from the patient's Follow-Up tab has no order of its own: it belongs to
+            // the order the doctor's request was about (if any). It must not create a stray order. The cash is still recorded below.
+            $followUp = $payment->appointment_id ? \App\Models\FollowUpRequest::where('appointment_id', $payment->appointment_id)->first() : null;
+            $order ??= $followUp?->order;
+            $isFollowUpBooking = $order === null && $payment->appointment && array_key_exists($payment->appointment->type, config('patient.follow_up.types', []));
+
             // No pre-existing mirror (e.g. a medication payment with no appointment) → create one now.
-            $order ??= $this->upsertOrder('payment', (string) $payment->id, [
+            $order ??= $isFollowUpBooking ? null : $this->upsertOrder('payment', (string) $payment->id, [
                 'patient_id' => $payment->patient_id,
                 'status' => 'PendingPayment',
                 'total_minor' => (int) $payment->amount,
@@ -90,7 +96,7 @@ class LiveOrderBridge
             ]);
 
             // Advance to PaymentReceived on payment (guarded; ignore if the machine disallows from current state).
-            if ($order->status === 'PendingPayment') {
+            if ($order?->status === 'PendingPayment') {
                 try {
                     $order->transitionTo('PaymentReceived', 'payment', ['notes' => 'PayFast payment completed', 'triggered_by' => 'system:payfast']);
                 } catch (\Throwable $e) {
@@ -99,14 +105,14 @@ class LiveOrderBridge
             }
 
             // Record cash in the finance ledger (idempotent per payment).
-            $this->finance->recordCashFromPayment($payment, serviceLine: $order->service_category);
+            $this->finance->recordCashFromPayment($payment, serviceLine: $order?->service_category ?? ($isFollowUpBooking ? 'follow_up' : null));
 
             // Task 6: capture payment into the CRM funnel + analytics. Guarded internally so a CRM
             // hiccup can never roll back the finance transaction that matters here.
             if ($payment->patient_id) {
                 $patient = \App\Models\User::find($payment->patient_id);
                 if ($patient) {
-                    app(\App\Services\Crm\JourneyCapture::class)->paid($patient, $order->service_category);
+                    app(\App\Services\Crm\JourneyCapture::class)->paid($patient, $order?->service_category ?? 'follow_up');
                 }
             }
         });

@@ -204,6 +204,13 @@ class PaymentController extends Controller
                 'payment' => $payment->reference, 'error' => $e->getMessage(),
             ]);
         }
+
+        // A follow-up the doctor asked for counts as booked once its card payment is in. Guarded the same way.
+        try {
+            app(\App\Services\Patient\PatientFollowUps::class)->onPaymentCompleted($payment);
+        } catch (\Throwable $e) {
+            Log::warning('Follow-up booking after payment failed', ['payment' => $payment->reference, 'error' => $e->getMessage()]);
+        }
     }
 
     /**

@@ -54,4 +54,17 @@ return [
         // The patient may log their own weight and update their height. Same limits as the coach app (config coach.weight).
         'height_cm' => [100, 230],
     ],
+    'follow_up' => [
+        // Lengths a patient can book (Craig's guide 3.1).
+        'durations' => [15, 30],
+        // The doctor's follow-up fee is for 30 minutes; 15 minutes costs this share of it. PROVISIONAL: Craig to confirm pricing.
+        'fee_factor' => [15 => 0.5, 30 => 1.0],
+        // How far ahead a patient can book.
+        'days_ahead' => 14,
+        // What the patient can book. A free check-in only happens when a doctor asked for it (a follow-up request marked free).
+        'types' => [
+            'follow_up' => 'Follow-up',
+            'authorisation_check_in' => 'Authorisation check-in',
+        ],
+    ],
 ];
