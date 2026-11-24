@@ -221,6 +221,9 @@
                         @endif
                     </div>
 
+                    {{-- Operations controls: service-fee coupon, manual payment, audit trail (Craig's guide 6.2) --}}
+                    <livewire:admin.order-controls-panel :order-id="$order->id" :key="'oc-'.$order->id" />
+
                     {{-- Immutable status timeline --}}
                     <div>
                         <h4 class="text-sm font-semibold text-gray-700 mb-2">Status history</h4>

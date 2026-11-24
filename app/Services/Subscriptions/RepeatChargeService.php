@@ -156,7 +156,16 @@ class RepeatChargeService
 
     private function amountCents(SubscriptionCycle $cycle, Subscription $sub): int
     {
+        // A repeat that was already submitted, and every retry of one, keeps the amount it was first submitted with.
+        if ((! empty($cycle->metadata['charge_reference']) || ! empty($cycle->metadata['retry_of'])) && isset($cycle->metadata['amount_cents'])) {
+            return (int) $cycle->metadata['amount_cents'];
+        }
+
         // A repeat order can carry its own amount (medication price); otherwise the plan price.
-        return (int) ($cycle->metadata['amount_cents'] ?? $sub->plan?->price ?? 0);
+        $base = (int) ($cycle->metadata['amount_cents'] ?? $sub->plan?->price ?? 0);
+
+        // Operations may have put a coupon on this order's monthly SERVICE fee (Craig's guide 6.2). It is capped at the
+        // service fee, so the medication part is never reduced.
+        return max(0, $base - app(\App\Services\Operations\OrderControls::class)->discountCentsForSubscription($sub));
     }
 }

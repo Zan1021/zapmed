@@ -66,7 +66,7 @@ class FollowUpService
         }
 
         $tz = config('doctor.time.timezone');
-        $due = CarbonImmutable::now($tz)->addDays($days)->startOfDay();
+        $due = CarbonImmutable::now($tz)->addDays($days)->startOfDay()->utc();   // midnight South African time, stored as UTC
 
         $followUp = DB::transaction(function () use ($doctor, $order, $days, $note, $consultationId, $due) {
             $isFree = ! FollowUpRequest::where('order_id', $order->id)->whereIn('status', [FollowUpRequest::BOOKED, FollowUpRequest::COMPLETED])->exists();
