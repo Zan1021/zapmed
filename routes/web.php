@@ -158,6 +158,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Doctor follow-up requests: the list. Requesting is done from the consultation screen.
     Route::get('doctor/follow-ups', \App\Livewire\Doctor\FollowUps::class)->middleware('role:doctor')->name('doctor.follow-ups');
 
+    // Blood tests (Craig's guide 4.1, 4.2): the doctor's list, and private downloads for the patient and treating doctors only.
+    Route::get('doctor/blood-tests', \App\Livewire\Doctor\BloodTests::class)->middleware('role:doctor')->name('doctor.blood-tests');
+    Route::middleware('role:doctor,patient')->group(function () {
+        Route::get('blood-tests/{bloodTest}/results/{result}', [\App\Http\Controllers\BloodTestFileController::class, 'result'])->whereNumber(['bloodTest', 'result'])->name('bloodtests.result');
+        Route::get('blood-tests/{bloodTest}/form', [\App\Http\Controllers\BloodTestFileController::class, 'form'])->whereNumber('bloodTest')->name('bloodtests.form');
+    });
+
     // Doctor time tracking (Craig's guide 4.2, 8.1). The export is also open to Operations for the invoice.
     Route::get('doctor/time', \App\Livewire\Doctor\TimeSheet::class)->middleware('role:doctor')->name('doctor.time');
     Route::get('doctor/time/export', \App\Http\Controllers\DoctorTimeExportController::class)->middleware('role:doctor,admin')->name('doctor.time.export');

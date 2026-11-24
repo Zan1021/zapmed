@@ -107,6 +107,7 @@ return [
         ['PendingBloodTests', 'PendingReviewFeedback', 'patient'],  // results uploaded
         ['PendingBloodTests', 'PendingReviewFeedback', 'doctor'],
         ['PendingReviewFeedback', 'InReview', 'doctor'],
+        ['PendingBloodTests', 'InReview', 'doctor'],                // the request was cancelled
         // a doctor requests a follow-up: the order waits, and repeats are blocked, until the doctor submits again
         ['Processing', 'PendingFollowUpRequest', 'doctor'],
         ['Delivered', 'PendingFollowUpRequest', 'doctor'],

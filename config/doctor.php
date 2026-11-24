@@ -38,4 +38,32 @@ return [
         // being prepared or posted) the order is left alone and only the open follow-up blocks the next repeat.
         'move_order_from' => ['Delivered', 'Completed'],
     ],
+    'blood_tests' => [
+        // The tests a doctor can tick. PROVISIONAL list: Dr Anke / Craig to confirm the real menu and lab codes.
+        'catalogue' => [
+            'fbc' => 'Full blood count',
+            'lipids' => 'Cholesterol (lipid profile)',
+            'hba1c' => 'HbA1c',
+            'glucose' => 'Fasting glucose',
+            'tsh' => 'Thyroid (TSH)',
+            'liver' => 'Liver function',
+            'kidney' => 'Kidney function (urea and electrolytes)',
+            'vitd' => 'Vitamin D',
+            'iron' => 'Iron studies',
+            'hormones' => 'Hormone profile',
+        ],
+        // Lab request forms a doctor can attach by name. PROVISIONAL: no form templates exist yet, so only the choice is
+        // recorded. A doctor can also upload their own form.
+        'lab_forms' => [
+            'pathcare' => 'PathCare request form',
+            'lancet' => 'Lancet request form',
+            'ampath' => 'Ampath request form',
+        ],
+        // Tell the patient. OFF until DOCTOR_BLOODTEST_NOTIFY=true. Never names the tests or the medicine.
+        'notify_enabled' => env('DOCTOR_BLOODTEST_NOTIFY', false),
+        'disk' => env('DOCTOR_BLOODTEST_DISK', 'local'),
+        'max_file_kb' => 10240,
+        'allowed_extensions' => ['pdf', 'jpg', 'jpeg', 'png'],
+        'max_files_per_request' => 10,
+    ],
 ];
