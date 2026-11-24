@@ -37,13 +37,13 @@ class StatsOrdersTest extends TestCase
         ], $attr));
     }
 
-    public function test_by_status_zero_fills_all_25_statuses(): void
+    public function test_by_status_zero_fills_every_status(): void
     {
         $this->order('Delivered');
 
         $m = $this->stats->orders('month');
 
-        $this->assertCount(25, $m['by_status'], 'every one of the 25 statuses must appear');
+        $this->assertCount(count(config('orders.statuses')), $m['by_status'], 'every status must appear (29 with the four added from Craig guide)');
         $this->assertSame(1, $m['by_status']['Delivered']);
         $this->assertSame(0, $m['by_status']['PendingPayment']);
         $this->assertSame(1, $m['total']);

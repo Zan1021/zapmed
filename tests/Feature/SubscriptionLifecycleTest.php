@@ -90,7 +90,7 @@ class SubscriptionLifecycleTest extends TestCase
 
     // ---- 3-strike ------------------------------------------------------------------------------
 
-    public function test_three_consecutive_failures_auto_cancels(): void
+    public function test_three_consecutive_failures_pause_the_order_and_never_cancel(): void
     {
         $sub = $this->subscription();
 
@@ -100,21 +100,20 @@ class SubscriptionLifecycleTest extends TestCase
         $this->assertSame('payment_failed', $sub->fresh()->status);
         $this->assertSame(1, $sub->fresh()->consecutive_failures);
 
-        // Strike 2
+        // Strike 2 (the retry row made after strike 1 is the open cycle)
         $c2 = $this->svc()->scheduleNextCycle($sub->fresh());
         $this->svc()->recordFailure($c2);
         $this->assertSame('payment_failed', $sub->fresh()->status);
         $this->assertSame(2, $sub->fresh()->consecutive_failures);
 
-        // Strike 3 → auto-cancel
+        // Strike 3 pauses (Craig's rule), it does not cancel.
         $c3 = $this->svc()->scheduleNextCycle($sub->fresh());
         $this->svc()->recordFailure($c3);
         $sub->refresh();
-        $this->assertSame('cancelled', $sub->status);
+        $this->assertSame('paused', $sub->status);
         $this->assertSame(3, $sub->consecutive_failures);
-        $this->assertNotNull($sub->cancelled_at);
+        $this->assertNull($sub->cancelled_at);
     }
-
     public function test_success_after_failures_resets_the_strike_count(): void
     {
         $sub = $this->subscription();

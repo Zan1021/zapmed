@@ -66,6 +66,21 @@ class OrderStatusMachine
         return array_values(array_unique($next));
     }
 
+    /** True when a due repeat must not start for an order in this status (paused, cancelled, follow-up pending). */
+    public static function blocksRepeat(string $status): bool
+    {
+        return in_array($status, config('orders.repeat_blocking_statuses', []), true);
+    }
+
+    /**
+     * Where a missed consultation goes: back to NoShow (the patient may rebook once), or Cancelled once the order has
+     * already used its allowed reschedules. $priorNoShows = how many times this order was already NoShow.
+     */
+    public static function statusAfterNoShow(int $priorNoShows): string
+    {
+        return $priorNoShows >= (int) config('orders.no_show.max_reschedules', 1) ? 'Cancelled' : 'NoShow';
+    }
+
     /** Map an inbound RxHub event code to the order status it drives, or null if unknown. */
     public static function statusForRxhubEvent(string $eventCode): ?string
     {

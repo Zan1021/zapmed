@@ -153,9 +153,9 @@ class OrderBoardTest extends TestCase
             ->call('selectOrder', $order->id)
             ->tap(function ($t) {
                 $allowed = $t->instance()->allowedNextStatuses();
-                // From InReview the machine allows AwaitingInformation, Processing, Cancelled.
+                // From InReview the machine allows AwaitingInformation, Processing, Cancelled and (new) PendingBloodTests.
                 sort($allowed);
-                $this->assertSame(['AwaitingInformation', 'Cancelled', 'Processing'], $allowed);
+                $this->assertSame(['AwaitingInformation', 'Cancelled', 'PendingBloodTests', 'Processing'], $allowed);
             });
     }
 

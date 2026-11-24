@@ -14,7 +14,7 @@ class SubscriptionPauseEvent extends Model
 
     protected $fillable = [
         'subscription_id', 'paused_at', 'paused_until', 'resumed_at',
-        'paused_reason', 'paused_by', 'resumed_by', 'created_at',
+        'paused_reason', 'paused_by', 'resumed_by', 'initiator', 'created_at',
     ];
 
     protected function casts(): array

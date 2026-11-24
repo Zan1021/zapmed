@@ -24,6 +24,9 @@ class Subscription extends Model
         'payment_count',
         'last_payment_at',
         'cancellation_reason',
+        'cancelled_initiator',
+        'cancelled_by',
+        'repeat_cycle_days',
         'metadata',
     ];
 
@@ -130,13 +133,14 @@ class Subscription extends Model
     /**
      * Cancel the subscription.
      */
-    public function cancel(string $reason = null): void
+    public function cancel(string $reason = null, string $initiator = 'patient'): void
     {
         $this->update([
             'status' => 'cancelled',
             'cancelled_at' => now(),
             'ends_at' => $this->current_period_end, // Access until end of paid period
             'cancellation_reason' => $reason,
+            'cancelled_initiator' => $initiator,
         ]);
     }
 

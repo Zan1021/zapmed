@@ -8,6 +8,9 @@ use App\Models\Subscription;
 use App\Models\SubscriptionCycle;
 use App\Models\SubscriptionFollowup;
 use App\Models\SubscriptionPauseEvent;
+use App\Services\Orders\OrderStatusMachine;
+use Carbon\CarbonInterface;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
@@ -32,10 +35,23 @@ class SubscriptionLifecycle
 
     private function intervalDays(Subscription $sub): int
     {
+        // A repeat order remembers its pack length; a membership uses its plan's cadence.
+        if ($sub->repeat_cycle_days) {
+            return (int) $sub->repeat_cycle_days;
+        }
+
         // Prefer the plan's cadence (months → days); fall back to the configured default.
         $months = $sub->plan?->cycle_frequency;
 
         return $months ? ($months * 30) : (int) config('subscriptions.default_interval_days', 30);
+    }
+
+    /** The given moment's DATE at the charge time (09:30 South African time), as UTC. */
+    private function atChargeTime(CarbonInterface $when): Carbon
+    {
+        [$h, $m] = array_map('intval', explode(':', (string) config('subscriptions.charge_time', '09:30')));
+
+        return Carbon::instance($when)->setTimezone(config('subscriptions.charge_timezone', 'Africa/Johannesburg'))->setTime($h, $m, 0)->utc();
     }
 
     /**
@@ -53,7 +69,7 @@ class SubscriptionLifecycle
             }
 
             $nextSeq = ((int) $sub->cycles()->max('sequence_no')) + 1;
-            $scheduledFor = $when ?? now()->addDays($this->intervalDays($sub));
+            $scheduledFor = $when ?? $this->atChargeTime(now()->addDays($this->intervalDays($sub)));
 
             $cycle = $sub->cycles()->create([
                 'sequence_no' => $nextSeq,
@@ -65,6 +81,24 @@ class SubscriptionLifecycle
 
             return $cycle;
         });
+    }
+
+    /**
+     * The FIRST repeat after a prescription: (pack days - buffer) days later at 09:30, so a 28 day pack repeats on day 23
+     * and the patient has a 5 day delivery buffer. Later repeats follow every pack days. Remembers the pack length.
+     */
+    public function scheduleFirstRepeat(Subscription $sub, \DateTimeInterface $prescribedAt, int $packDays): SubscriptionCycle
+    {
+        if ($packDays < 1) {
+            throw new RuntimeException('A pack must last at least one day.');
+        }
+
+        $buffer = (int) config('subscriptions.first_repeat_buffer_days', 5);
+        $days = max(1, $packDays - $buffer);
+
+        $sub->forceFill(['repeat_cycle_days' => $packDays])->save();
+
+        return $this->scheduleNextCycle($sub->fresh(), $this->atChargeTime(Carbon::instance($prescribedAt)->addDays($days)));
     }
 
     /**
@@ -112,9 +146,10 @@ class SubscriptionLifecycle
     }
 
     /**
-     * Record a FAILED cycle. Increments consecutive_failures; on the 3rd consecutive strike the
-     * subscription is auto-cancelled (parity with Dave's 3-strike rule). Marks the subscription
-     * payment_failed otherwise. No retry charge is issued here.
+     * Record a FAILED cycle. Craig's rule: retry at 09:30 on three successive days; the THIRD failure PAUSES the order
+     * (reason recorded, initiator "system") and blocks charges until the patient responds. It no longer cancels
+     * (config subscriptions.after_max_failures = 'cancel' brings back the old rule). Failures 1 and 2 schedule the next
+     * attempt as a bookkeeping row for tomorrow 09:30. No charge is issued here.
      */
     public function recordFailure(SubscriptionCycle $cycle, ?string $reason = null): SubscriptionCycle
     {
@@ -127,21 +162,44 @@ class SubscriptionLifecycle
 
             $sub = $cycle->subscription;
             $failures = ($sub->consecutive_failures ?? 0) + 1;
+            $limitReached = $failures >= $this->maxFailures();
+            $cancel = config('subscriptions.after_max_failures', 'pause') === 'cancel';
 
-            $sub->forceFill([
-                'consecutive_failures' => $failures,
-                'last_failure_at' => now(),
-                'status' => $failures >= $this->maxFailures() ? 'cancelled' : 'payment_failed',
-                'cancelled_at' => $failures >= $this->maxFailures() ? now() : $sub->cancelled_at,
-                'cancellation_reason' => $failures >= $this->maxFailures()
-                    ? 'auto-cancelled after ' . $this->maxFailures() . ' consecutive payment failures'
-                    : $sub->cancellation_reason,
-            ])->save();
+            if (! $limitReached) {
+                $sub->forceFill(['consecutive_failures' => $failures, 'last_failure_at' => now(), 'status' => 'payment_failed'])->save();
+
+                $retryAt = $this->atChargeTime(now()->addDays((int) config('subscriptions.retry_after_days', 1)));
+                $retry = $this->scheduleNextCycle($sub->fresh(), $retryAt);
+                $retry->update(['metadata' => ['retry_of' => $cycle->id, 'attempt' => $failures + 1]]);
+
+                return $cycle->fresh();
+            }
+
+            if ($cancel) {
+                $sub->forceFill([
+                    'consecutive_failures' => $failures,
+                    'last_failure_at' => now(),
+                    'status' => 'cancelled',
+                    'cancelled_at' => now(),
+                    'cancelled_initiator' => 'system',
+                    'cancellation_reason' => 'auto-cancelled after '.$this->maxFailures().' consecutive payment failures',
+                ])->save();
+
+                return $cycle->fresh();
+            }
+
+            $sub->forceFill(['consecutive_failures' => $failures, 'last_failure_at' => now(), 'status' => 'paused'])->save();
+            SubscriptionPauseEvent::create([
+                'subscription_id' => $sub->id,
+                'paused_at' => now(),
+                'paused_reason' => config('subscriptions.pause_reason_three_failures'),
+                'paused_by' => null,
+                'initiator' => 'system',
+            ]);
 
             return $cycle->fresh();
         });
     }
-
     /** Cycles that are due to run now (scheduled + scheduled_for in the past). */
     public function dueCycles()
     {
@@ -149,17 +207,23 @@ class SubscriptionLifecycle
     }
 
     /**
-     * Runner: for each due cycle on an ACTIVE subscription, mark it attempted so the live checkout flow
-     * can pick it up. This does NOT charge — it hands off to the live payment flow. Returns count moved.
-     * Imported/cancelled subscriptions are skipped, so a backfill can never wake a charge.
+     * Runner: for each due cycle, mark it attempted so the live checkout flow can pick it up. This does NOT charge, it
+     * hands off to the live payment flow. Returns count moved.
+     *
+     * Only live subscriptions run: 'active', or 'payment_failed' while the 09:30 retries are still going. Paused,
+     * cancelled and imported subscriptions are skipped, and so is any repeat blocked by its order (a required
+     * follow-up that the doctor has not submitted yet). A blocked cycle stays scheduled and is looked at again next run.
      */
     public function runDueCycles(): int
     {
         $moved = 0;
         foreach ($this->dueCycles() as $cycle) {
             $sub = $cycle->subscription;
-            if (! $sub || $sub->status !== 'active') {
-                continue; // only live, active subscriptions renew
+            if (! $sub || ! in_array($sub->status, ['active', 'payment_failed'], true)) {
+                continue; // only live subscriptions renew
+            }
+            if ($this->repeatBlockedBy($sub) !== null) {
+                continue;
             }
             $cycle->update(['status' => CycleStatus::Attempted->value, 'started_at' => now()]);
             $moved++;
@@ -168,6 +232,13 @@ class SubscriptionLifecycle
         return $moved;
     }
 
+    /** The order status that blocks this subscription's next repeat (paused, cancelled, follow-up pending), or null. */
+    public function repeatBlockedBy(Subscription $sub): ?string
+    {
+        $order = Order::where('source_type', 'subscription')->where('source_ref', (string) $sub->id)->first();
+
+        return $order && OrderStatusMachine::blocksRepeat((string) $order->status) ? (string) $order->status : null;
+    }
     // ---- follow-up (+180d) ----------------------------------------------------------------------
 
     /**
@@ -203,13 +274,23 @@ class SubscriptionLifecycle
 
     // ---- pause / resume -------------------------------------------------------------------------
 
-    public function pause(Subscription $sub, ?\DateTimeInterface $until = null, ?string $reason = null, ?int $actorId = null): void
+    /**
+     * Pause. A patient must give a reason. The initiator (patient, operations or system) is recorded, and any cycle that
+     * has not been charged yet is cancelled so it stays in history but can never run. Paused orders do not charge or repeat.
+     */
+    public function pause(Subscription $sub, ?\DateTimeInterface $until = null, ?string $reason = null, ?int $actorId = null, ?string $initiator = null): void
     {
-        if ($sub->status !== 'active') {
+        if (! in_array($sub->status, ['active', 'payment_failed'], true)) {
             throw new RuntimeException("Cannot pause a subscription in status '{$sub->status}'.");
         }
 
-        DB::transaction(function () use ($sub, $until, $reason, $actorId) {
+        $initiator = $this->initiator($initiator, $actorId);
+        if ($initiator === 'patient' && trim((string) $reason) === '') {
+            throw new RuntimeException('Please tell us why you are pausing.');
+        }
+
+        DB::transaction(function () use ($sub, $until, $reason, $actorId, $initiator) {
+            $this->cancelUnchargedCycles($sub, 'paused');
             $sub->forceFill(['status' => 'paused'])->save();
             SubscriptionPauseEvent::create([
                 'subscription_id' => $sub->id,
@@ -217,26 +298,92 @@ class SubscriptionLifecycle
                 'paused_until' => $until,
                 'paused_reason' => $reason,
                 'paused_by' => $actorId,
+                'initiator' => $initiator,
             ]);
         });
     }
 
-    public function resume(Subscription $sub, ?int $actorId = null): void
+    /**
+     * Continue a paused order. Allowed within 90 days of the pause (Operations can override). The repeat cycle starts
+     * again like a first repeat; the old cycles stay in history. Clears the failed-payment strikes: the patient has responded.
+     */
+    public function resume(Subscription $sub, ?int $actorId = null, bool $override = false): void
     {
         if ($sub->status !== 'paused') {
             throw new RuntimeException("Cannot resume a subscription in status '{$sub->status}'.");
         }
 
-        DB::transaction(function () use ($sub, $actorId) {
-            $sub->forceFill(['status' => 'active', 'next_run_at' => now()->addDays($this->intervalDays($sub))])->save();
+        $open = SubscriptionPauseEvent::where('subscription_id', $sub->id)->whereNull('resumed_at')->latest('paused_at')->first();
+        $window = (int) config('subscriptions.pause_resume_window_days', 90);
+        if (! $override && $open && $open->paused_at->copy()->addDays($window)->isPast()) {
+            throw new RuntimeException("This order has been paused for more than {$window} days and can no longer be continued. Please contact us.");
+        }
 
-            $open = SubscriptionPauseEvent::where('subscription_id', $sub->id)->whereNull('resumed_at')->latest('paused_at')->first();
+        DB::transaction(function () use ($sub, $actorId, $open) {
+            $sub->forceFill(['status' => 'active', 'consecutive_failures' => 0])->save();
             $open?->update(['resumed_at' => now(), 'resumed_by' => $actorId]);
 
-            $this->scheduleNextCycle($sub->fresh());
+            $fresh = $sub->fresh();
+            if ($fresh->repeat_cycle_days) {
+                $this->scheduleFirstRepeat($fresh, now(), (int) $fresh->repeat_cycle_days);
+            } else {
+                $this->scheduleNextCycle($fresh);
+            }
         });
     }
 
+    /**
+     * Cancel. A reason is always required and the initiator (patient, operations or system) is recorded. Cycles that have
+     * not been charged yet are cancelled. Cancelled orders never charge or repeat.
+     */
+    public function cancel(Subscription $sub, string $reason, string $initiator, ?int $actorId = null): void
+    {
+        if ($sub->status === 'cancelled') {
+            throw new RuntimeException('This subscription is already cancelled.');
+        }
+        if (trim($reason) === '') {
+            throw new RuntimeException('Please tell us why you are cancelling.');
+        }
+        $initiator = $this->initiator($initiator, $actorId);
+
+        DB::transaction(function () use ($sub, $reason, $initiator, $actorId) {
+            $this->cancelUnchargedCycles($sub, 'cancelled');
+            $sub->forceFill([
+                'status' => 'cancelled',
+                'cancelled_at' => now(),
+                'ends_at' => $sub->current_period_end,
+                'cancellation_reason' => $reason,
+                'cancelled_initiator' => $initiator,
+                'cancelled_by' => $actorId,
+            ])->save();
+
+            // A cancelled order that was paused is no longer waiting to be continued.
+            SubscriptionPauseEvent::where('subscription_id', $sub->id)->whereNull('resumed_at')->update(['resumed_at' => now(), 'resumed_by' => $actorId]);
+        });
+    }
+
+    /** Cycles not yet charged (scheduled or handed to the payment flow) become cancelled history rows. */
+    private function cancelUnchargedCycles(Subscription $sub, string $why): void
+    {
+        $sub->cycles()->whereIn('status', [CycleStatus::Scheduled->value, CycleStatus::Attempted->value])->get()->each(
+            fn (SubscriptionCycle $c) => $c->update([
+                'status' => CycleStatus::Cancelled->value,
+                'cancelled_at' => now(),
+                'metadata' => array_merge((array) $c->metadata, ['cancelled_because' => $why]),
+            ])
+        );
+    }
+
+    private function initiator(?string $initiator, ?int $actorId): string
+    {
+        $initiator ??= $actorId ? 'operations' : 'system';
+
+        if (! in_array($initiator, config('subscriptions.initiators', ['patient', 'operations', 'system']), true)) {
+            throw new RuntimeException("Unknown initiator '{$initiator}'.");
+        }
+
+        return $initiator;
+    }
     // ---- import (history reconstruction — NO charges) -------------------------------------------
 
     /**

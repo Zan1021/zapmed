@@ -40,6 +40,11 @@ return [
         'RefundComplete',
         'RefundNeeded',
         'TwoRepeatFailures',
+        // 4 new (Craig's build guide, 19 Nov 2026)
+        'PendingBloodTests',
+        'PendingReviewFeedback',
+        'PendingFollowUpRequest',
+        'PendingFollowUpProfileBook',
     ],
 
     // ---- trigger types --------------------------------------------------------------------------
@@ -85,10 +90,32 @@ return [
         ['RepeatPaymentFailed', 'PendingPayment', 'patient'],    // retry
         ['RepeatPaymentFailed', 'TwoRepeatFailures', 'payment'], // restored intermediate
         ['TwoRepeatFailures', 'ThreeRepeatFailures', 'payment'],
-        ['ThreeRepeatFailures', 'Cancelled', 'system_timer'],    // payment_abandoned
+        ['ThreeRepeatFailures', 'Cancelled', 'system_timer'],    // payment_abandoned (kept: Contro history parity)
+        ['ThreeRepeatFailures', 'Paused', 'system_timer'],       // Craig: the 3rd failed repeat PAUSES the order and blocks charges
         // wildcard admin
         ['Processing', 'Paused', 'admin'],
         ['Paused', 'Processing', 'admin'],
+        // patient pause / continue / cancel (reason and initiator are recorded on the subscription)
+        ['Processing', 'Paused', 'patient'],
+        ['Paused', 'Processing', 'patient'],                      // continue within 90 days
+        ['Paused', 'Cancelled', 'patient'],
+        ['Paused', 'Cancelled', 'admin'],
+        // second missed consultation cancels the order (one reschedule only)
+        ['NoShow', 'Cancelled', 'system_timer'],
+        // blood tests and results review
+        ['InReview', 'PendingBloodTests', 'doctor'],
+        ['PendingBloodTests', 'PendingReviewFeedback', 'patient'],  // results uploaded
+        ['PendingBloodTests', 'PendingReviewFeedback', 'doctor'],
+        ['PendingReviewFeedback', 'InReview', 'doctor'],
+        // a doctor requests a follow-up: the order waits, and repeats are blocked, until the doctor submits again
+        ['Processing', 'PendingFollowUpRequest', 'doctor'],
+        ['Delivered', 'PendingFollowUpRequest', 'doctor'],
+        ['Completed', 'PendingFollowUpRequest', 'doctor'],
+        ['PendingFollowUpRequest', 'PendingFollowUpProfileBook', 'patient'],   // patient books it in the dashboard
+        ['PendingFollowUpRequest', 'PendingConsulation', 'calendar'],
+        ['PendingFollowUpProfileBook', 'PendingConsulation', 'calendar'],
+        ['PendingFollowUpRequest', 'Processing', 'doctor'],      // doctor reviewed and submitted
+        ['PendingFollowUpProfileBook', 'Processing', 'doctor'],
     ],
 
     /**
@@ -104,6 +131,18 @@ return [
     ],
 
     'initial_status' => 'PendingPayment',
+
+    /**
+     * Statuses in which a due repeat must NOT be started (Craig: paused and cancelled orders never repeat or charge;
+     * a required follow-up blocks the next repeat until the doctor reviews and submits).
+     */
+    'repeat_blocking_statuses' => [
+        'Paused', 'Cancelled', 'ThreeRepeatFailures',
+        'PendingFollowUpBooking', 'PendingFollowUp', 'PendingFollowUpRequest', 'PendingFollowUpProfileBook',
+    ],
+
+    /** A consultation can be missed once and rebooked. The second miss cancels the order. */
+    'no_show' => ['max_reschedules' => 1],
 
     /**
      * Ops board swimlanes (Order Board / Kanban, specs/contro-rebuild/08 §2.2).
@@ -127,7 +166,7 @@ return [
         'clinical_review' => [
             'label' => 'Clinical review',
             'colour' => 'violet',
-            'statuses' => ['InReview', 'AwaitingInformation'],
+            'statuses' => ['InReview', 'AwaitingInformation', 'PendingBloodTests', 'PendingReviewFeedback'],
         ],
         'pharmacy' => [
             'label' => 'Pharmacy pipeline',
@@ -142,7 +181,7 @@ return [
         'follow_up' => [
             'label' => 'Repeat & follow-up',
             'colour' => 'teal',
-            'statuses' => ['Completed', 'PendingFollowUpBooking', 'PendingFollowUp'],
+            'statuses' => ['Completed', 'PendingFollowUpBooking', 'PendingFollowUp', 'PendingFollowUpRequest', 'PendingFollowUpProfileBook'],
         ],
         'closed' => [
             'label' => 'Closed & exceptions',

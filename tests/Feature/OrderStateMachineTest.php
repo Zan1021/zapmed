@@ -28,10 +28,10 @@ class OrderStateMachineTest extends TestCase
 
     // ---- config / state-machine definition ------------------------------------------------------
 
-    public function test_there_are_exactly_25_statuses_with_verbatim_contro_spelling(): void
+    public function test_there_are_exactly_29_statuses_with_verbatim_contro_spelling(): void
     {
         $statuses = OrderStatusMachine::statuses();
-        $this->assertCount(25, $statuses);
+        $this->assertCount(29, $statuses); // the 25 Contro statuses + the 4 added from Craig's guide
         $this->assertContains('PendingConsulation', $statuses); // sic — Contro misspelling preserved
         $this->assertContains('PaymentReceived', $statuses);    // restored
         $this->assertContains('TwoRepeatFailures', $statuses);  // restored
