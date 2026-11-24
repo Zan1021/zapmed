@@ -211,6 +211,42 @@ class OrderControls
         });
     }
 
+    // ---- reset the repeat cycle ----------------------------------------------------------------------------------
+
+    /**
+     * Reset a running repeat order's cycle and counters (Craig's guide 6.4): uncharged repeats are cancelled but kept in history,
+     * failed-payment strikes are cleared and the first repeat is worked out again from today. A reason is required and the old and
+     * new repeat dates are written to the audit trail.
+     */
+    public function resetRepeat(User $ops, Order $order, string $reason, ?int $packDays = null): \App\Models\SubscriptionCycle
+    {
+        $this->assertOps($ops);
+
+        $reason = trim($reason);
+        if ($reason === '') {
+            throw ValidationException::withMessages(['reason' => 'Give a reason.']);
+        }
+
+        $sub = Subscription::where('id', (int) $order->source_ref)->where('user_id', $order->patient_id)->first();
+        if ($order->source_type !== 'subscription' || ! $sub) {
+            throw ValidationException::withMessages(['order' => 'This is not a repeat order.']);
+        }
+
+        $old = $sub->cycles()->where('status', \App\Enums\CycleStatus::Scheduled->value)->orderBy('scheduled_for')->first();
+
+        try {
+            $new = app(\App\Services\Subscriptions\SubscriptionLifecycle::class)->restartRepeatCycle($sub, $packDays);
+        } catch (\RuntimeException $e) {
+            throw ValidationException::withMessages(['order' => $e->getMessage()]);
+        }
+
+        $fmt = fn ($c) => $c?->scheduled_for?->setTimezone($this->tz())->format('Y-m-d') ?? 'none';
+        $this->audit($order, $ops, 'repeat_reset', sprintf('Repeat reset: next repeat %s, was %s. %s', $fmt($new), $fmt($old), $reason), [
+            'subscription_id' => $sub->id, 'old_cycle_id' => $old?->id, 'new_cycle_id' => $new->id, 'pack_days' => $sub->fresh()->repeat_cycle_days,
+        ]);
+
+        return $new;
+    }
     // ---- audit ---------------------------------------------------------------------------------------------------
 
     public function audit(Order $order, ?User $user, string $event, string $summary, array $data = []): OrderAuditEvent

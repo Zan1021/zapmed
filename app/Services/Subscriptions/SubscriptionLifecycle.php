@@ -95,8 +95,9 @@ class SubscriptionLifecycle
             throw new RuntimeException('A pack must last at least one day.');
         }
 
-        $buffer = (int) config('subscriptions.first_repeat_buffer_days', 5);
-        $days = max(1, $packDays - $buffer);
+        // The first-repeat day comes from the repeat cycles Operations set (28 days -> day 23); with none configured for this
+        // pack length it is pack days minus the delivery buffer.
+        $days = app(\App\Services\Operations\RepeatCycles::class)->firstRepeatDays($packDays);
 
         $sub->forceFill(['repeat_cycle_days' => $packDays])->save();
 
@@ -290,6 +291,29 @@ class SubscriptionLifecycle
         return $due->count();
     }
 
+    /**
+     * Operations reset a repeat order's cycle: uncharged repeats are cancelled (kept as history), failed-payment strikes are
+     * cleared and the first repeat is worked out again from today, like a first repeat. Only for an order that is running:
+     * a paused one must be continued first and a cancelled one cannot be reset.
+     */
+    public function restartRepeatCycle(Subscription $sub, ?int $packDays = null): SubscriptionCycle
+    {
+        if (! in_array($sub->status, ['active', 'payment_failed'], true)) {
+            throw new RuntimeException("Cannot reset the repeat of a subscription in status '{$sub->status}'.");
+        }
+
+        $pack = $packDays ?? (int) $sub->repeat_cycle_days;
+        if ($pack < 1) {
+            throw new RuntimeException('This order has no pack length yet. Give one to reset the repeat.');
+        }
+
+        return DB::transaction(function () use ($sub, $pack) {
+            $this->cancelUnchargedCycles($sub, 'reset');
+            $sub->forceFill(['status' => 'active', 'consecutive_failures' => 0])->save();
+
+            return $this->scheduleFirstRepeat($sub->fresh(), now(), $pack);
+        });
+    }
     // ---- pause / resume -------------------------------------------------------------------------
 
     /**

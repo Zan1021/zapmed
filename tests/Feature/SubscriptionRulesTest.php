@@ -193,6 +193,8 @@ class SubscriptionRulesTest extends TestCase
 
     public function test_the_buffer_is_configurable_and_a_pack_must_have_days(): void
     {
+        // With no repeat cycle set up for this pack length, the delivery buffer in config decides (Operations can set cycles instead).
+        \App\Models\RepeatCycle::query()->delete();
         config(['subscriptions.first_repeat_buffer_days' => 3]);
         $sub = $this->subscription();
 

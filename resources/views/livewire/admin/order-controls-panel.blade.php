@@ -49,6 +49,15 @@
         <button type="button" wire:click="recordPayment" data-action="record-payment" class="mt-2 rounded-lg bg-indigo-600 px-3 py-2 text-sm text-white">Record payment</button>
     </div>
 
+    @if($isRepeat)
+    <div class="rounded-lg border border-gray-200 p-4" data-section="repeat-reset">
+        <h4 class="mb-2 text-sm font-semibold text-gray-700">Repeat cycle</h4>
+        <p class="mb-2 text-xs text-gray-500">Next repeat: {{ $nextRepeat ?? 'none scheduled' }}. Resetting cancels the waiting repeats (kept in history), clears failed-payment strikes and works out the first repeat again from today.</p>
+        <input type="text" wire:model="resetReason" placeholder="Why reset?" class="mr-2 w-56 rounded-lg border-gray-300 text-sm">
+        <button type="button" wire:click="resetRepeat" data-action="reset-repeat" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">Reset repeat</button>
+    </div>
+    @endif
+
     <div class="rounded-lg border border-gray-200 p-4" data-section="audit">
         <h4 class="mb-2 text-sm font-semibold text-gray-700">What Operations did to this order</h4>
         @forelse($audit as $a)

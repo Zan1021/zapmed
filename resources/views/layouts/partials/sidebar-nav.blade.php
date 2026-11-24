@@ -155,6 +155,11 @@
         Operations reports
     </a>
 
+    <a href="{{ route('admin.repeat-cycles') }}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors border-b border-slate-700/50 {{ request()->routeIs('admin.repeat-cycles') ? 'bg-sidebar-active text-white' : 'text-slate-300 hover:bg-slate-700/50 hover:text-white' }}">
+        <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+        Repeat cycles
+    </a>
+
     <a href="{{ route('admin.ai-nudges') }}"
        class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors border-b border-slate-700/50 {{ request()->routeIs('admin.ai-nudges') ? 'bg-sidebar-active text-white' : 'text-slate-300 hover:bg-sidebar-hover hover:text-white' }}">
         <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
