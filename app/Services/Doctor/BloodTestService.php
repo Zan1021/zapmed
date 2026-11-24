@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\Coach\CoachAccess;
 use App\Services\Notifications\NotificationDispatcher;
 use App\Services\Notifications\OutboundMessage;
+use App\Services\Patient\PatientMessenger;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -32,6 +33,7 @@ class BloodTestService
     public function __construct(
         private readonly CoachAccess $access,
         private readonly NotificationDispatcher $dispatcher,
+        private readonly PatientMessenger $messenger,
     ) {
     }
 
@@ -219,10 +221,10 @@ class BloodTestService
         }
 
         try {
-            $this->dispatcher->send(new OutboundMessage(
+            $this->messenger->send(new OutboundMessage(
                 templateKey: $template, category: 'transactional', user: $r->patient, phone: $r->patient->phone,
                 subject: $subject, body: $body, meta: ['blood_test_request_id' => $r->id],
-            ), ['email']);
+            ));
         } catch (\Throwable $e) {
             Log::error('blood test: message failed', ['request' => $r->id, 'error' => $e->getMessage()]);
         }

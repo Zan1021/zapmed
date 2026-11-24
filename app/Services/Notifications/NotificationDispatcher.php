@@ -42,6 +42,12 @@ class NotificationDispatcher
         $this->channels[$channel->key()] = $channel;
     }
 
+    /** True when the channel exists and has what it needs to really deliver (WhatsApp without Meta credentials only logs). */
+    public function isConfigured(string $channelKey): bool
+    {
+        return isset($this->channels[$channelKey]) && $this->channels[$channelKey]->isConfigured();
+    }
+
     /**
      * Send a message across one or more channels.
      *

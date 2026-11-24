@@ -67,4 +67,9 @@ return [
             'authorisation_check_in' => 'Authorisation check-in',
         ],
     ],
+    'notifications' => [
+        // Bump when the wording below changes: each consent record keeps the wording the patient agreed to.
+        'consent_version' => 1,
+        'whatsapp_wording' => 'I agree that Zapmed may send me service messages on WhatsApp, such as appointment, order and follow-up updates. These messages never include my health details. I can change my mind at any time.',
+    ],
 ];

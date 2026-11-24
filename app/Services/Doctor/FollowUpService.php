@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\Coach\CoachAccess;
 use App\Services\Notifications\NotificationDispatcher;
 use App\Services\Notifications\OutboundMessage;
+use App\Services\Patient\PatientMessenger;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -32,6 +33,7 @@ class FollowUpService
     public function __construct(
         private readonly CoachAccess $access,
         private readonly NotificationDispatcher $dispatcher,
+        private readonly PatientMessenger $messenger,
     ) {
     }
 
@@ -228,7 +230,8 @@ class FollowUpService
     private function send(FollowUpRequest $f, OutboundMessage $message): void
     {
         try {
-            $this->dispatcher->send($message, ['email']);
+            // The patient gets it on the channel they chose (with the other as a fallback); Operations get email.
+            $message->user ? $this->messenger->send($message) : $this->dispatcher->send($message, ['email']);
         } catch (\Throwable $e) {
             Log::error('follow-up: message failed', ['follow_up' => $f->id, 'error' => $e->getMessage()]);
         }
