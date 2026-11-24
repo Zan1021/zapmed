@@ -132,4 +132,13 @@ return [
         'retry_minutes' => [5, 15, 30, 60, 120, 240, 480, 720, 1440],
         'max_attempts' => 10,
     ],
+
+    'booking_links' => [
+        // A link Operations send a patient that opens the follow-up booking page (Craig's guide 6.2). About three uses and two
+        // weeks to start with; Operations can change both per link, within the limits below.
+        'default_uses' => 3,
+        'default_days' => 14,
+        'max_uses' => 20,
+        'max_days' => 60,
+    ],
 ];

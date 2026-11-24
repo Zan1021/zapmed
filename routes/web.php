@@ -224,6 +224,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('orders', \App\Livewire\Patient\MyOrders::class)->name('patient.orders');
         Route::get('health', \App\Livewire\Patient\HealthStats::class)->name('patient.health');
         Route::get('follow-up', \App\Livewire\Patient\FollowUp::class)->name('patient.follow-up');
+        Route::get('book/{token}', \App\Http\Controllers\BookingLinkController::class)->where('token', '[A-Za-z0-9_-]{20,80}')->name('booking-link.open');
         Route::get('notifications', \App\Livewire\Patient\Notifications::class)->name('patient.notifications');
         Route::get('rewards', \App\Livewire\Patient\Rewards::class)->name('patient.rewards');
         Route::get('community', \App\Livewire\Patient\Community::class)->name('patient.community');

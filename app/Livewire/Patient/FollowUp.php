@@ -22,7 +22,14 @@ class FollowUp extends Component
     {
         $this->date = now(config('doctor.time.timezone'))->addDay()->format('Y-m-d');
 
-        // Coming from "Book a check-in" on My Orders, or a doctor's request: start on the first open request.
+        // Coming from a booking link Operations sent, or "Book a check-in" on My Orders, or a doctor's request: start on it.
+        $linked = session()->pull('booking_link.follow_up_request_id');
+        if ($linked && FollowUpRequest::where('patient_id', Auth::id())->where('status', FollowUpRequest::REQUESTED)->whereKey($linked)->exists()) {
+            $this->pickRequest((int) $linked);
+
+            return;
+        }
+
         $first = app(PatientFollowUps::class)->requests(Auth::user())->first();
         if ($first) {
             $this->pickRequest($first->id);

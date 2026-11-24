@@ -58,6 +58,27 @@
     </div>
     @endif
 
+    <div class="rounded-lg border border-gray-200 p-4" data-section="booking-links">
+        <h4 class="mb-2 text-sm font-semibold text-gray-700">Booking link</h4>
+        @foreach(['uses', 'days', 'link', 'patient', 'follow_up'] as $f) @error($f) <p class="mb-1 text-xs text-red-600" data-error="{{ $f }}">{{ $message }}</p> @enderror @endforeach
+        @if($newLinkUrl)
+            <p class="mb-2 break-all rounded bg-green-50 p-2 text-xs text-green-900" data-new-link>Copy this now, it is shown only once: <strong>{{ $newLinkUrl }}</strong></p>
+        @endif
+        @foreach($bookingLinks as $bl)
+            <div class="mb-1 flex items-center justify-between text-xs text-gray-700" data-link="{{ $bl->id }}">
+                <span>Made {{ $bl->created_at->format('j M') }}: used {{ $bl->uses }} of {{ $bl->max_uses }}, {{ $bl->revoked_at ? 'switched off' : ($bl->expires_at->isPast() ? 'expired' : 'until '.$bl->expires_at->format('j M')) }}</span>
+                @if($bl->isUsable())
+                    <span><button type="button" wire:click="resendLink({{ $bl->id }})" data-action="resend-link" class="mr-2 text-indigo-600">New link</button><button type="button" wire:click="revokeLink({{ $bl->id }})" data-action="revoke-link" class="text-red-600">Switch off</button></span>
+                @endif
+            </div>
+        @endforeach
+        <div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
+            <input type="number" wire:model="linkUses" min="1" max="{{ $linkDefaults['max_uses'] }}" placeholder="Uses ({{ $linkDefaults['default_uses'] }})" class="w-28 rounded-lg border-gray-300 text-sm">
+            <input type="number" wire:model="linkDays" min="1" max="{{ $linkDefaults['max_days'] }}" placeholder="Days ({{ $linkDefaults['default_days'] }})" class="w-28 rounded-lg border-gray-300 text-sm">
+            <button type="button" wire:click="makeLink" data-action="make-link" class="rounded-lg bg-indigo-600 px-3 py-2 text-white">Make a link</button>
+        </div>
+    </div>
+
     <div class="rounded-lg border border-gray-200 p-4" data-section="care-team">
         <h4 class="mb-2 text-sm font-semibold text-gray-700">Care team (doctors and coaches for this patient)</h4>
         @error('staff') <p class="mb-1 text-xs text-red-600" data-error="staff">{{ $message }}</p> @enderror

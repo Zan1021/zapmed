@@ -46,6 +46,42 @@ class OrderControlsPanel extends Component
     public string $staffId = '';
     public string $teamNote = '';
 
+    // booking links
+    public string $linkUses = '';
+    public string $linkDays = '';
+    public ?string $newLinkUrl = null;     // shown once, straight after a link is made
+
+    public function makeLink(\App\Services\Operations\BookingLinks $links): void
+    {
+        $this->resetErrorBag();
+        $order = Order::with('patient')->findOrFail($this->orderId);
+        $followUp = \App\Models\FollowUpRequest::open()->where('order_id', $order->id)->where('status', 'requested')->first();
+
+        $made = $links->make(
+            Auth::user(), $order->patient,
+            $this->linkUses === '' ? null : (int) $this->linkUses, $this->linkDays === '' ? null : (int) $this->linkDays, $followUp,
+        );
+        $this->newLinkUrl = $made['url'];
+        $this->reset(['linkUses', 'linkDays']);
+    }
+
+    public function resendLink(int $id, \App\Services\Operations\BookingLinks $links): void
+    {
+        $this->resetErrorBag();
+        $order = Order::findOrFail($this->orderId);
+
+        $made = $links->resend(Auth::user(), \App\Models\BookingLink::where('patient_id', $order->patient_id)->findOrFail($id));
+        $this->newLinkUrl = $made['url'];
+    }
+
+    public function revokeLink(int $id, \App\Services\Operations\BookingLinks $links): void
+    {
+        $this->resetErrorBag();
+        $order = Order::findOrFail($this->orderId);
+
+        $links->revoke(Auth::user(), \App\Models\BookingLink::where('patient_id', $order->patient_id)->findOrFail($id));
+    }
+
     public function assignStaff(\App\Services\Operations\StaffAssignments $team): void
     {
         $this->resetErrorBag();
@@ -163,6 +199,8 @@ class OrderControlsPanel extends Component
             'off' => $controls->discountCents($order),
             'isRepeat' => $order->source_type === 'subscription',
             'nextRepeat' => \App\Models\SubscriptionCycle::where('subscription_id', (int) $order->source_ref)->where('status', 'scheduled')->when($order->source_type !== 'subscription', fn ($q) => $q->whereRaw('1 = 0'))->orderBy('scheduled_for')->first()?->scheduled_for?->setTimezone(config('doctor.time.timezone'))->format('j M Y'),
+            'bookingLinks' => \App\Models\BookingLink::where('patient_id', $order->patient_id)->orderByDesc('id')->limit(10)->get(),
+            'linkDefaults' => config('operations.booking_links'),
             'careTeam' => app(\App\Services\Operations\StaffAssignments::class)->historyFor($order->patient),
             'assignableStaff' => app(\App\Services\Operations\StaffAssignments::class)->assignable(),
             'offeredAddons' => app(\App\Services\Operations\Addons::class)->offeredFor($order),
