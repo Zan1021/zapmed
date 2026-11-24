@@ -18,8 +18,25 @@ The lifecycle service only RECORDS outcomes and schedules bookkeeping rows. It n
 
 Tests: `SubscriptionRulesTest` (25), updated `SubscriptionLifecycleTest`, `OrderStateMachineTest`, `OrderBoardTest`, `StatsOrdersTest`.
 
-## NOT built (needs the live engine or a decision)
-- **No live charge engine calls this yet.** Nothing in the app currently triggers the repeat charge, calls `recordSuccess` / `recordFailure` from PayFast results for medication repeats, or applies the order status changes (the state machine is a rules checker, no service moves orders). So the rules are ready and tested, but they only bite once that engine is wired. The membership (R450 etc.) still uses PayFast's own recurring billing and the old failure email.
+## Repeat-charge engine (added 2026-11-24 evening, deployed, OFF by default)
+Captain Zan said to proceed, so the repeat charge piece was built with these design decisions (veto any of them):
+- **PayFast tokenisation + ad hoc charge.** The patient pays once on a checkout with `subscription_type=2` (PayFast saves the card, we get a token). On each due repeat WE call PayFast `POST /subscriptions/{token}/adhoc` at 09:30 SA. (A normal PayFast subscription cannot be charged ad hoc, and PayFast would bill it on its own schedule, so we cannot control retry times that way.)
+- **Only `charge_mode = 'adhoc'` subscriptions are ever charged by us.** Memberships stay `payfast_recurring` (PayFast bills them) and are never touched. New column `subscriptions.charge_mode`; `SubscriptionCheckout::begin(..., tokenised: true)` creates an adhoc one.
+- **Master switch `SUBSCRIPTIONS_CHARGE_ENABLED` (default OFF).** With it off, `subscriptions:run-due` never moves money. With `payfast.test_mode` true every call goes to the PayFast sandbox (`?testing=true`).
+- **Never charges twice.** The reference `RPT-<cycle>-<attempt>` is saved on the cycle before PayFast is called, and a cycle with a reference is never submitted again.
+- **Accepted request = `placed`, not paid.** The ITN (`SubscriptionController::notify`, references starting `RPT-`) confirms: COMPLETE records the payment and schedules the next repeat, FAILED records a failure (retry tomorrow 09:30; third failure pauses). Refused request = failed payment straight away.
+- **If PayFast does not answer (timeout, 5xx)** nobody knows if the money was taken, so the cycle stays `placed` flagged `charge_unknown`: NOT a failure, NO automatic retry. Charges with no confirmation after 3 days are listed by `subscriptions:run-due` for manual review in PayFast.
+- **Amount** = the cycle's `amount_cents` if set (a medication repeat), else the plan price. Retries keep the same amount.
+
+Tests: `RepeatChargeTest` (22, every PayFast call faked).
+
+### Before switching it on (Captain Zan / Craig)
+1. PayFast merchant account must have **tokenisation** and **ad hoc** payments enabled (PayFast support / account owner).
+2. The exact adhoc request/response shape and the API timestamp/signature format were written from PayFast's public docs and are NOT yet proven against the sandbox: run one sandbox repeat on zapdev first (`SUBSCRIPTIONS_CHARGE_ENABLED=true` + `PAYFAST_TEST_MODE=true` only).
+3. Decide where a repeat order is created and priced (still the open "Rx signed, order never advances" item) and call `scheduleFirstRepeat` + the tokenised checkout from there.
+
+## NOT built (needs a decision or the order flow)
+- The order flow that creates a repeat subscription from a signed prescription (`scheduleFirstRepeat` and the tokenised checkout are ready, nothing calls them). The state machine is still a rules checker: no service moves orders yet.
 - Calling `scheduleFirstRepeat` when a prescription is signed (needs the "order advances after Rx signed" fix, still open).
 - Applying `statusAfterNoShow` where an appointment is marked missed.
 - Patient-facing pause / cancel / continue screens (phase 3, My Orders tab) and the messages for the three failed payments.

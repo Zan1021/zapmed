@@ -37,4 +37,17 @@ return [
     'pause_resume_window_days' => 90,
     'initiators' => ['patient', 'operations', 'system'],
     'pause_reason_three_failures' => 'Three failed repeat payments in a row. Waiting for the patient to respond.',
+
+    /*
+     * Charging repeat orders ourselves (PayFast "tokenisation": the patient pays once, we charge the saved token on
+     * each due repeat with PayFast's ad hoc API). OFF unless SUBSCRIPTIONS_CHARGE_ENABLED=true, and only for
+     * subscriptions whose charge_mode is 'adhoc'. Memberships stay 'payfast_recurring' (PayFast bills them itself) and
+     * are never charged by us. Needs "tokenisation" and "ad hoc" switched on in the PayFast merchant account.
+     * With payfast.test_mode true every call goes to the PayFast sandbox (?testing=true).
+     */
+    'charging' => [
+        'enabled' => (bool) env('SUBSCRIPTIONS_CHARGE_ENABLED', false),
+        'timeout_seconds' => 20,
+        'stale_placed_days' => 3,    // a charge with no PayFast confirmation after this long is reported for manual review
+    ],
 ];

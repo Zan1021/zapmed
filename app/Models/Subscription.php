@@ -27,6 +27,7 @@ class Subscription extends Model
         'cancelled_initiator',
         'cancelled_by',
         'repeat_cycle_days',
+        'charge_mode',
         'metadata',
     ];
 

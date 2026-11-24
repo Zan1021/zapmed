@@ -78,6 +78,14 @@ class SubscriptionController extends Controller
         }
 
         $reference = $data['m_payment_id'] ?? '';
+
+        // A repeat we charged ourselves on a saved token (reference RPT-<cycle>-<attempt>).
+        if (str_starts_with($reference, 'RPT-')) {
+            $known = app(\App\Services\Subscriptions\RepeatChargeService::class)->recordItn($reference, (string) ($data['payment_status'] ?? ''), (int) round(((float) ($data['amount_gross'] ?? 0)) * 100));
+
+            return $known ? response('OK', 200) : response('Not found', 404);
+        }
+
         $subscription = Subscription::where('payment_reference', $reference)->first();
 
         if (!$subscription) {

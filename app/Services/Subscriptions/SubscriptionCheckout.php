@@ -21,7 +21,11 @@ class SubscriptionCheckout
     }
 
     /** @param Subscription|null $pending an unpaid subscription on this plan to reuse instead of making a new one */
-    public function begin(User $user, SubscriptionPlan $plan, ?Subscription $pending = null): Subscription
+    /**
+     * @param  bool  $tokenised  true for a repeat order we charge ourselves (PayFast saves the card, we charge the token). The
+     *                          subscription is marked charge_mode 'adhoc'. Memberships stay false: PayFast bills those.
+     */
+    public function begin(User $user, SubscriptionPlan $plan, ?Subscription $pending = null, bool $tokenised = false): Subscription
     {
         if ($pending && ($pending->user_id !== $user->id || $pending->subscription_plan_id !== $plan->id || $pending->status !== 'pending')) {
             $pending = null;
@@ -38,7 +42,11 @@ class SubscriptionCheckout
             $subscription->update(['payment_reference' => PayFastService::generateSubscriptionReference()]);
         }
 
-        $paymentData = $this->payfast->generateSubscriptionData($user, $plan, $subscription);
+        if ($tokenised && $subscription->charge_mode !== 'adhoc') {
+            $subscription->update(['charge_mode' => 'adhoc']);
+        }
+
+        $paymentData = $this->payfast->generateSubscriptionData($user, $plan, $subscription, $tokenised);
 
         // Mirror into the CRM Order aggregate. A bridge failure must never break the customer's purchase.
         try {

@@ -170,7 +170,9 @@ class SubscriptionLifecycle
 
                 $retryAt = $this->atChargeTime(now()->addDays((int) config('subscriptions.retry_after_days', 1)));
                 $retry = $this->scheduleNextCycle($sub->fresh(), $retryAt);
-                $retry->update(['metadata' => ['retry_of' => $cycle->id, 'attempt' => $failures + 1]]);
+                // A retry charges the same amount as the repeat that failed.
+                $keep = isset($cycle->metadata['amount_cents']) ? ['amount_cents' => $cycle->metadata['amount_cents']] : [];
+                $retry->update(['metadata' => ['retry_of' => $cycle->id, 'attempt' => $failures + 1] + $keep]);
 
                 return $cycle->fresh();
             }

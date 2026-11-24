@@ -7,6 +7,7 @@ use App\Models\Payment;
 use App\Models\Subscription;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -59,7 +60,7 @@ class PayFastService
     /**
      * Generate the subscription payment form data for PayFast recurring billing.
      */
-    public function generateSubscriptionData(User $user, SubscriptionPlan $plan, Subscription $subscription): array
+    public function generateSubscriptionData(User $user, SubscriptionPlan $plan, Subscription $subscription, bool $tokenised = false): array
     {
         $data = [
             'merchant_id' => $this->merchantId,
@@ -83,9 +84,66 @@ class PayFastService
             'cycles' => '0', // 0 = indefinite
         ];
 
+        if ($tokenised) {
+            // Tokenisation: PayFast saves the card and gives us a token. WE charge it later (ad hoc), PayFast does not bill by itself.
+            $data['subscription_type'] = '2';
+            foreach (['billing_date', 'recurring_amount', 'frequency', 'cycles'] as $key) {
+                unset($data[$key]);
+            }
+        }
+
         $data['signature'] = $this->generateSignature($data);
 
         return $data;
+    }
+
+    /**
+     * Charge a saved PayFast token once (ad hoc). $amountCents is in cents. Returns ['ok' => bool, 'message' => string,
+     * 'unknown' => bool]. 'unknown' = we could not tell whether PayFast took the money (timeout or network error): the
+     * caller must NOT treat it as a failure or retry, the ITN decides. The result of the payment itself arrives by ITN.
+     *
+     * @return array{ok:bool,message:string,unknown:bool}
+     */
+    public function adhocCharge(string $token, int $amountCents, string $itemName, string $reference): array
+    {
+        $timestamp = now()->format('Y-m-d\TH:i:s');
+        $body = ['amount' => $amountCents, 'item_name' => $itemName, 'm_payment_id' => $reference];
+        $url = 'https://api.payfast.co.za/subscriptions/'.rawurlencode($token).'/adhoc'.($this->testMode ? '?testing=true' : '');
+
+        try {
+            $response = Http::timeout((int) config('subscriptions.charging.timeout_seconds', 20))
+                ->withHeaders([
+                    'merchant-id' => $this->merchantId,
+                    'version' => 'v1',
+                    'timestamp' => $timestamp,
+                    'signature' => $this->generateApiSignature($timestamp, $body),
+                ])
+                ->asJson()
+                ->post($url, $body);
+        } catch (\Throwable $e) {
+            Log::error('PayFast adhoc charge: no answer, result unknown', ['reference' => $reference, 'error' => $e->getMessage()]);
+
+            return ['ok' => false, 'message' => 'No answer from PayFast: '.$e->getMessage(), 'unknown' => true];
+        }
+
+        if ($response->serverError()) {
+            Log::error('PayFast adhoc charge: server error, result unknown', ['reference' => $reference, 'status' => $response->status()]);
+
+            return ['ok' => false, 'message' => 'PayFast server error '.$response->status(), 'unknown' => true];
+        }
+
+        $json = $response->json() ?? [];
+        $accepted = $response->status() === 200 && ($json['status'] ?? null) === 'success' && ($json['data']['response'] ?? false) !== false;
+
+        if (! $accepted) {
+            Log::warning('PayFast adhoc charge refused', ['reference' => $reference, 'status' => $response->status(), 'body' => $json]);
+        }
+
+        return [
+            'ok' => $accepted,
+            'message' => (string) ($json['data']['message'] ?? $json['message'] ?? ($accepted ? 'Accepted' : 'Refused')),
+            'unknown' => false,
+        ];
     }
 
     /**
@@ -167,9 +225,10 @@ class PayFastService
     /**
      * Generate API signature for PayFast API calls.
      */
-    private function generateApiSignature(string $timestamp): string
+    private function generateApiSignature(string $timestamp, array $body = []): string
     {
-        $data = [
+        // Header values and any body fields, sorted by name (PayFast API signature rule).
+        $data = $body + [
             'merchant-id' => $this->merchantId,
             'passphrase' => $this->passphrase,
             'timestamp' => $timestamp,
