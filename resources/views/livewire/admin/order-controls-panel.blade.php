@@ -1,5 +1,5 @@
 <div class="space-y-4" data-panel="order-controls">
-    @foreach(['order', 'type', 'value', 'months', 'reason', 'transaction', 'amount', 'paid_at', 'result'] as $f)
+    @foreach(['order', 'type', 'value', 'months', 'reason', 'transaction', 'amount', 'paid_at', 'result', 'tracking_number', 'status', 'courier', 'url', 'tracked_at'] as $f)
         @error($f) <p class="text-xs text-red-600" data-error="{{ $f }}">{{ $message }}</p> @enderror
     @endforeach
 
@@ -57,6 +57,22 @@
         <button type="button" wire:click="resetRepeat" data-action="reset-repeat" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">Reset repeat</button>
     </div>
     @endif
+
+    <div class="rounded-lg border border-gray-200 p-4" data-section="tracking">
+        <h4 class="mb-2 text-sm font-semibold text-gray-700">Courier tracking</h4>
+        @if($tracking)
+            <p class="mb-2 text-sm text-gray-800" data-current-tracking>{{ $tracking->courier }} {{ $tracking->tracking_number }}: {{ $trackingStatuses[$tracking->status] ?? $tracking->status }} ({{ $tracking->tracked_at->setTimezone(config('doctor.time.timezone'))->format('j M H:i') }})
+                @if($tracking->url)<a href="{{ $tracking->url }}" target="_blank" rel="noopener" class="text-indigo-600">link</a>@endif</p>
+        @endif
+        <div class="grid grid-cols-2 gap-2 text-sm">
+            <input type="text" wire:model="trackNumber" placeholder="Tracking number" class="rounded-lg border-gray-300 text-sm">
+            <select wire:model="trackStatus" class="rounded-lg border-gray-300 text-sm">@foreach($trackingStatuses as $k => $label)<option value="{{ $k }}">{{ $label }}</option>@endforeach</select>
+            <input type="text" wire:model="trackCourier" placeholder="Courier (default {{ config('operations.tracking.default_courier') }})" class="rounded-lg border-gray-300 text-sm">
+            <input type="text" wire:model="trackPharmacyRef" placeholder="Pharmacy reference" class="rounded-lg border-gray-300 text-sm">
+            <input type="url" wire:model="trackUrl" placeholder="Link (optional)" class="col-span-2 rounded-lg border-gray-300 text-sm">
+        </div>
+        <button type="button" wire:click="recordTracking" data-action="record-tracking" class="mt-2 rounded-lg bg-indigo-600 px-3 py-2 text-sm text-white">Save tracking</button>
+    </div>
 
     <div class="rounded-lg border border-gray-200 p-4" data-section="audit">
         <h4 class="mb-2 text-sm font-semibold text-gray-700">What Operations did to this order</h4>

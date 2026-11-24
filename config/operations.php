@@ -37,4 +37,19 @@ return [
             'max_kb' => 2048,
         ],
     ],
+
+    'tracking' => [
+        'default_courier' => 'DPS Laser',
+        // Where a tracking number can be followed. {number} is replaced. Set DPS_TRACKING_URL once DPS Laser give us the address;
+        // until then Operations paste the link by hand. Nothing here talks to DPS Laser: they have not given us API access yet.
+        'url_template' => env('DPS_TRACKING_URL'),
+        'statuses' => [
+            'created' => 'Booked with the courier',
+            'collected' => 'Collected from the pharmacy',
+            'in_transit' => 'On its way',
+            'out_for_delivery' => 'Out for delivery',
+            'delivered' => 'Delivered',
+            'failed' => 'Delivery did not work out',
+        ],
+    ],
 ];

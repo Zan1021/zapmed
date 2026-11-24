@@ -31,6 +31,13 @@ class OrderControlsPanel extends Component
     // repeat reset
     public string $resetReason = '';
 
+    // courier tracking
+    public string $trackNumber = '';
+    public string $trackStatus = 'in_transit';
+    public string $trackCourier = '';
+    public string $trackUrl = '';
+    public string $trackPharmacyRef = '';
+
     public function mount(): void
     {
         abort_unless(Auth::user()?->isAdmin(), 403);
@@ -75,6 +82,13 @@ class OrderControlsPanel extends Component
         $this->reset('resetReason');
     }
 
+    public function recordTracking(\App\Services\Operations\OrderTrackingService $tracking): void
+    {
+        $this->resetErrorBag();
+        $tracking->record(Auth::user(), Order::findOrFail($this->orderId), $this->trackNumber, $this->trackStatus, $this->trackCourier, $this->trackUrl, $this->trackPharmacyRef);
+        $this->reset(['trackNumber', 'trackUrl', 'trackPharmacyRef']);
+    }
+
     private function toCents(string $rand, string $field): int
     {
         $rand = str_replace([' ', ','], ['', '.'], trim($rand));
@@ -96,6 +110,8 @@ class OrderControlsPanel extends Component
             'off' => $controls->discountCents($order),
             'isRepeat' => $order->source_type === 'subscription',
             'nextRepeat' => \App\Models\SubscriptionCycle::where('subscription_id', (int) $order->source_ref)->where('status', 'scheduled')->when($order->source_type !== 'subscription', fn ($q) => $q->whereRaw('1 = 0'))->orderBy('scheduled_for')->first()?->scheduled_for?->setTimezone(config('doctor.time.timezone'))->format('j M Y'),
+            'tracking' => app(\App\Services\Operations\OrderTrackingService::class)->latest($order),
+            'trackingStatuses' => config('operations.tracking.statuses'),
             'audit' => OrderAuditEvent::with('user')->where('order_id', $order->id)->orderByDesc('id')->limit(50)->get(),
         ]);
     }

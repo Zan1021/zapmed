@@ -52,7 +52,9 @@
                 </p>
             @endif
 
-            @if($o['tracking_url'])
+            @if($o['tracking'])
+                <p class="mt-1 text-sm text-gray-800" data-tracking>Delivery: <strong>{{ $o['tracking']['status'] }}</strong> ({{ $o['tracking']['courier'] }} {{ $o['tracking']['number'] }}, {{ $o['tracking']['at']->setTimezone('Africa/Johannesburg')->format('j M') }})@if($o['tracking_url']) &middot; <a href="{{ $o['tracking_url'] }}" target="_blank" rel="noopener" class="text-zapmed-700 hover:underline">Track your delivery</a>@endif</p>
+            @elseif($o['tracking_url'])
                 <p class="mt-1 text-sm"><a href="{{ $o['tracking_url'] }}" target="_blank" rel="noopener" class="text-zapmed-700 hover:underline">Track your delivery</a></p>
             @endif
 

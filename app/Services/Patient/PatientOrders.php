@@ -51,6 +51,7 @@ class PatientOrders
         $openFollowUp = FollowUpRequest::open()->where('order_id', $order->id)->first();
         $auth = OrderAuthorisation::where('order_id', $order->id)->whereIn('status', ['active', 'expired'])->latest('id')->first();
         $held = $sub ? $this->lifecycle->repeatBlockedBy($sub) : null;
+        $tracking = app(\App\Services\Operations\OrderTrackingService::class)->latest($order);
 
         $paused = $subStatus === 'paused';
         $cancelled = $subStatus === 'cancelled' || $status === 'Cancelled';
@@ -72,7 +73,13 @@ class PatientOrders
                 'due' => $this->authorisations->isDueForReview($auth),
             ] : null,
             'follow_up' => $openFollowUp ? ['due_at' => $openFollowUp->due_at, 'status' => $openFollowUp->status, 'is_free' => $openFollowUp->is_free] : null,
-            'tracking_url' => $order->metadata['tracking_url'] ?? null,
+            'tracking_url' => $tracking?->url ?? ($order->metadata['tracking_url'] ?? null),
+            'tracking' => $tracking ? [
+                'courier' => $tracking->courier,
+                'number' => $tracking->tracking_number,
+                'at' => $tracking->tracked_at,
+                'status' => config('operations.tracking.statuses.'.$tracking->status, $tracking->status),
+            ] : null,
             'resume' => $this->resume($order, $sub),
             'paused_until_deadline' => $paused ? $this->resumeDeadline($sub) : null,
             'can_pause' => $sub && in_array($subStatus, ['active', 'payment_failed'], true),
