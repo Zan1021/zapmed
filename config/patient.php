@@ -41,4 +41,17 @@ return [
         'archivable_statuses' => ['Cancelled', 'RefundComplete', 'PendingPayment', 'PaymentFailed'],
         'authorisation_check_in_note' => 'Book a short check-in with your doctor to renew.',
     ],
+    'health' => [
+        // An order counts as weight-loss when its service category contains one of these words (any case).
+        'weight_loss_markers' => ['weight'],
+        // Medical records and results (Craig's guide 3.1). Private disk, random file names.
+        'records' => [
+            'disk' => env('PATIENT_RECORD_DISK', 'local'),
+            'max_kb' => 10240,
+            'allowed_extensions' => ['pdf', 'jpg', 'jpeg', 'png'],
+            'max_per_patient' => 100,
+        ],
+        // The patient may log their own weight and update their height. Same limits as the coach app (config coach.weight).
+        'height_cm' => [100, 230],
+    ],
 ];

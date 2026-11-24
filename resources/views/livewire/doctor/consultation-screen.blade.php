@@ -53,6 +53,9 @@
             <!-- Notes (Craig's guide 4.3) -->
             <livewire:doctor.notes-panel :patient-id="$appointment->patient_id" :key="'nt-'.$appointment->patient_id" />
 
+            <!-- Patient records and results (Craig's guide 3.1) -->
+            <livewire:doctor.records-panel :patient-id="$appointment->patient_id" :key="'rc-'.$appointment->patient_id" />
+
             <!-- Allergies -->
             @php $profile = $appointment->patient->patientProfile; @endphp
             @if($profile && $profile->allergies->count() > 0)

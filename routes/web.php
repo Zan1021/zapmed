@@ -165,6 +165,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('blood-tests/{bloodTest}/form', [\App\Http\Controllers\BloodTestFileController::class, 'form'])->whereNumber('bloodTest')->name('bloodtests.form');
     });
 
+    // A patient's uploaded records and results: the patient and treating doctors only (checked in the controller).
+    Route::get('health-records/{record}', \App\Http\Controllers\HealthRecordFileController::class)->middleware('role:doctor,patient')->whereNumber('record')->name('health-records.show');
+
     // Authorisations: patients nearing their six-month renewal (Craig's guide 4.1).
     Route::get('doctor/authorisations', \App\Livewire\Doctor\Authorisations::class)->middleware('role:doctor')->name('doctor.authorisations');
 
@@ -206,6 +209,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // My Zapmed tabs (Craig's guide section 3): orders, health, follow-up, notifications, rewards, community.
     Route::middleware(['role:patient', 'onboarding'])->prefix('my')->group(function () {
         Route::get('orders', \App\Livewire\Patient\MyOrders::class)->name('patient.orders');
+        Route::get('health', \App\Livewire\Patient\HealthStats::class)->name('patient.health');
     });
 
     // Patient subscription
