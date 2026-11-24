@@ -203,6 +203,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware(['role:patient', 'onboarding'])
         ->name('patient.video');
 
+    // My Zapmed tabs (Craig's guide section 3): orders, health, follow-up, notifications, rewards, community.
+    Route::middleware(['role:patient', 'onboarding'])->prefix('my')->group(function () {
+        Route::get('orders', \App\Livewire\Patient\MyOrders::class)->name('patient.orders');
+    });
+
     // Patient subscription
     Route::get('subscription', \App\Livewire\Patient\MySubscription::class)
         ->middleware(['role:patient', 'onboarding'])
