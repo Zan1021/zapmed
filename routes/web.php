@@ -165,6 +165,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('blood-tests/{bloodTest}/form', [\App\Http\Controllers\BloodTestFileController::class, 'form'])->whereNumber('bloodTest')->name('bloodtests.form');
     });
 
+    // Authorisations: patients nearing their six-month renewal (Craig's guide 4.1).
+    Route::get('doctor/authorisations', \App\Livewire\Doctor\Authorisations::class)->middleware('role:doctor')->name('doctor.authorisations');
+
     // Doctor time tracking (Craig's guide 4.2, 8.1). The export is also open to Operations for the invoice.
     Route::get('doctor/time', \App\Livewire\Doctor\TimeSheet::class)->middleware('role:doctor')->name('doctor.time');
     Route::get('doctor/time/export', \App\Http\Controllers\DoctorTimeExportController::class)->middleware('role:doctor,admin')->name('doctor.time.export');

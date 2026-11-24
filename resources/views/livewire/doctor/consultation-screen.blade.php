@@ -47,6 +47,9 @@
             <!-- Blood tests (Craig's guide 4.2) -->
             <livewire:doctor.blood-test-panel :patient-id="$appointment->patient_id" :key="'bt-'.$appointment->patient_id" />
 
+            <!-- Authorisation (Craig's guide 4.1) -->
+            <livewire:doctor.authorisation-panel :patient-id="$appointment->patient_id" :key="'au-'.$appointment->patient_id" />
+
             <!-- Allergies -->
             @php $profile = $appointment->patient->patientProfile; @endphp
             @if($profile && $profile->allergies->count() > 0)

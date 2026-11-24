@@ -66,4 +66,13 @@ return [
         'allowed_extensions' => ['pdf', 'jpg', 'jpeg', 'png'],
         'max_files_per_request' => 10,
     ],
+    'authorisations' => [
+        // A doctor's authorisation for an order's repeats lasts this many months (Craig's guide 4.1: six months).
+        'months' => 6,
+        // It shows up for review this many days before it ends ("review around month five").
+        'review_days_before' => 31,
+        // Once an order has an authorisation and none is valid any more, the next repeat is held back until a doctor renews it.
+        // PROVISIONAL reading of "renew for six months": confirm with Craig. Orders with no authorisation record are never held.
+        'block_when_expired' => env('DOCTOR_AUTH_BLOCK_EXPIRED', true),
+    ],
 ];

@@ -9,6 +9,7 @@ use App\Models\Subscription;
 use App\Models\SubscriptionCycle;
 use App\Models\SubscriptionFollowup;
 use App\Models\SubscriptionPauseEvent;
+use App\Services\Doctor\AuthorisationService;
 use App\Services\Orders\OrderStatusMachine;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
@@ -249,7 +250,12 @@ class SubscriptionLifecycle
 
         // A doctor's follow-up request blocks the next repeat even when the order itself is still mid-delivery
         // and so was not moved to Pending follow-up request (Craig's guide 4.2: block until review is complete).
-        return FollowUpRequest::open()->where('order_id', $order->id)->exists() ? 'PendingFollowUpRequest' : null;
+        if (FollowUpRequest::open()->where('order_id', $order->id)->exists()) {
+            return 'PendingFollowUpRequest';
+        }
+
+        // The doctor's six-month authorisation has run out and nobody renewed it (Craig's guide 4.1).
+        return app(AuthorisationService::class)->blocksRepeat($order) ? 'AuthorisationExpired' : null;
     }
     // ---- follow-up (+180d) ----------------------------------------------------------------------
 
