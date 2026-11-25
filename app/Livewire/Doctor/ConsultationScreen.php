@@ -298,6 +298,23 @@ class ConsultationScreen extends Component
     }
 
     /**
+     * The height and weight the patient gave in the assessment ("85 kg, 170 cm") with the BMI, for patients whose profile has none yet.
+     *
+     * @return array{weight_kg: float, height_cm: float, bmi: float, category: string}|null
+     */
+    public function getReportedMeasurementsProperty(): ?array
+    {
+        foreach ($this->assessmentView['sections'] ?? [] as $items) {
+            foreach ($items as $item) {
+                if (($item['type'] ?? null) === 'measurements' && ($m = \App\Services\Doctor\BodyMeasurements::fromAnswer($item['answer'] ?? null))) {
+                    return $m;
+                }
+            }
+        }
+
+        return null;
+    }
+    /**
      * The assessment, assembled for the doctor's view (Phase 6, US-16/US-17).
      *
      * Reads the NEW per-answer rows (assessment_answers — with per-answer timestamp + flag) when they

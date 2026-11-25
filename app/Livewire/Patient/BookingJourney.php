@@ -457,6 +457,9 @@ class BookingJourney extends Component
                 'phone' => $this->localCell(),
                 'preferred_contact' => strtolower($this->communication),
                 'id_number' => $this->noId ? null : $this->idNumber,
+                // A valid ID number carries the date of birth and the sex, so the doctor sees the age and gender without asking again.
+                'date_of_birth' => $this->noId ? null : \App\Support\SaIdNumber::dateOfBirth(\App\Support\SaIdNumber::isValid($this->idNumber) ? $this->idNumber : null)?->toDateString(),
+                'gender' => $this->noId ? null : \App\Support\SaIdNumber::gender($this->idNumber),
                 'password' => Hash::make($this->password),
                 'role' => \App\Enums\UserRole::Patient,
                 // Identity is proven by the SMS OTP in this journey, so the account is
@@ -468,6 +471,7 @@ class BookingJourney extends Component
         }
 
         $this->flushConsentLog($user);
+        $this->saveMeasurementsToProfile($user);
 
         $svc = app(AssessmentService::class);
         $onBank = $svc->categoryIdFor($this->slug) !== null;
@@ -497,6 +501,25 @@ class BookingJourney extends Component
 
     // ── book ──────────────────────────────────────────────────────────────────────────────────────
 
+    /** The height and weight the patient gave go on their profile (only where it is still empty), so the doctor sees the BMI. */
+    private function saveMeasurementsToProfile(User $user): void
+    {
+        foreach ($this->visibleQuestions() as $q) {
+            if (($q['type'] ?? null) !== 'measurements') {
+                continue;
+            }
+            $m = \App\Services\Doctor\BodyMeasurements::fromAnswer($this->answers[$q['id']] ?? null);
+            if (! $m) {
+                return;
+            }
+            $profile = \App\Models\PatientProfile::firstOrNew(['user_id' => $user->id]);
+            $profile->height_cm = $profile->height_cm ?: $m['height_cm'];
+            $profile->weight_kg = $profile->weight_kg ?: $m['weight_kg'];
+            $profile->save();
+
+            return;
+        }
+    }
     /** Practitioners who take consultations in this journey (dietitians are coaches, not consult doctors). */
     private function consultDoctors()
     {

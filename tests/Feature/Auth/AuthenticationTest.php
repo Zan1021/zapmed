@@ -62,7 +62,8 @@ class AuthenticationTest extends TestCase
 
         $this->actingAs($user);
 
-        $response = $this->get('/dashboard');
+        // /dashboard sends each role to its own home page (an admin goes to the admin area), so follow it to the page with the menu.
+        $response = $this->followingRedirects()->get('/dashboard');
 
         $response->assertOk();
     }

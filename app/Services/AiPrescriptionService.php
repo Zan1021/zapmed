@@ -57,8 +57,8 @@ ALLERGIES: {$allergies}
 Respond in JSON with these exact fields:
 {
   "dosage": "e.g. 1 capsule, 2 tablets, 5ml",
-  "frequency": "once daily|twice daily|three times daily|at bedtime|as needed|every 4 hours|every 8 hours",
-  "route": "oral|topical|sublingual|IM|IV|per rectum",
+  "frequency": "once daily|twice daily|three times daily|at bedtime|as needed|every 4 hours|every 8 hours|once weekly",
+  "route": "oral|topical|sublingual|IM|IV|subcutaneous|per rectum",
   "duration_days": 7,
   "quantity": 21,
   "instructions": "e.g. Take with food, avoid alcohol",
@@ -66,8 +66,8 @@ Respond in JSON with these exact fields:
 }
 
 Rules:
-- frequency MUST be one of: once daily, twice daily, three times daily, at bedtime, as needed, every 4 hours, every 8 hours
-- route MUST be one of: oral, topical, sublingual, IM, IV, per rectum
+- frequency MUST be one of: once daily, twice daily, three times daily, at bedtime, as needed, every 4 hours, every 8 hours, once weekly
+- route MUST be one of: oral, topical, sublingual, IM, IV, subcutaneous, per rectum
 - quantity should equal dosage_units_per_day * duration_days (e.g. 1 tab twice daily for 7 days = 14)
 - If medication form is cream/topical, route should be topical
 - Flag allergies/interactions in "warning" field
@@ -157,8 +157,8 @@ Respond in JSON with this structure:
       "form": "tablet|capsule|cream|syrup|injection|drops|topical",
       "strength": "e.g. 500mg, 10mg/5ml",
       "dosage": "e.g. 1 tablet, 5ml, apply thin layer",
-      "frequency": "once daily|twice daily|three times daily|at bedtime|as needed|every 4 hours|every 8 hours",
-      "route": "oral|topical|sublingual|IM|IV|per rectum",
+      "frequency": "once daily|twice daily|three times daily|at bedtime|as needed|every 4 hours|every 8 hours|once weekly",
+      "route": "oral|topical|sublingual|IM|IV|subcutaneous|per rectum",
       "duration_days": 7,
       "quantity": 21,
       "instructions": "special instructions",

@@ -235,6 +235,7 @@
                             <option value="as needed">As needed</option>
                             <option value="every 4 hours">Every 4 hours</option>
                             <option value="every 8 hours">Every 8 hours</option>
+                            <option value="once weekly">Once weekly</option>
                         </select>
                     </div>
                     <div>
@@ -246,6 +247,7 @@
                             <option value="sublingual">Sublingual</option>
                             <option value="IM">IM</option>
                             <option value="IV">IV</option>
+                            <option value="subcutaneous">Subcutaneous</option>
                             <option value="per rectum">Per rectum</option>
                         </select>
                     </div>

@@ -129,19 +129,26 @@ class SparReconcilerTest extends TestCase
         $this->assertGreaterThanOrEqual(1, $stats['reopened']);
     }
 
-    public function test_course_complete_resolves_journey_loop(): void
+    public function test_last_repeat_reached_keeps_the_renewal_loop_open_until_the_script_is_replaced(): void
     {
         $this->useRule(SparReconciler::RULE_OVERLAY);
         $patient = $this->patient($this->pharmacy());
-        // Final dispense reached → renewal_due; the journey's own loop closes.
-        $journey = $this->journey($patient, completed: 6, total: 6, status: 'renewal_due');
-        $this->assertSame(SparActionableStatus::Open, $journey->fresh()->actionStatus());
 
-        (new SparReconciler())->reconcileJourney($journey->fresh());
+        // Final dispense reached -> renewal_due. That is when the renewal follow-up OPENS: staff must still chase a new script.
+        $due = $this->journey($patient, completed: 6, total: 6, status: 'renewal_due');
+        (new SparReconciler())->reconcileJourney($due->fresh());
+        $this->assertSame(SparActionableStatus::Open, $due->fresh()->actionStatus());
 
-        $this->assertSame(SparActionableStatus::Resolved, $journey->fresh()->actionStatus());
+        // The loop only closes once the file shows the script was replaced, expired or cancelled.
+        foreach (['renewed', 'expired', 'cancelled'] as $closed) {
+            $journey = $this->journey($patient, completed: 6, total: 6, status: $closed);
+            $this->assertSame(SparActionableStatus::Open, $journey->fresh()->actionStatus());
+
+            (new SparReconciler())->reconcileJourney($journey->fresh());
+
+            $this->assertSame(SparActionableStatus::Resolved, $journey->fresh()->actionStatus(), $closed);
+        }
     }
-
     public function test_disabled_reconciler_is_a_noop(): void
     {
         config()->set('spar.reconciler.enabled', false);

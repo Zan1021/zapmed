@@ -99,7 +99,7 @@ class PatientJourneyTest extends TestCase
     {
         $response = $this->get('/weight-loss');
         $response->assertStatus(200);
-        $response->assertSee('Weight Loss');
+        $response->assertSee('Weight-loss care');
 
         $response = $this->get('/thrush-treatment');
         $response->assertStatus(200);

@@ -87,6 +87,18 @@
             </div>
             @endif
 
+            <!-- BMI worked out from the assessment, when the profile has none -->
+            @if($this->reportedMeasurements && ! $profile?->bmi)
+            @php $rm = $this->reportedMeasurements; @endphp
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4" data-reported-measurements>
+                <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Reported in the assessment</h4>
+                <div class="space-y-1 text-xs">
+                    <div class="flex justify-between"><span class="text-gray-500">Weight</span><span class="text-gray-700">{{ rtrim(rtrim(number_format($rm['weight_kg'], 1, '.', ''), '0'), '.') }} kg</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Height</span><span class="text-gray-700">{{ rtrim(rtrim(number_format($rm['height_cm'], 1, '.', ''), '0'), '.') }} cm</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">BMI</span><span class="text-gray-700" data-reported-bmi>{{ $rm['bmi'] }} ({{ $rm['category'] }})</span></div>
+                </div>
+            </div>
+            @endif
             <!-- Patient Metrics -->
             @if($profile)
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
