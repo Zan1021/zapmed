@@ -15,6 +15,12 @@
 
             <!-- Order Summary -->
             <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                @if(! $appointment)
+                <div class="flex justify-between text-sm mb-2">
+                    <span class="text-gray-500">For</span>
+                    <span class="font-medium text-gray-900">{{ $payment->description }}</span>
+                </div>
+                @else
                 <div class="flex justify-between text-sm mb-2">
                     <span class="text-gray-500">Appointment</span>
                     <span class="font-medium text-gray-900">{{ $appointment->reference }}</span>
@@ -27,6 +33,7 @@
                     <span class="text-gray-500">Date</span>
                     <span class="font-medium text-gray-900">{{ $appointment->appointment_date->format('j M Y') }} at {{ substr($appointment->start_time, 0, 5) }}</span>
                 </div>
+                @endif
                 <div class="flex justify-between text-sm pt-2 border-t border-gray-200 mt-2">
                     <span class="font-semibold text-gray-900">Total</span>
                     <span class="font-bold text-zapmed-600 text-lg">{{ $payment->formatted_amount }}</span>

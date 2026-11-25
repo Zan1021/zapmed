@@ -30,7 +30,9 @@ class PaymentController extends Controller
             ->firstOrFail();
 
         $appointment = $payment->appointment;
-        $paymentData = $this->payfast->generatePaymentData($appointment, $payment);
+        // The first payment for a prescription with repeats saves the card, when that is switched on.
+        $tokenised = app(\App\Services\Subscriptions\PrescriptionRepeats::class)->shouldTokenise($payment);
+        $paymentData = $this->payfast->generatePaymentData($appointment, $payment, $tokenised);
         $processUrl = $this->payfast->getProcessUrl();
 
         return view('payment.checkout', compact('payment', 'appointment', 'paymentData', 'processUrl'));
@@ -130,7 +132,7 @@ class PaymentController extends Controller
         }
 
         // Check if this is a medication payment — dispatch to pharmacy
-        $this->handleMedicationPayment($payment);
+        $this->handleMedicationPayment($payment, $data);
 
         Log::info('PayFast payment completed', [
             'reference' => $payment->reference,
@@ -216,7 +218,7 @@ class PaymentController extends Controller
     /**
      * Handle medication payment — mark prescription as paid and dispatch to pharmacy.
      */
-    private function handleMedicationPayment(Payment $payment): void
+    private function handleMedicationPayment(Payment $payment, array $data = []): void
     {
         // Check if this payment is for medication (description starts with "Medication -")
         if (!str_starts_with($payment->description ?? '', 'Medication -')) {
@@ -237,6 +239,15 @@ class PaymentController extends Controller
 
         // Mark prescription as paid
         $prescription->markPaid($payment->reference);
+
+        // PayFast sent a card token with this payment (the form asked to save the card): start the repeat order. Never blocks the payment.
+        if (! empty($data['token'])) {
+            try {
+                app(\App\Services\Subscriptions\PrescriptionRepeats::class)->start($prescription, (string) $data['token'], $payment);
+            } catch (\Throwable $e) {
+                Log::error('Starting the repeat order failed', ['prescription' => $prescription->reference, 'error' => $e->getMessage()]);
+            }
+        }
 
         // Dispatch to pharmacy
         $pharmacy = app(\App\Services\PharmacyService::class);

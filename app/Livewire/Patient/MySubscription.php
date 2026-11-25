@@ -21,6 +21,7 @@ class MySubscription extends Component
         // Load current active/grace subscription
         $this->subscription = Subscription::where('user_id', Auth::id())
             ->whereIn('status', ['active', 'cancelled', 'paused'])
+            ->whereHas('plan', fn ($q) => $q->where('slug', '!=', \App\Services\Subscriptions\PrescriptionRepeats::PLAN_SLUG))
             ->with('plan')
             ->latest()
             ->first();

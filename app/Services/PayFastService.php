@@ -31,9 +31,15 @@ class PayFastService
     /**
      * Generate the payment form data for an appointment.
      */
-    public function generatePaymentData(Appointment $appointment, Payment $payment): array
+    public function generatePaymentData(?Appointment $appointment, Payment $payment, bool $tokenised = false): array
     {
-        $patient = $appointment->patient;
+        $patient = $appointment?->patient ?? $payment->patient;
+
+        // A medication payment (no appointment) is named after its description, e.g. "Medication - RX-123".
+        $itemName = $appointment ? "Zapmed Consultation - {$appointment->reference}" : 'Zapmed '.($payment->description ?: 'Payment');
+        $itemDescription = $appointment
+            ? $appointment->type_label . ' with Dr. ' . $appointment->doctor->last_name
+            : ($payment->description ?: 'Zapmed payment');
 
         $data = [
             'merchant_id' => $this->merchantId,
@@ -47,9 +53,14 @@ class PayFastService
             'cell_number' => $patient->phone ?? '',
             'm_payment_id' => $payment->reference,
             'amount' => number_format($payment->amount / 100, 2, '.', ''),
-            'item_name' => "Zapmed Consultation - {$appointment->reference}",
-            'item_description' => $appointment->type_label . ' with Dr. ' . $appointment->doctor->last_name,
+            'item_name' => $itemName,
+            'item_description' => $itemDescription,
         ];
+
+        if ($tokenised) {
+            // Tokenisation: PayFast keeps the card and sends us a token with the payment notice. We charge the repeats on it.
+            $data['subscription_type'] = '2';
+        }
 
         // Generate signature
         $data['signature'] = $this->generateSignature($data);

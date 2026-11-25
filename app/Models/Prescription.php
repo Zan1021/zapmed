@@ -21,6 +21,8 @@ class Prescription extends Model
     protected $fillable = [
         'reference',
         'consultation_id',
+        'refill_of_id',
+        'refill_no',
         'patient_id',
         'doctor_id',
         'prescriber_name',

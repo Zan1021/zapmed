@@ -131,6 +131,8 @@ class RepeatChargeService
         if ($payfastStatus === 'COMPLETE') {
             $sub->recordPayment($amountCents);
             $this->lifecycle->recordSuccess($cycle);
+            // A medication repeat: record the refill and send it to the pharmacy. Never blocks the payment notice.
+            app(PrescriptionRepeats::class)->onRepeatPaid($cycle->fresh(), $amountCents);
         } elseif ($payfastStatus === 'FAILED') {
             $this->lifecycle->recordFailure($cycle, 'PayFast reported the payment as failed');
         }

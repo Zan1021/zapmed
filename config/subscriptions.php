@@ -45,6 +45,13 @@ return [
      * are never charged by us. Needs "tokenisation" and "ad hoc" switched on in the PayFast merchant account.
      * With payfast.test_mode true every call goes to the PayFast sandbox (?testing=true).
      */
+    // Repeat orders that start from a signed prescription with repeats (medication refills charged on a saved card).
+    'repeat_orders' => [
+        // The FIRST medication payment saves the card (PayFast tokenisation). Leave OFF until PayFast has enabled tokenisation on
+        // the merchant account: with it off the normal payment form is unchanged and no repeat order starts by itself.
+        'tokenise_first_payment' => (bool) env('SUBSCRIPTIONS_TOKENISE_FIRST_PAYMENT', false),
+        'default_pack_days' => 28,       // when no medication line says how long it lasts
+    ],
     'charging' => [
         'enabled' => (bool) env('SUBSCRIPTIONS_CHARGE_ENABLED', false),
         'timeout_seconds' => 20,

@@ -16,6 +16,7 @@ class MyPrescriptions extends Component
     public function getPrescriptionsProperty()
     {
         $query = Prescription::where('doctor_id', Auth::id())
+            ->whereNull('refill_of_id')   // a paid repeat is a copy for the pharmacy, not something the doctor signed again
             ->with(['patient', 'items'])
             ->orderByDesc('signed_at');
 
@@ -30,9 +31,9 @@ class MyPrescriptions extends Component
     {
         $doctorId = Auth::id();
         return [
-            'total' => Prescription::where('doctor_id', $doctorId)->count(),
-            'this_month' => Prescription::where('doctor_id', $doctorId)->whereMonth('signed_at', now()->month)->count(),
-            'chronic' => Prescription::where('doctor_id', $doctorId)->where('is_chronic', true)->count(),
+            'total' => Prescription::where('doctor_id', $doctorId)->whereNull('refill_of_id')->count(),
+            'this_month' => Prescription::where('doctor_id', $doctorId)->whereNull('refill_of_id')->whereMonth('signed_at', now()->month)->count(),
+            'chronic' => Prescription::where('doctor_id', $doctorId)->whereNull('refill_of_id')->where('is_chronic', true)->count(),
         ];
     }
 
