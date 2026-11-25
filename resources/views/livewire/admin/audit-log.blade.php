@@ -1,50 +1,74 @@
 <div>
     <x-slot name="header">Audit Log</x-slot>
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
-        <div class="text-center">
-            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                </svg>
-            </div>
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">Audit Log</h3>
-            <p class="text-sm text-gray-500 max-w-md mx-auto">
-                The audit log system tracks all significant actions on the platform — user logins, role changes, appointment modifications, and more.
-            </p>
-            <div class="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-200 max-w-md mx-auto">
-                <p class="text-sm text-amber-700">
-                    <span class="font-medium">Coming soon.</span> Audit logging will be implemented with the security hardening phase before launch.
-                </p>
-            </div>
-        </div>
+    <p class="mb-4 text-sm text-gray-500">A record of what happened on the platform. You can read it here but nobody can change it. Times are South African time.</p>
 
-        <!-- Preview of what audit log entries will look like -->
-        <div class="mt-8 border-t border-gray-100 pt-6">
-            <h4 class="text-sm font-medium text-gray-700 mb-4">Preview — entry format:</h4>
-            <div class="space-y-3 opacity-60">
-                <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                    <div class="w-2 h-2 mt-2 bg-green-500 rounded-full flex-shrink-0"></div>
-                    <div>
-                        <p class="text-sm text-gray-700"><span class="font-medium">admin@zapmed.co.za</span> changed role of user #12 from Patient to Doctor</p>
-                        <p class="text-xs text-gray-400">2 minutes ago &middot; IP 102.x.x.x</p>
-                    </div>
-                </div>
-                <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                    <div class="w-2 h-2 mt-2 bg-blue-500 rounded-full flex-shrink-0"></div>
-                    <div>
-                        <p class="text-sm text-gray-700"><span class="font-medium">dr.smith@zapmed.co.za</span> completed consultation #ZAP-ABC123</p>
-                        <p class="text-xs text-gray-400">15 minutes ago &middot; IP 102.x.x.x</p>
-                    </div>
-                </div>
-                <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                    <div class="w-2 h-2 mt-2 bg-amber-500 rounded-full flex-shrink-0"></div>
-                    <div>
-                        <p class="text-sm text-gray-700"><span class="font-medium">patient@gmail.com</span> failed login attempt (2FA expired)</p>
-                        <p class="text-xs text-gray-400">1 hour ago &middot; IP 41.x.x.x</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-gray-200 bg-white p-4 text-sm" data-section="filters">
+        <label>Show
+            <select wire:model.live="source" class="mt-1 block rounded-lg border-gray-300 text-sm">
+                <option value="platform">What people changed</option>
+                <option value="access">Who opened medical records</option>
+            </select>
+        </label>
+        @if($source === 'platform')
+            <label>Area
+                <select wire:model.live="domain" class="mt-1 block rounded-lg border-gray-300 text-sm">
+                    <option value="">Everything</option>
+                    @foreach($domains as $d)<option value="{{ $d }}">{{ $d }}</option>@endforeach
+                </select>
+            </label>
+        @endif
+        <label>From <input type="date" wire:model.live="from" class="mt-1 block rounded-lg border-gray-300 text-sm"></label>
+        <label>To <input type="date" wire:model.live="to" class="mt-1 block rounded-lg border-gray-300 text-sm"></label>
+        <label class="grow">Search <input type="text" wire:model.live.debounce.400ms="search" placeholder="{{ $source === 'platform' ? 'action, who, or reference' : 'person, address or words' }}" class="mt-1 block w-full rounded-lg border-gray-300 text-sm"></label>
+        @if($source === 'platform')
+            <button type="button" wire:click="verifyChain" data-action="verify-chain" class="rounded-lg border border-gray-300 px-3 py-2 text-gray-700">Check nothing was changed</button>
+        @endif
+    </div>
+    @if($chainResult)<p class="mb-4 rounded-lg bg-gray-50 p-3 text-sm text-gray-800" data-chain-result>{{ $chainResult }}</p>@endif
+
+    <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
+        @if($source === 'platform')
+            <table class="w-full text-sm" data-list="platform">
+                <thead class="bg-gray-50 text-xs uppercase text-gray-500"><tr><th class="px-4 py-3 text-left">When</th><th class="px-4 py-3 text-left">Who</th><th class="px-4 py-3 text-left">Area</th><th class="px-4 py-3 text-left">What</th><th class="px-4 py-3 text-left">About</th><th class="px-4 py-3"></th></tr></thead>
+                <tbody class="divide-y divide-gray-100">
+                    @forelse($events as $e)
+                        <tr data-event="{{ $e->id }}">
+                            <td class="px-4 py-2 text-gray-600">{{ $e->occurred_at->setTimezone($tz)->format('j M Y H:i') }}</td>
+                            <td class="px-4 py-2 text-gray-800">{{ $e->actor ? trim($e->actor->first_name.' '.$e->actor->last_name) : ($e->actor_label ?: 'The system') }}</td>
+                            <td class="px-4 py-2 text-gray-600">{{ $e->domain }}</td>
+                            <td class="px-4 py-2 text-gray-900">{{ $e->action }}</td>
+                            <td class="px-4 py-2 text-gray-600">{{ trim(class_basename((string) $e->subject_type).' '.$e->subject_id) ?: '-' }}</td>
+                            <td class="px-4 py-2 text-right">@if($e->before || $e->after)<button type="button" wire:click="toggle({{ $e->id }})" data-action="details" class="text-indigo-600">{{ $open === $e->id ? 'Hide' : 'Details' }}</button>@endif</td>
+                        </tr>
+                        @if($open === $e->id)
+                            <tr data-details="{{ $e->id }}"><td colspan="6" class="bg-gray-50 px-4 py-3">
+                                <pre class="whitespace-pre-wrap break-all text-xs text-gray-700">{{ \Illuminate\Support\Str::limit(json_encode(['before' => $e->before, 'after' => $e->after], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), 1500) }}</pre>
+                            </td></tr>
+                        @endif
+                    @empty
+                        <tr><td colspan="6" class="px-4 py-8 text-center text-gray-400" data-empty="audit">Nothing found.</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+            <div class="p-3">{{ $events->links() }}</div>
+        @else
+            <table class="w-full text-sm" data-list="access">
+                <thead class="bg-gray-50 text-xs uppercase text-gray-500"><tr><th class="px-4 py-3 text-left">When</th><th class="px-4 py-3 text-left">Who</th><th class="px-4 py-3 text-left">What</th><th class="px-4 py-3 text-left">Address</th></tr></thead>
+                <tbody class="divide-y divide-gray-100">
+                    @forelse($rows as $r)
+                        <tr data-access="{{ $r->id }}">
+                            <td class="px-4 py-2 text-gray-600">{{ \Illuminate\Support\Carbon::parse($r->created_at)->setTimezone($tz)->format('j M Y H:i') }}</td>
+                            <td class="px-4 py-2 text-gray-800">{{ $r->first_name ? trim($r->first_name.' '.$r->last_name) : 'Nobody signed in' }}</td>
+                            <td class="px-4 py-2 text-gray-900">{{ $r->description ?: $r->action }}</td>
+                            <td class="px-4 py-2 text-gray-600">{{ $r->ip_address }}</td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="4" class="px-4 py-8 text-center text-gray-400" data-empty="audit">Nothing found.</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+            <div class="p-3">{{ $rows->links() }}</div>
+        @endif
     </div>
 </div>

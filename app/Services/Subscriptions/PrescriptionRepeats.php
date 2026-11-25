@@ -191,7 +191,7 @@ class PrescriptionRepeats
 
                 Payment::create([
                     'patient_id' => $rx->patient_id, 'order_id' => $order?->id, 'provider' => 'payfast', 'amount' => $amountCents ?: (int) $rx->total_amount,
-                    'currency' => 'ZAR', 'status' => 'completed', 'paid_at' => now(), 'provider_reference' => $reference, 'is_repeat_charge' => true,
+                    'currency' => 'ZAR', 'status' => 'completed', 'paid_at' => now(), 'provider_reference' => $reference, 'is_repeat_charge' => true, 'payment_method' => 'card',
                     'description' => "Refill ({$number}/{$rx->repeats}) - {$rx->reference}",
                 ]);
 

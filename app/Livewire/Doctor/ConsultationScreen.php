@@ -55,8 +55,9 @@ class ConsultationScreen extends Component
             ]
         );
 
-        // Mark appointment as in progress
-        if ($appointment->status !== 'in_progress' && $appointment->status !== 'completed') {
+        // Opening the screen starts the appointment only when it is confirmed (paid) and it is today or earlier. Looking at one that
+        // is days away, or that has not been paid for, must not change it.
+        if ($this->canStart($appointment) && $appointment->status === 'confirmed') {
             $appointment->update(['status' => 'in_progress']);
         }
 
@@ -85,8 +86,23 @@ class ConsultationScreen extends Component
     /**
      * Start a video call — creates Daily.co room and tokens.
      */
+    /** An appointment may be started once it is paid and it is today (South African date) or earlier. */
+    private function canStart(\App\Models\Appointment $appointment): bool
+    {
+        return in_array($appointment->status, ['confirmed', 'in_progress'], true)
+            && $appointment->appointment_date->toDateString() <= now(config('doctor.time.timezone'))->toDateString();
+    }
+
     public function startVideoCall(): void
     {
+        if (! $this->canStart($this->appointment)) {
+            session()->flash('error', $this->appointment->status === 'completed'
+                ? 'This consultation is already finished.'
+                : 'This appointment is on '.$this->appointment->appointment_date->format('j M Y').' or is not confirmed yet. You can start the call on the day.');
+
+            return;
+        }
+
         $daily = app(DailyService::class);
 
         if (!$daily->isConfigured()) {

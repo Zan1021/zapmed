@@ -131,7 +131,7 @@ class ConsultSmallFixesTest extends TestCase
     private function consult(array $assessmentAnswers, ?PatientProfile $profileData = null): array
     {
         $doctor = User::factory()->create(['role' => UserRole::Doctor]);
-        DoctorProfile::create(['user_id' => $doctor->id, 'hpcsa_number' => 'MP1', 'speciality' => 'GP', 'qualification' => 'MBChB', 'doctor_type' => 'full_time', 'is_verified' => true]);
+        DoctorProfile::create(['user_id' => $doctor->id, 'hpcsa_number' => 'MP'.uniqid(), 'speciality' => 'GP', 'qualification' => 'MBChB', 'doctor_type' => 'full_time', 'is_verified' => true]);
         $patient = User::factory()->create(['role' => UserRole::Patient]);
         $appt = Appointment::create(['patient_id' => $patient->id, 'doctor_id' => $doctor->id, 'type' => 'general-health', 'status' => 'confirmed', 'appointment_date' => now()->format('Y-m-d'), 'start_time' => '10:00', 'end_time' => '10:45', 'communication_preference' => 'video', 'fee_amount' => 70000, 'is_paid' => true]);
         Assessment::create(['user_id' => $patient->id, 'appointment_id' => $appt->id, 'treatment_slug' => 'weight-loss', 'treatment_name' => 'Weight loss', 'answers' => $assessmentAnswers, 'status' => 'completed']);
@@ -242,5 +242,39 @@ class ConsultSmallFixesTest extends TestCase
         [$c] = $this->journeyAtDetails();
 
         $c->set('idNumber', $this->saId('850315', 5123))->call('sendOtp')->assertHasNoErrors()->assertSet('otpSent', true);
+    }
+
+    // --- the consult screen does not start an appointment that is not due ------------------------------------------
+
+    public function test_opening_the_consult_screen_only_starts_a_confirmed_appointment_that_is_due(): void
+    {
+        $this->travelTo(\Carbon\CarbonImmutable::parse('2026-11-25 10:00', 'Africa/Johannesburg'));
+        [$doctor, , $today] = $this->consult([]);
+        [, , $later] = $this->consult([]);
+        [, , $unpaid] = $this->consult([]);
+        $later->update(['appointment_date' => '2026-11-28', 'doctor_id' => $doctor->id]);
+        $today->update(['appointment_date' => '2026-11-25', 'doctor_id' => $doctor->id]);
+        $unpaid->update(['appointment_date' => '2026-11-25', 'status' => 'pending_payment', 'doctor_id' => $doctor->id]);
+
+        Livewire::actingAs($doctor)->test(ConsultationScreen::class, ['appointment' => $later]);
+        Livewire::actingAs($doctor)->test(ConsultationScreen::class, ['appointment' => $unpaid]);
+        $this->assertSame('confirmed', $later->fresh()->status, 'A future appointment is not started by looking at it.');
+        $this->assertSame('pending_payment', $unpaid->fresh()->status, 'An unpaid appointment is not started.');
+
+        Livewire::actingAs($doctor)->test(ConsultationScreen::class, ['appointment' => $today]);
+        $this->assertSame('in_progress', $today->fresh()->status);
+    }
+
+    public function test_the_video_call_is_refused_for_an_appointment_that_is_not_due(): void
+    {
+        $this->travelTo(\Carbon\CarbonImmutable::parse('2026-11-25 10:00', 'Africa/Johannesburg'));
+        [$doctor, , $later] = $this->consult([]);
+        $later->update(['appointment_date' => '2026-11-28', 'doctor_id' => $doctor->id]);
+        $this->mock(\App\Services\DailyService::class, fn ($m) => $m->shouldNotReceive('createRoom'));
+
+        Livewire::actingAs($doctor)->test(ConsultationScreen::class, ['appointment' => $later])->call('startVideoCall')->assertSee('28 Nov 2026');
+
+        $this->assertSame('confirmed', $later->fresh()->status);
+        $this->assertSame(0, \App\Models\VideoSession::count());
     }
 }
