@@ -47,3 +47,12 @@ Tests: `RepeatChargeTest` (22, every PayFast call faked).
 2. **Retry timing:** the first retry is the day after the failure at 09:30, then the day after that; the third failure pauses.
 3. **Blood tests / review-feedback statuses** do not block repeats.
 4. **Cancel always needs a reason**, for any initiator. Pause needs a reason from a patient only.
+
+## CONNECTED 2026-11-25 (evening): repeats from a signed prescription (`PrescriptionRepeats`)
+- **Bug found and fixed:** the medication payment page crashed (it needed an appointment, medication payments have none), so a patient could not pay for a signed prescription at all. It now works for medication payments.
+- **First payment saves the card** (`subscription_type=2`) only for a signed chronic prescription with repeats left AND only while `SUBSCRIPTIONS_TOKENISE_FIRST_PAYMENT=true` (default OFF: PayFast must enable tokenisation first, otherwise the payment form could be refused). When the payment notice carries a token, the repeat order starts: a subscription on the hidden `medication-repeat` plan, `charge_mode adhoc`, the pack length from the longest medication line (default 28), first repeat (pack - 5) days after signing at 09:30 SA for the prescription total, plus the order the patient and Operations control. Repeated notices start only one.
+- **A paid repeat** (`RepeatChargeService::recordItn` COMPLETE): records a completed repeat payment, uses up one repeat, makes the refill (a copy of the signed prescription with `refill_of_id` + `refill_no`, unique per repeat) and sends it to the pharmacy through the normal sender, so the pharmacy message log, automatic retries and "never send twice" rules apply to it. A pharmacy problem never undoes the payment. After the last repeat the order is `completed` and nothing more is scheduled.
+- Doctor "My prescriptions" no longer counts refills (they are copies for the pharmacy).
+- Tests: `PrescriptionRepeatsTest` (13).
+- **Still needed before real money:** PayFast tokenisation + ad hoc on the merchant account; one sandbox run on zapdev with `SUBSCRIPTIONS_TOKENISE_FIRST_PAYMENT=true`, `SUBSCRIPTIONS_CHARGE_ENABLED=true`, `PAYFAST_TEST_MODE=true`; the pharmacy payload for a refill (`prescription_reference` is the refill's own reference, `refill_of` is not sent yet: ask the pharmacy / RX Hub whether they want the original reference).
+- Not done: a patient screen to see "repeat 2 of 3" on the prescriptions page; the order status for failed repeat payments is not moved by the lifecycle (it only records).
