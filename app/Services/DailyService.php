@@ -13,8 +13,8 @@ class DailyService
 
     public function __construct()
     {
-        $this->apiKey = config('services.daily.api_key');
-        $this->domain = config('services.daily.domain');
+        $this->apiKey = (string) config('services.daily.api_key');
+        $this->domain = (string) config('services.daily.domain');
     }
 
     /**

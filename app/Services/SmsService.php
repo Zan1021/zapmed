@@ -14,9 +14,9 @@ class SmsService
 
     public function __construct()
     {
-        $this->provider = config('services.sms.provider', 'bulksms');
-        $this->apiToken = config('services.sms.api_token', '');
-        $this->senderId = config('services.sms.sender_id', 'Zapmed');
+        $this->provider = (string) config('services.sms.provider', 'bulksms');
+        $this->apiToken = (string) config('services.sms.api_token', '');
+        $this->senderId = (string) config('services.sms.sender_id', 'Zapmed');
 
         $this->apiUrl = match ($this->provider) {
             'bulksms' => 'https://api.bulksms.com/v1/messages',

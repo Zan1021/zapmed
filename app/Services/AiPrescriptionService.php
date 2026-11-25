@@ -14,8 +14,8 @@ class AiPrescriptionService
 
     public function __construct()
     {
-        $this->apiKey = config('services.openai.api_key', '');
-        $this->model = config('services.openai.model', 'gpt-4o-mini');
+        $this->apiKey = (string) config('services.openai.api_key', '');
+        $this->model = (string) config('services.openai.model', 'gpt-4o-mini');
         $this->baseUrl = 'https://api.openai.com/v1';
     }
 
