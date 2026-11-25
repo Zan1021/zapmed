@@ -29,10 +29,21 @@
         <div class="mb-4 rounded-xl border border-gray-200 bg-white p-4" data-section="daily">
             <h2 class="mb-2 text-sm font-semibold uppercase text-gray-500">Orders each day</h2>
             @php($max = max(1, max($d['orders']['per_day'] ?: [0])))
-            <div class="flex h-28 items-end gap-px" role="img" aria-label="Orders each day">
+            @php($palette = ['bg-indigo-500', 'bg-emerald-500', 'bg-amber-500', 'bg-rose-500', 'bg-sky-500', 'bg-violet-500', 'bg-teal-500', 'bg-orange-500'])
+            @php($colour = fn ($cat) => $palette[array_search($cat, $d['orders']['chart_categories']) % count($palette)])
+            <div class="flex h-28 items-end gap-px" role="img" aria-label="Orders each day, split by service">
                 @foreach($d['orders']['per_day'] as $day => $n)
-                    <div class="flex-1 bg-indigo-400" style="height: {{ max(2, (int) round($n / $max * 100)) }}%" title="{{ $day }}: {{ $n }}" data-day="{{ $day }}" data-count="{{ $n }}"></div>
+                    <div class="flex flex-1 flex-col-reverse" style="height: {{ $n ? max(2, (int) round($n / $max * 100)) : 2 }}%" title="{{ $day }}: {{ $n }}" data-day="{{ $day }}" data-count="{{ $n }}">
+                        @forelse($d['orders']['per_day_by_category'][$day] ?? [] as $cat => $cn)
+                            <div class="{{ $colour($cat) }}" style="height: {{ (int) round($cn / $n * 100) }}%" data-cat="{{ $cat }}" data-cat-count="{{ $cn }}"></div>
+                        @empty
+                            <div class="h-full bg-gray-200"></div>
+                        @endforelse
+                    </div>
                 @endforeach
+            </div>
+            <div class="mt-2 flex flex-wrap gap-3 text-xs text-gray-600" data-legend>
+                @foreach($d['orders']['chart_categories'] as $cat)<span><span class="mr-1 inline-block h-2 w-2 rounded-sm {{ $colour($cat) }}"></span>{{ $cat }}</span>@endforeach
             </div>
         </div>
 
@@ -46,6 +57,12 @@
                 <p class="text-sm text-gray-800">Received: <strong data-figure="received">{{ $rand($d['revenue']['received_cents']) }}</strong> ({{ $d['revenue']['received_count'] }} payments)</p>
                 <p class="text-sm text-gray-800">Waiting to be paid: <strong data-figure="pending">{{ $rand($d['revenue']['pending_cents']) }}</strong> ({{ $d['revenue']['pending_count'] }} orders)</p>
                 <p class="text-sm text-gray-800">Payments that failed: <strong>{{ $d['revenue']['failed_count'] }}</strong></p>
+                <div class="mt-2 border-t border-gray-100 pt-2" data-section="revenue-split">
+                    <p class="text-xs text-gray-500">Received, by type</p>
+                    <p class="text-sm text-gray-800">First orders: <strong data-figure="first">{{ $rand($d['revenue']['first_cents']) }}</strong>, repeats: <strong data-figure="repeat">{{ $rand($d['revenue']['repeat_cents']) }}</strong></p>
+                    <p class="mt-1 text-xs text-gray-500">Received, by service</p>
+                    @forelse($d['revenue']['by_category_cents'] as $cat => $cents)<p class="text-sm text-gray-800" data-revenue-cat="{{ $cat }}">{{ $cat }}: <strong>{{ $rand($cents) }}</strong></p>@empty<p class="text-sm text-gray-400">Nothing received in this period.</p>@endforelse
+                </div>
             </div>
             <div class="rounded-xl border border-gray-200 bg-white p-4" data-section="signups">
                 <h2 class="mb-2 text-sm font-semibold uppercase text-gray-500">Sign-ups</h2>

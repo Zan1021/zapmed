@@ -70,7 +70,24 @@ class OperationsDashboard
             $series[$d->format('Y-m-d')] = $perDay[$d->format('Y-m-d')] ?? 0;
         }
 
+        // the same days again, split by service, for the stacked chart
+        $perDayByCategory = [];
+        $categories = [];
+        foreach ($in()->get(['ordered_at', 'service_category']) as $o) {
+            $d = $o->ordered_at->setTimezone($this->tz())->format('Y-m-d');
+            $cat = $o->service_category ?: 'Other';
+            $perDayByCategory[$d][$cat] = ($perDayByCategory[$d][$cat] ?? 0) + 1;
+            $categories[$cat] = ($categories[$cat] ?? 0) + 1;
+        }
+        arsort($categories);
+        $seriesByCategory = [];
+        foreach (array_keys($series) as $day) {
+            $seriesByCategory[$day] = $perDayByCategory[$day] ?? [];
+        }
+
         return [
+            'per_day_by_category' => $seriesByCategory,
+            'chart_categories' => array_keys($categories),
             'today' => Order::whereBetween('ordered_at', [$now->startOfDay()->utc(), $now->endOfDay()->utc()])->count(),
             'this_month' => Order::whereBetween('ordered_at', [$now->startOfMonth()->utc(), $now->endOfMonth()->utc()])->count(),
             'in_range' => array_sum($series),
@@ -108,7 +125,26 @@ class OperationsDashboard
         $received = Payment::where('status', 'completed')->whereBetween('paid_at', [$from->utc(), $to->utc()]);
         $pending = Order::where('status', 'PendingPayment')->whereBetween('ordered_at', [$from->utc(), $to->utc()]);
 
+        // Where the money came from: which service, and whether it paid a first order or a repeat. Payments with no order
+        // (older bookings) are counted under "Other" and as a first purchase.
+        $byCategory = [];
+        $firstCents = 0;
+        $repeatCents = 0;
+        foreach ((clone $received)->with('order:id,service_category,source_type')->get(['id', 'order_id', 'amount']) as $p) {
+            $cat = $p->order?->service_category ?: 'Other';
+            $byCategory[$cat] = ($byCategory[$cat] ?? 0) + (int) $p->amount;
+            if ($p->order?->source_type === 'subscription') {
+                $repeatCents += (int) $p->amount;
+            } else {
+                $firstCents += (int) $p->amount;
+            }
+        }
+        arsort($byCategory);
+
         return [
+            'by_category_cents' => $byCategory,
+            'first_cents' => $firstCents,
+            'repeat_cents' => $repeatCents,
             'received_cents' => (int) (clone $received)->sum('amount'),
             'received_count' => (clone $received)->count(),
             'pending_cents' => (int) (clone $pending)->sum('total_minor'),

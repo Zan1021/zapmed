@@ -239,4 +239,50 @@ class OperationsOverviewTest extends TestCase
             ->set('useMonth', '0')->set('from', '2026-02-31')->assertHasErrors('from')
             ->set('from', '2026-11-01')->set('to', '2026-11-30')->assertHasNoErrors()->assertSeeHtml('data-section="coaching"');
     }
-}
+
+    public function test_the_daily_chart_is_split_by_service_with_no_gaps(): void
+    {
+        $p = $this->patient();
+        $this->order($p, '2026-11-10 10:00', ['service_category' => 'Weight loss']);
+        $this->order($p, '2026-11-10 11:00', ['service_category' => 'Weight loss']);
+        $this->order($p, '2026-11-10 12:00', ['service_category' => null]);
+        $this->order($p, '2026-11-12 10:00', ['service_category' => 'Skincare']);
+
+        $o = $this->dash()['orders'];
+
+        $this->assertSame(['Weight loss' => 2, 'Other' => 1], $o['per_day_by_category']['2026-11-10']);
+        $this->assertSame([], $o['per_day_by_category']['2026-11-11']);
+        $this->assertSame(['Weight loss', 'Other', 'Skincare'], $o['chart_categories']);
+        $this->assertSame(array_keys($o['per_day']), array_keys($o['per_day_by_category']));
+    }
+
+    public function test_money_received_is_split_by_service_and_first_versus_repeat(): void
+    {
+        $p = $this->patient();
+        $paid = CarbonImmutable::parse('2026-11-10 10:00', 'Africa/Johannesburg')->utc();
+        $first = $this->order($p, '2026-11-09 10:00', ['service_category' => 'Weight loss']);
+        $repeat = $this->order($p, '2026-11-09 11:00', ['service_category' => 'Weight loss', 'source_type' => 'subscription', 'source_ref' => '1']);
+        Payment::create(['patient_id' => $p->id, 'order_id' => $first->id, 'amount' => 70000, 'status' => 'completed', 'paid_at' => $paid]);
+        Payment::create(['patient_id' => $p->id, 'order_id' => $repeat->id, 'amount' => 45000, 'status' => 'completed', 'paid_at' => $paid]);
+        Payment::create(['patient_id' => $p->id, 'amount' => 10000, 'status' => 'completed', 'paid_at' => $paid]);
+
+        $r = $this->dash()['revenue'];
+
+        $this->assertSame(['Weight loss' => 115000, 'Other' => 10000], $r['by_category_cents']);
+        $this->assertSame([80000, 45000], [$r['first_cents'], $r['repeat_cents']]);
+        $this->assertSame($r['received_cents'], $r['first_cents'] + $r['repeat_cents']);
+        $this->assertSame($r['received_cents'], array_sum($r['by_category_cents']));
+    }
+
+    public function test_the_screen_shows_the_chart_key_and_the_money_split(): void
+    {
+        $p = $this->patient();
+        $paid = CarbonImmutable::parse('2026-11-10 10:00', 'Africa/Johannesburg')->utc();
+        $o = $this->order($p, '2026-11-10 10:00', ['service_category' => 'Weight loss']);
+        Payment::create(['patient_id' => $p->id, 'order_id' => $o->id, 'amount' => 70000, 'status' => 'completed', 'paid_at' => $paid]);
+        $this->actingAs($this->ops);
+
+        Livewire::test(OperationsOverview::class)->set('month', '2026-11')
+            ->assertSeeHtml('data-legend')->assertSeeHtml('data-cat="Weight loss"')
+            ->assertSeeHtml('data-revenue-cat="Weight loss"')->assertSeeHtml('data-figure="first"')->assertSee('R700.00');
+    }}
