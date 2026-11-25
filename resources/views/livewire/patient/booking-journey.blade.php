@@ -134,9 +134,19 @@
                 @error('cell')<p class="error" role="alert">{{ $message }}</p>@enderror
 
                 <label for="zj-id">South African ID number</label>
-                <input id="zj-id" wire:model="idNumber" maxlength="13" inputmode="numeric" placeholder="13-digit ID number">
+                <input id="zj-id" wire:model.blur="idNumber" maxlength="13" inputmode="numeric" placeholder="13-digit ID number">
                 @error('idNumber')<p class="error" role="alert">{{ $message }}</p>@enderror
                 <label class="zcheck"><input type="checkbox" wire:model.live="noId"><span>I don't have a South African ID</span></label>
+
+                @if($this->needsPersonalDetails() && ($noId || strlen($idNumber) === 13))
+                    <p class="zhint" data-personal-details>Your doctor needs these two details, which a South African ID number would give us.</p>
+                    <label for="zj-dob">Date of birth</label>
+                    <input id="zj-dob" type="date" wire:model="dateOfBirth" max="{{ now()->subDay()->format('Y-m-d') }}" autocomplete="bday">
+                    @error('dateOfBirth')<p class="error" role="alert">{{ $message }}</p>@enderror
+                    <label for="zj-gender">Gender</label>
+                    <select id="zj-gender" wire:model="gender"><option value="">Choose</option><option value="female">Female</option><option value="male">Male</option><option value="other">Other</option></select>
+                    @error('gender')<p class="error" role="alert">{{ $message }}</p>@enderror
+                @endif
 
                 <h3>Preferred booking communication</h3>
                 <div class="zoption-grid zsmall-options">

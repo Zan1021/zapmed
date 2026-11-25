@@ -50,6 +50,8 @@ class OrderControlsPanel extends Component
     public string $linkUses = '';
     public string $linkDays = '';
     public ?string $newLinkUrl = null;     // shown once, straight after a link is made
+    public ?int $newLinkId = null;
+    public ?string $linkSendNote = null;  // what happened when Operations pressed Send
 
     public function makeLink(\App\Services\Operations\BookingLinks $links): void
     {
@@ -62,7 +64,27 @@ class OrderControlsPanel extends Component
             $this->linkUses === '' ? null : (int) $this->linkUses, $this->linkDays === '' ? null : (int) $this->linkDays, $followUp,
         );
         $this->newLinkUrl = $made['url'];
+        $this->newLinkId = $made['link']->id;
+        $this->linkSendNote = null;
         $this->reset(['linkUses', 'linkDays']);
+    }
+
+    /** Send the link that was just made to the patient (only possible while its address is still on screen). */
+    public function sendLink(\App\Services\Operations\BookingLinks $links): void
+    {
+        $this->resetErrorBag();
+        $order = Order::findOrFail($this->orderId);
+
+        if (! $this->newLinkUrl || ! $this->newLinkId) {
+            $this->linkSendNote = 'Make a link first. A link can only be sent right after it is made.';
+
+            return;
+        }
+
+        $link = \App\Models\BookingLink::where('patient_id', $order->patient_id)->findOrFail($this->newLinkId);
+        $this->linkSendNote = $links->send(Auth::user(), $link, $this->newLinkUrl)
+            ? 'Sent to the patient.'
+            : (config('operations.booking_links.notify_enabled') ? 'The link could not be sent (the words may be switched off under Patient messages).' : 'Sending messages to patients is switched off, so nothing was sent. Copy the link instead.');
     }
 
     public function resendLink(int $id, \App\Services\Operations\BookingLinks $links): void
@@ -72,6 +94,8 @@ class OrderControlsPanel extends Component
 
         $made = $links->resend(Auth::user(), \App\Models\BookingLink::where('patient_id', $order->patient_id)->findOrFail($id));
         $this->newLinkUrl = $made['url'];
+        $this->newLinkId = $made['link']->id;
+        $this->linkSendNote = null;
     }
 
     public function revokeLink(int $id, \App\Services\Operations\BookingLinks $links): void

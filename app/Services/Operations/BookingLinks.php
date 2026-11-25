@@ -61,6 +61,37 @@ class BookingLinks
         return ['link' => $link, 'url' => route('booking-link.open', $token)];
     }
 
+    /**
+     * Send a link that was just made to its patient, on the channel they chose (and the other one if that fails). The link is only known
+     * at the moment it is made (only its hash is kept), so this takes the address that was shown to Operations. No health detail in the words.
+     *
+     * @return bool true when a message was handed over; false when sending is switched off or Operations switched the words off
+     */
+    public function send(User $ops, BookingLink $link, string $url): bool
+    {
+        abort_unless($ops->role === UserRole::Admin, 403);
+
+        if (! config('operations.booking_links.notify_enabled') || ! $link->isUsable() || $this->hash(basename(parse_url($url, PHP_URL_PATH) ?: '')) !== $link->token_hash) {
+            return false;
+        }
+
+        $patient = $link->patient;
+        $t = app(MessageTemplates::class)->render('ops.booking_link', [
+            'link' => $url, 'until' => $link->expires_at->setTimezone(config('doctor.time.timezone'))->format('j M Y'),
+        ]);
+        if ($patient === null || $t === null) {
+            return false;
+        }
+
+        app(\App\Services\Patient\PatientMessenger::class)->send(new \App\Services\Notifications\OutboundMessage(
+            templateKey: 'ops.booking_link', category: 'transactional', user: $patient, phone: $patient->phone,
+            subject: $t['subject'], body: $t['body'], meta: ['booking_link_id' => $link->id, 'template_version' => $t['version']],
+        ));
+        $this->audit->record('booking_link', 'sent', 'user', (string) $link->patient_id, null, ['link_id' => $link->id], $ops->id);
+
+        return true;
+    }
+
     /** A fresh link in place of the old one, which is switched off. */
     public function resend(User $ops, BookingLink $old): array
     {

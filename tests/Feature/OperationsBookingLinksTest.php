@@ -239,4 +239,87 @@ class OperationsBookingLinksTest extends TestCase
 
         $this->assertSame(['created', 'revoked'], CrmAuditEvent::where('domain', 'booking_link')->orderBy('id')->pluck('action')->all());
     }
+
+    // --- sending the link ---------------------------------------------------------------------------------------------
+
+    /** Captures what would be sent instead of sending it. */
+    private function captureMessages(): \ArrayObject
+    {
+        $sent = new \ArrayObject();
+        $this->mock(\App\Services\Patient\PatientMessenger::class, fn ($m) => $m->shouldReceive('send')->andReturnUsing(function ($message) use ($sent) {
+            $sent->append($message);
+
+            return [];
+        }));
+
+        return $sent;
+    }
+
+    public function test_the_link_is_sent_to_the_patient_only_when_the_switch_is_on(): void
+    {
+        $sent = $this->captureMessages();
+        $made = $this->svc()->make($this->ops, $this->patient);
+
+        config()->set('operations.booking_links.notify_enabled', false);
+        $this->assertFalse($this->svc()->send($this->ops, $made['link'], $made['url']));
+        $this->assertCount(0, $sent);
+
+        config()->set('operations.booking_links.notify_enabled', true);
+        $this->assertTrue($this->svc()->send($this->ops, $made['link'], $made['url']));
+        $this->assertCount(1, $sent);
+        $m = $sent[0];
+        $this->assertSame([$this->patient->id, 'ops.booking_link'], [$m->user->id, $m->templateKey]);
+        $this->assertStringContainsString($made['url'], $m->body);
+        $this->assertStringContainsString('9 Dec 2026', $m->body, 'The last day is in the message (14 days from 25 Nov).');
+        $this->assertSame(['created', 'sent'], CrmAuditEvent::where('domain', 'booking_link')->orderBy('id')->pluck('action')->all());
+    }
+
+    public function test_a_link_that_is_not_the_one_that_was_made_or_is_no_longer_usable_is_never_sent(): void
+    {
+        $sent = $this->captureMessages();
+        config()->set('operations.booking_links.notify_enabled', true);
+        $a = $this->svc()->make($this->ops, $this->patient);
+        $b = $this->svc()->make($this->ops, $this->patient);
+
+        $this->assertFalse($this->svc()->send($this->ops, $a['link'], $b['url']), 'A different link address.');
+        $this->svc()->revoke($this->ops, $a['link']);
+        $this->assertFalse($this->svc()->send($this->ops, $a['link']->fresh(), $a['url']), 'A switched-off link.');
+        $this->assertCount(0, $sent);
+    }
+
+    public function test_only_operations_can_send_a_link(): void
+    {
+        $made = $this->svc()->make($this->ops, $this->patient);
+
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        $this->svc()->send($this->patient, $made['link'], $made['url']);
+    }
+
+    public function test_the_panel_sends_the_link_it_just_made_and_says_what_happened(): void
+    {
+        $sent = $this->captureMessages();
+        $order = $this->order();
+        $this->actingAs($this->ops);
+
+        $panel = Livewire::test(OrderControlsPanel::class, ['orderId' => $order->id])
+            ->call('sendLink')->assertSee('Make a link first')
+            ->call('makeLink')->assertSeeHtml('data-action="send-link"');
+
+        config()->set('operations.booking_links.notify_enabled', false);
+        $panel->call('sendLink')->assertSee('switched off, so nothing was sent');
+        $this->assertCount(0, $sent);
+
+        config()->set('operations.booking_links.notify_enabled', true);
+        $panel->call('sendLink')->assertSee('Sent to the patient.');
+        $this->assertCount(1, $sent);
+    }
+
+    public function test_the_default_words_carry_no_health_detail_and_it_is_off_by_default(): void
+    {
+        $this->assertMatchesRegularExpression('/OPS_BOOKING_LINK_NOTIFY.{1,8}false/', file_get_contents(base_path('config/operations.php')));
+        $t = app(\App\Services\Operations\MessageTemplates::class)->render('ops.booking_link', ['link' => 'https://x.test/my/book/abc', 'until' => '9 Dec 2026']);
+
+        $this->assertNotNull($t);
+        $this->assertStringNotContainsString('weight', strtolower($t['body']));
+    }
 }

@@ -101,6 +101,11 @@ return [
                 'subject' => 'Finish your Zapmed order',
                 'body' => 'You started an order with Zapmed and did not finish paying. You can pick up where you left off: sign in and open My Orders.{coupon_text} {link}',
             ],
+            'ops.booking_link' => [
+                'name' => 'Booking link', 'placeholders' => ['link', 'until'], 'required' => ['link'],
+                'subject' => 'Book your next Zapmed appointment',
+                'body' => 'Your Zapmed care team sent you a link to book your next appointment. Sign in first, then open the link. It works until {until}: {link}',
+            ],
             'ops.addon_added' => [
                 'name' => 'Add-on added', 'placeholders' => ['addon'], 'required' => [],
                 'subject' => 'An add-on was added to your order',
@@ -139,6 +144,8 @@ return [
         'default_days' => 14,
         'max_uses' => 20,
         'max_days' => 60,
+        // Operations can send the new link to the patient straight from the order. OFF until OPS_BOOKING_LINK_NOTIFY=true.
+        'notify_enabled' => env('OPS_BOOKING_LINK_NOTIFY', false),
     ],
 
     'server' => [

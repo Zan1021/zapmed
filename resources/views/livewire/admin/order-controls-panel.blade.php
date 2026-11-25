@@ -63,7 +63,11 @@
         @foreach(['uses', 'days', 'link', 'patient', 'follow_up'] as $f) @error($f) <p class="mb-1 text-xs text-red-600" data-error="{{ $f }}">{{ $message }}</p> @enderror @endforeach
         @if($newLinkUrl)
             <p class="mb-2 break-all rounded bg-green-50 p-2 text-xs text-green-900" data-new-link>Copy this now, it is shown only once: <strong>{{ $newLinkUrl }}</strong></p>
+            <div class="mb-2 flex items-center gap-3 text-xs">
+                <button type="button" wire:click="sendLink" data-action="send-link" class="rounded-lg border border-indigo-600 px-3 py-1.5 text-indigo-700">Send it to the patient</button>
+            </div>
         @endif
+        @if($linkSendNote)<p class="mb-2 text-xs text-gray-600" data-send-note>{{ $linkSendNote }}</p>@endif
         @foreach($bookingLinks as $bl)
             <div class="mb-1 flex items-center justify-between text-xs text-gray-700" data-link="{{ $bl->id }}">
                 <span>Made {{ $bl->created_at->format('j M') }}: used {{ $bl->uses }} of {{ $bl->max_uses }}, {{ $bl->revoked_at ? 'switched off' : ($bl->expires_at->isPast() ? 'expired' : 'until '.$bl->expires_at->format('j M')) }}</span>

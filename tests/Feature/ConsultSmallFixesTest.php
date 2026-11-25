@@ -180,4 +180,67 @@ class ConsultSmallFixesTest extends TestCase
         $item = Prescription::where('consultation_id', $consultation->id)->firstOrFail()->items()->firstOrFail();
         $this->assertSame(['once weekly', 'subcutaneous'], [$item->frequency, $item->route]);
     }
+
+    // --- patients with no usable ID number --------------------------------------------------------------------------
+
+    /** The journey up to the details step, with a question bank that has only the measurements question. */
+    private function journeyAtDetails(): array
+    {
+        config()->set('onboarding.enabled_slugs', ['weight-loss']);
+        $sms = new class extends \App\Services\SmsService {
+            public ?string $lastCode = null;
+            public function __construct() {}
+            public function sendOtp(string $phoneNumber, string $code): bool { $this->lastCode = $code; return true; }
+        };
+        $this->app->instance(\App\Services\SmsService::class, $sms);
+
+        $bank = app(QuestionBankService::class);
+        $cat = $bank->createCategory('weight-loss', 'Weight Loss');
+        $q = $bank->createQuestion(['scope' => 'category', 'question_key' => 'WL_MEAS'], ['text' => 'Your current measurements', 'type' => 'measurements', 'required' => true], null);
+        $bank->addQuestionToCategory($cat->refresh(), $q, null);
+        $bank->publish($q, $q->versions()->latest('version')->first(), 'test', null);
+        $bank->publishCategory($cat->refresh(), null);
+
+        $c = Livewire::test(BookingJourney::class, ['slug' => 'weight-loss']);
+        $c->set('answers.WL_MEAS_weight', 80)->set('answers.WL_MEAS_height', 170)->call('nextQuestion');
+        $c->set('reviewTruth', true)->set('reviewSideEffects', true)->call('toDetails')->assertSet('stage', 'details');
+        $c->set('name', 'Lerato Dlamini')->set('email', 'lerato@example.com')->set('cell', '82 000 0000')->set('communication', 'email')
+            ->set('password', 'CorrectHorse99')->set('passwordConfirm', 'CorrectHorse99')->set('consentCare', true);
+
+        return [$c, $sms];
+    }
+
+    public function test_a_patient_with_no_id_is_asked_for_date_of_birth_and_gender_and_they_are_saved(): void
+    {
+        [$c, $sms] = $this->journeyAtDetails();
+        $c->set('noId', true)->assertSeeHtml('data-personal-details');
+
+        $c->call('sendOtp')->assertHasErrors(['dateOfBirth', 'gender'])->assertSet('otpSent', false);
+        $c->set('dateOfBirth', now()->addDay()->format('Y-m-d'))->set('gender', 'female')->call('sendOtp')->assertHasErrors('dateOfBirth');
+        $c->set('dateOfBirth', '1991-07-04')->set('gender', 'robot')->call('sendOtp')->assertHasErrors('gender');
+
+        $c->set('gender', 'female')->call('sendOtp')->assertHasNoErrors()->assertSet('otpSent', true);
+        $c->set('otp', (string) $sms->lastCode)->call('verifyOtp')->assertSet('verified', true);
+
+        $user = User::where('email', 'lerato@example.com')->firstOrFail();
+        $this->assertSame(['1991-07-04', 'female', null], [$user->date_of_birth->toDateString(), $user->gender, $user->id_number]);
+        $this->assertSame(80.0, (float) PatientProfile::where('user_id', $user->id)->value('weight_kg'));
+    }
+
+    public function test_a_13_digit_number_that_is_not_a_real_id_also_asks_for_the_two_details(): void
+    {
+        [$c] = $this->journeyAtDetails();
+        $good = $this->saId('850315', 5123);
+        $bad = substr($good, 0, 12).((int) substr($good, 12) + 1) % 10;
+
+        $c->set('idNumber', $bad)->assertSeeHtml('data-personal-details')->call('sendOtp')->assertHasErrors(['dateOfBirth', 'gender']);
+        $c->set('idNumber', $good)->assertDontSeeHtml('data-personal-details');
+    }
+
+    public function test_a_real_id_needs_no_extra_details(): void
+    {
+        [$c] = $this->journeyAtDetails();
+
+        $c->set('idNumber', $this->saId('850315', 5123))->call('sendOtp')->assertHasNoErrors()->assertSet('otpSent', true);
+    }
 }

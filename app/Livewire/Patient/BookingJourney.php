@@ -53,6 +53,8 @@ class BookingJourney extends Component
     public string $cell = '';           // 9 digits after +27, shown as "82 123 4567"
     public string $idNumber = '';
     public bool $noId = false;
+    public string $dateOfBirth = '';   // asked only when there is no usable South African ID number (the ID holds both)
+    public string $gender = '';
     public string $communication = 'WhatsApp';
     public string $password = '';
     public string $passwordConfirm = '';
@@ -380,9 +382,17 @@ class BookingJourney extends Component
         $this->recordConsent('prescribing', 'I understand my doctor prescribes based on my answers, and only when treatment is safe and right for me. A prescription is not guaranteed.', (bool) $value);
     }
 
+    /** True when the ID number cannot tell us the date of birth and sex: none given, or not a valid South African ID. */
+    public function needsPersonalDetails(): bool
+    {
+        return $this->noId || ! \App\Support\SaIdNumber::isValid($this->idNumber);
+    }
+
     public function sendOtp(): void
     {
         $this->validate([
+            'dateOfBirth' => $this->needsPersonalDetails() ? 'required|date|before:today|after:1900-01-01' : 'nullable',
+            'gender' => $this->needsPersonalDetails() ? 'required|in:male,female,other' : 'nullable',
             'name' => 'required|string|max:190',
             'email' => 'required|email|max:190',
             'cell' => ['required', 'regex:/^\d{2} \d{3} \d{4}$/'],
@@ -393,6 +403,9 @@ class BookingJourney extends Component
         ], [
             'cell.regex' => 'Enter your 9-digit mobile number, for example 82 123 4567.',
             'idNumber.regex' => 'Enter your 13-digit South African ID number, or choose the no-ID option.',
+            'dateOfBirth.required' => 'Enter your date of birth.',
+            'dateOfBirth.before' => 'Your date of birth must be in the past.',
+            'gender.required' => 'Choose the option that applies to you.',
             'password.min' => 'Choose a password of at least 10 characters.',
             'password.same' => 'The two passwords do not match.',
             'consentCare.accepted' => 'Agree to the Terms and Conditions and Privacy Policy to continue.',
@@ -458,8 +471,8 @@ class BookingJourney extends Component
                 'preferred_contact' => strtolower($this->communication),
                 'id_number' => $this->noId ? null : $this->idNumber,
                 // A valid ID number carries the date of birth and the sex, so the doctor sees the age and gender without asking again.
-                'date_of_birth' => $this->noId ? null : \App\Support\SaIdNumber::dateOfBirth(\App\Support\SaIdNumber::isValid($this->idNumber) ? $this->idNumber : null)?->toDateString(),
-                'gender' => $this->noId ? null : \App\Support\SaIdNumber::gender($this->idNumber),
+                'date_of_birth' => $this->needsPersonalDetails() ? ($this->dateOfBirth ?: null) : \App\Support\SaIdNumber::dateOfBirth($this->idNumber)?->toDateString(),
+                'gender' => $this->needsPersonalDetails() ? ($this->gender ?: null) : \App\Support\SaIdNumber::gender($this->idNumber),
                 'password' => Hash::make($this->password),
                 'role' => \App\Enums\UserRole::Patient,
                 // Identity is proven by the SMS OTP in this journey, so the account is
