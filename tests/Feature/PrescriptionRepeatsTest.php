@@ -266,4 +266,49 @@ class PrescriptionRepeatsTest extends TestCase
         $this->assertNull(app(PrescriptionRepeats::class)->onRepeatPaid($cycle, 100));
         $this->assertSame(0, Prescription::whereNotNull('refill_of_id')->count());
     }
+
+    public function test_a_repeat_that_failed_once_and_is_then_paid_puts_the_order_back_with_the_pharmacy(): void
+    {
+        $this->firstPaymentNotice();
+        $sub = Subscription::where('metadata->prescription_id', $this->rx->id)->firstOrFail();
+        $order = Order::where('source_type', 'subscription')->where('source_ref', (string) $sub->id)->firstOrFail();
+
+        $due = $sub->cycles()->where('status', 'scheduled')->firstOrFail();
+        $due->update(['scheduled_for' => now()->subMinute(), 'status' => CycleStatus::Attempted->value]);
+        app(SubscriptionLifecycle::class)->recordFailure($due->fresh(), 'card declined');
+        $this->assertSame('RepeatPaymentFailed', $order->fresh()->status);
+
+        $this->payTheNextRepeat();
+
+        $this->assertSame('PharmacyProcessing', $order->fresh()->status);
+        $this->assertSame(['RepeatPaymentFailed', 'PharmacyProcessing'], $order->statusHistory()->pluck('to_status')->all());
+        $this->assertSame(1, Prescription::where('refill_of_id', $this->rx->id)->count());
+    }
+
+    public function test_the_prescriptions_page_shows_the_next_repeat_and_hides_the_manual_refill_button(): void
+    {
+        $this->rx->update(['status' => 'dispensed', 'dispatched_at' => now()]);
+        $this->actingAs($this->patient)->get(route('patient.prescriptions'))->assertOk()
+            ->assertSee('Request Refill')->assertDontSeeHtml('data-auto-repeat');
+
+        $this->firstPaymentNotice();
+
+        $this->actingAs($this->patient)->get(route('patient.prescriptions'))->assertOk()
+            ->assertSeeHtml('data-auto-repeat="'.$this->rx->id.'"')->assertSee('Repeats are automatic. Next repeat: 18 Dec 2026')->assertDontSee('Request Refill');
+
+        $sub = Subscription::where('metadata->prescription_id', $this->rx->id)->firstOrFail();
+        $sub->update(['status' => 'paused']);
+        $this->actingAs($this->patient)->get(route('patient.prescriptions'))->assertSee('Your repeats are on hold');
+    }
+
+    public function test_a_manual_refill_is_refused_while_the_repeats_are_automatic(): void
+    {
+        $this->rx->update(['status' => 'dispensed', 'dispatched_at' => now()]);
+        $this->firstPaymentNotice();
+
+        Livewire::actingAs($this->patient)->test(\App\Livewire\Patient\MyPrescriptions::class)
+            ->call('requestRefill', $this->rx->id)->assertSet('refillError', 'Your repeats for this prescription are automatic. You do not need to request a refill.');
+
+        $this->assertSame(0, Payment::where('description', 'like', 'Refill%')->count());
+    }
 }

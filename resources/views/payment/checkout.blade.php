@@ -34,12 +34,43 @@
                     <span class="font-medium text-gray-900">{{ $appointment->appointment_date->format('j M Y') }} at {{ substr($appointment->start_time, 0, 5) }}</span>
                 </div>
                 @endif
+                @if($payment->discount_cents > 0)
+                <div class="flex justify-between text-sm mb-2" data-discount-row>
+                    <span class="text-gray-500">Coupon {{ $payment->coupon_code }}</span>
+                    <span class="font-medium text-green-700">- R{{ number_format($payment->discount_cents / 100, 2) }}</span>
+                </div>
+                @endif
                 <div class="flex justify-between text-sm pt-2 border-t border-gray-200 mt-2">
                     <span class="font-semibold text-gray-900">Total</span>
                     <span class="font-bold text-zapmed-600 text-lg">{{ $payment->formatted_amount }}</span>
                 </div>
             </div>
 
+            @if(! empty($couponsOn))
+            <div class="mb-6" data-coupon-box>
+                @if(session('coupon_message'))
+                    <p class="mb-2 rounded-lg bg-green-50 p-2 text-xs text-green-800" data-coupon-message>{{ session('coupon_message') }}</p>
+                @endif
+                @error('coupon')
+                    <p class="mb-2 rounded-lg bg-red-50 p-2 text-xs text-red-700" data-coupon-error>{{ $message }}</p>
+                @enderror
+
+                @if($payment->coupon_code)
+                    <form method="POST" action="{{ route('payment.coupon.remove', $payment->reference) }}" class="flex items-center justify-between text-xs text-gray-600">
+                        @csrf @method('DELETE')
+                        <span>Coupon <strong>{{ $payment->coupon_code }}</strong> is on this payment.</span>
+                        <button type="submit" class="text-gray-500 underline" data-action="remove-coupon">Remove</button>
+                    </form>
+                @else
+                    <form method="POST" action="{{ route('payment.coupon.apply', $payment->reference) }}" class="flex gap-2">
+                        @csrf
+                        <input type="text" name="coupon" value="{{ old('coupon') }}" maxlength="40" autocomplete="off" placeholder="Have a coupon code?" aria-label="Coupon code"
+                            class="flex-1 rounded-lg border-gray-300 text-sm uppercase" data-coupon-input>
+                        <button type="submit" class="rounded-lg border border-zapmed-600 px-4 py-2 text-sm font-semibold text-zapmed-700 hover:bg-zapmed-50" data-action="apply-coupon">Apply</button>
+                    </form>
+                @endif
+            </div>
+            @endif
             <!-- PayFast Form (auto-submits) -->
             <form id="payfast-form" action="{{ $processUrl }}" method="POST">
                 @foreach($paymentData as $key => $value)

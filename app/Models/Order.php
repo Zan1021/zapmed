@@ -145,6 +145,25 @@ class Order extends Model
     }
 
     /**
+     * A system step on a long-lived repeat order (a failed repeat payment, a repeat paid again). One order carries the whole series, so
+     * the step is not always one the single-order state machine lists. It is recorded in the history like any other and says so in the notes.
+     */
+    public function recordSystemStatus(string $to, string $trigger, string $note): OrderStatusHistory
+    {
+        $from = $this->status;
+        if ($from === $to) {
+            return $this->statusHistory()->latest('id')->firstOrFail();
+        }
+        if (! OrderStatusMachine::isValidStatus($to)) {
+            throw new RuntimeException("Unknown order status: {$to}");
+        }
+
+        return OrderStatusMachine::isTransitionAllowed($from, $to, $trigger)
+            ? $this->transitionTo($to, $trigger, ['notes' => $note])
+            : $this->recordImportedStatus($from, $to, $trigger, ['notes' => $note.' (repeat order step)']);
+    }
+
+    /**
      * Record a status step WITHOUT validation — for importing Contro history verbatim, where the
      * step is already known (possibly against current rules). Writes an immutable history row and
      * sets current status. Anomaly flagging is the reconciler's job (quarantine), not this method's.

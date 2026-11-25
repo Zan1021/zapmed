@@ -176,8 +176,8 @@ class OperationsAbandonedCheckoutTest extends TestCase
         $this->assertStringContainsString('checkouts:follow-up', $scheduled);
     }
 
-    public function test_the_rewards_page_does_not_promise_a_checkout_box(): void
+    public function test_the_rewards_page_points_to_the_coupon_box_on_the_payment_page(): void
     {
-        $this->actingAs($this->patient)->get(route('patient.rewards'))->assertOk()->assertDontSee('at checkout')->assertSee('apply it to your order');
+        $this->actingAs($this->patient)->get(route('patient.rewards'))->assertOk()->assertSee('coupon box on the payment page');
     }
 }

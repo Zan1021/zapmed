@@ -170,6 +170,7 @@ class SubscriptionLifecycle
 
             if (! $limitReached) {
                 $sub->forceFill(['consecutive_failures' => $failures, 'last_failure_at' => now(), 'status' => 'payment_failed'])->save();
+                $this->moveOrderTo($sub, $failures === 1 ? 'RepeatPaymentFailed' : 'TwoRepeatFailures', 'payment', 'Repeat payment failed (attempt '.$failures.' of '.$this->maxFailures().')');
 
                 $retryAt = $this->atChargeTime(now()->addDays((int) config('subscriptions.retry_after_days', 1)));
                 $retry = $this->scheduleNextCycle($sub->fresh(), $retryAt);
@@ -189,6 +190,8 @@ class SubscriptionLifecycle
                     'cancelled_initiator' => 'system',
                     'cancellation_reason' => 'auto-cancelled after '.$this->maxFailures().' consecutive payment failures',
                 ])->save();
+                $this->moveOrderTo($sub, 'ThreeRepeatFailures', 'payment', 'Third repeat payment failed');
+                $this->moveOrderTo($sub, 'Cancelled', 'system_timer', 'Cancelled after '.$this->maxFailures().' failed repeat payments');
 
                 return $cycle->fresh();
             }
@@ -201,10 +204,25 @@ class SubscriptionLifecycle
                 'paused_by' => null,
                 'initiator' => 'system',
             ]);
+            $this->moveOrderTo($sub, 'ThreeRepeatFailures', 'payment', 'Third repeat payment failed');
+            $this->moveOrderTo($sub, 'Paused', 'system_timer', 'Paused after '.$this->maxFailures().' failed repeat payments');
 
             return $cycle->fresh();
         });
     }
+    /** Move the order that belongs to this repeat subscription, with a history row. Never throws into a payment notice. */
+    public function moveOrderTo(Subscription $sub, string $to, string $trigger, string $note): void
+    {
+        try {
+            $order = Order::where('source_type', 'subscription')->where('source_ref', (string) $sub->id)->first();
+            if ($order && ! in_array($order->status, ['Cancelled'], true)) {
+                $order->recordSystemStatus($to, $trigger, $note);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('repeat order: could not move the order', ['subscription' => $sub->id, 'to' => $to, 'error' => $e->getMessage()]);
+        }
+    }
+
     /** Cycles that are due to run now (scheduled + scheduled_for in the past). */
     public function dueCycles()
     {

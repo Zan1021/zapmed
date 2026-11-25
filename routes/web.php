@@ -96,6 +96,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/integration-log', \App\Livewire\Admin\IntegrationLogPage::class)->name('admin.integration-log');
         Route::get('/message-templates', \App\Livewire\Admin\MessageTemplateEditor::class)->name('admin.message-templates');
         Route::get('/addons', \App\Livewire\Admin\AddonSettings::class)->name('admin.addons');
+        Route::get('/coupons', \App\Livewire\Admin\Coupons::class)->name('admin.coupons');
         Route::get('/product-list', \App\Livewire\Admin\ProductListImport::class)->name('admin.product-list');
         Route::get('/product-list/export', \App\Http\Controllers\ProductListExportController::class)->name('admin.product-list.export');
         Route::get('/users/{user}/staff', \App\Livewire\Admin\StaffProfileEditor::class)->whereNumber('user')->name('admin.staff-profile');
@@ -311,6 +312,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Payment
     Route::get('payment/checkout/{reference}', [PaymentController::class, 'checkout'])->name('payment.checkout');
+    Route::post('payment/checkout/{reference}/coupon', [PaymentController::class, 'applyCoupon'])->name('payment.coupon.apply');
+    Route::delete('payment/checkout/{reference}/coupon', [PaymentController::class, 'removeCoupon'])->name('payment.coupon.remove');
     Route::get('payment/success', [PaymentController::class, 'success'])->name('payment.success');
     Route::get('payment/cancel', [PaymentController::class, 'cancel'])->name('payment.cancel');
 

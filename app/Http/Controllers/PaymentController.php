@@ -35,7 +35,37 @@ class PaymentController extends Controller
         $paymentData = $this->payfast->generatePaymentData($appointment, $payment, $tokenised);
         $processUrl = $this->payfast->getProcessUrl();
 
-        return view('payment.checkout', compact('payment', 'appointment', 'paymentData', 'processUrl'));
+        $couponsOn = app(\App\Services\Operations\CouponRedemption::class)->acceptsCoupon($payment);
+
+        return view('payment.checkout', compact('payment', 'appointment', 'paymentData', 'processUrl', 'couponsOn'));
+    }
+
+    /** A coupon code typed on the payment page. Only the patient's own pending consultation payment takes one. */
+    public function applyCoupon(Request $request, string $reference)
+    {
+        $payment = Payment::where('reference', $reference)->where('patient_id', auth()->id())->where('status', 'pending')->firstOrFail();
+        $data = $request->validate(['coupon' => 'required|string|max:40'], ['coupon.required' => 'Enter your coupon code.']);
+
+        try {
+            $payment = app(\App\Services\Operations\CouponRedemption::class)->apply($payment, $data['coupon'], auth()->user());
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->route('payment.checkout', $reference)->withErrors($e->errors())->withInput();
+        }
+
+        return redirect()->route('payment.checkout', $reference)->with('coupon_message', 'Coupon applied: R'.number_format($payment->discount_cents / 100, 2).' off.');
+    }
+
+    public function removeCoupon(string $reference)
+    {
+        $payment = Payment::where('reference', $reference)->where('patient_id', auth()->id())->where('status', 'pending')->firstOrFail();
+
+        try {
+            app(\App\Services\Operations\CouponRedemption::class)->remove($payment, auth()->user());
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->route('payment.checkout', $reference)->withErrors($e->errors());
+        }
+
+        return redirect()->route('payment.checkout', $reference)->with('coupon_message', 'Coupon removed.');
     }
 
     /**
@@ -129,6 +159,13 @@ class PaymentController extends Controller
                 'is_paid' => true,
                 'status' => 'confirmed',
             ]);
+        }
+
+        // A coupon on this payment is used up now that the money is confirmed. Never blocks the payment.
+        try {
+            app(\App\Services\Operations\CouponRedemption::class)->redeem($payment->fresh());
+        } catch (\Throwable $e) {
+            Log::warning('Counting a coupon use failed', ['payment' => $payment->reference, 'error' => $e->getMessage()]);
         }
 
         // Check if this is a medication payment — dispatch to pharmacy

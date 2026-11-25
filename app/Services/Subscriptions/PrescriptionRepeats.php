@@ -246,8 +246,9 @@ class PrescriptionRepeats
     private function moveOrder(Subscription $sub, string $status): void
     {
         try {
-            Order::where('source_type', 'subscription')->where('source_ref', (string) $sub->id)
-                ->whereNotIn('status', ['Paused', 'Cancelled'])->update(['status' => $status]);
+            if (! in_array(Order::where('source_type', 'subscription')->where('source_ref', (string) $sub->id)->value('status'), ['Paused', 'Cancelled'], true)) {
+                $this->lifecycle->moveOrderTo($sub, $status, 'payment', 'Repeat paid, refill sent to the pharmacy');
+            }
         } catch (\Throwable $e) {
             Log::warning('repeat order: could not move the order', ['subscription' => $sub->id, 'error' => $e->getMessage()]);
         }

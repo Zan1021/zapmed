@@ -26,6 +26,9 @@ class Payment extends Model
         'is_repeat_charge',
         'medical_aid_claim_status',
         'description',
+        'coupon_code',
+        'discount_cents',
+        'original_amount',
         'provider_data',
         'paid_at',
         'refunded_at',
@@ -44,6 +47,8 @@ class Payment extends Model
     {
         return [
             'amount' => 'integer',
+            'discount_cents' => 'integer',
+            'original_amount' => 'integer',
             'refund_amount' => 'integer',
             'retry_count' => 'integer',
             'is_repeat_charge' => 'boolean',

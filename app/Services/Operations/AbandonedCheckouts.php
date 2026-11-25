@@ -19,7 +19,7 @@ use Illuminate\Support\Str;
  *  - The message names nothing about the treatment and carries no health detail.
  *  - OFF until OPS_ABANDONED_NOTIFY=true: with it off this does nothing at all (no coupon, no flag), so turning it on later only
  *    reaches recent carts.
- *  - A thank-you coupon is a separate switch (OPS_ABANDONED_COUPON), OFF, because checkout cannot take a coupon code yet.
+ *  - A thank-you coupon is a separate switch (OPS_ABANDONED_COUPON), OFF until you want to offer one. The patient types the code in the coupon box on the payment page.
  *  - Orders the patient archived, paid, cancelled or that have a card payment started in the last hour are left alone.
  */
 class AbandonedCheckouts
@@ -96,7 +96,7 @@ class AbandonedCheckouts
         $coupon = CatalogCoupon::create([
             'code' => $code, 'type' => 'percent', 'value' => (int) $cfg['percent'] * 100, 'max_uses' => 1, 'number_of_uses' => 0,
             'is_cancelled' => false, 'expiry_dt' => now()->addDays((int) $cfg['valid_days']),
-            'metadata' => ['origin' => 'abandoned_checkout'],
+            'metadata' => ['origin' => 'abandoned_checkout'], 'upstream_source' => 'zapmed',
         ]);
 
         return $this->rewards->assign($coupon, $patient);

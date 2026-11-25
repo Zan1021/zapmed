@@ -56,11 +56,24 @@
                 <!-- Refill Button -->
                 <div class="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
                     <p class="text-xs text-gray-500">{{ $prescription->refills_remaining }} refill{{ $prescription->refills_remaining !== 1 ? 's' : '' }} remaining</p>
+                    @if(isset($auto[$prescription->id]))
+                    @php $a = $auto[$prescription->id]; @endphp
+                    <p class="text-xs font-medium text-teal-700" data-auto-repeat="{{ $prescription->id }}">
+                        @if($a['on_hold'])
+                            Your repeats are on hold. Open My Orders to continue them.
+                        @elseif($a['payment_trouble'])
+                            Your last repeat payment did not go through. We will try again.
+                        @else
+                            Repeats are automatic{{ $a['next'] ? '. Next repeat: '.$a['next'] : '' }}
+                        @endif
+                    </p>
+                    @else
                     <button wire:click="requestRefill({{ $prescription->id }})"
                         wire:confirm="Request a refill? You'll be taken to payment."
                         class="px-4 py-2 bg-zapmed-600 hover:bg-zapmed-700 text-white text-sm font-medium rounded-lg transition-colors">
                         Request Refill — {{ $prescription->formatted_total }}
                     </button>
+                    @endif
                 </div>
             </div>
             @endforeach

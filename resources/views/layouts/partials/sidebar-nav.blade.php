@@ -169,6 +169,9 @@
         Add-ons
     </a>
 
+    <a href="{{ route('admin.coupons') }}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors border-b border-slate-700/50 {{ request()->routeIs('admin.coupons') ? 'bg-sidebar-active text-white' : 'text-slate-300 hover:bg-slate-700/50 hover:text-white' }}">
+        Coupons
+    </a>
     <a href="{{ route('admin.message-templates') }}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors border-b border-slate-700/50 {{ request()->routeIs('admin.message-templates') ? 'bg-sidebar-active text-white' : 'text-slate-300 hover:bg-slate-700/50 hover:text-white' }}">
         Patient messages
     </a>

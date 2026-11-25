@@ -60,8 +60,7 @@ return [
         // switching the reminder on later does not message everybody who ever left a cart.
         'after_hours' => 24,
         'max_age_days' => 3,
-        // An optional thank-you coupon made for that patient. OFF: there is no coupon box at checkout yet, so a code could not be
-        // used by the patient on their own. Turn on only once checkout can take a code (then the patient sees it under Rewards).
+        // An optional thank-you coupon made for that patient (used in the coupon box on the payment page). OFF until Captain Zan wants it.
         'coupon' => [
             'enabled' => env('OPS_ABANDONED_COUPON', false),
             'percent' => 10,
@@ -148,5 +147,14 @@ return [
         // password (Forge gives the forge user this for service php8.x-fpm reload). OFF by default; ON in staging.
         'reload_php_on_release' => (bool) env('RELOAD_PHP_ON_RELEASE', false),
         'reload_command' => ['sudo', '-n', '/usr/sbin/service', 'php'.PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION.'-fpm', 'reload'],
+    ],
+
+    'coupons' => [
+        // A coupon can never take a payment below this (PayFast refuses payments under R5). In cents.
+        'minimum_payment_cents' => 500,
+        // Wrong or unusable codes tried per patient per minute before they must wait (stops people guessing codes).
+        'attempts_per_minute' => 8,
+        // Who may type a code: a coupon made for that patient, or one Operations made open to anyone with the code.
+        'open_audiences' => ['all', 'code'],
     ],
 ];

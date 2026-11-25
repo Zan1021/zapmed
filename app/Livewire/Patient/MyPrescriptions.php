@@ -30,6 +30,12 @@ class MyPrescriptions extends Component
             return;
         }
 
+        // Repeats that run by themselves are charged and sent without the patient asking, so a manual refill would pay twice.
+        if (app(\App\Services\Subscriptions\PrescriptionRepeats::class)->subscriptionFor($prescription)) {
+            $this->refillError = 'Your repeats for this prescription are automatic. You do not need to request a refill.';
+            return;
+        }
+
         if ($prescription->isExpired()) {
             $this->refillError = 'This prescription has expired. Please book a new consultation.';
             return;
@@ -55,7 +61,23 @@ class MyPrescriptions extends Component
         $chronic = $prescriptions->filter(fn ($p) => $p->is_chronic && $p->hasRefillsRemaining() && !$p->isExpired());
         $past = $prescriptions->reject(fn ($p) => $p->is_chronic && $p->hasRefillsRemaining() && !$p->isExpired());
 
+        $repeats = app(\App\Services\Subscriptions\PrescriptionRepeats::class);
+        $auto = $chronic->mapWithKeys(function ($p) use ($repeats) {
+            $sub = $repeats->subscriptionFor($p);
+            if (! $sub) {
+                return [];
+            }
+            $next = $sub->cycles()->where('status', 'scheduled')->orderBy('scheduled_for')->first()?->scheduled_for;
+
+            return [$p->id => [
+                'on_hold' => in_array($sub->status, ['paused', 'cancelled'], true),
+                'payment_trouble' => $sub->status === 'payment_failed',
+                'next' => $next?->setTimezone(config('doctor.time.timezone'))->format('j M Y'),
+            ]];
+        });
+
         return view('livewire.patient.my-prescriptions', [
+            'auto' => $auto,
             'chronic' => $chronic,
             'past' => $past,
         ])->layout('layouts.app');
