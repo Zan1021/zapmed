@@ -1,3 +1,4 @@
+@include('partials.coach-offer-banner')
 <!-- Welcome & Quick Book -->
 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
     <div class="flex flex-col md:flex-row md:items-center md:justify-between">

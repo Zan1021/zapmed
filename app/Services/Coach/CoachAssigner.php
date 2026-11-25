@@ -96,4 +96,41 @@ class CoachAssigner
 
         return $assigned;
     }
+
+    /**
+     * Ends the coach of members whose add-on has lapsed (cancelled and paid up to the end of the period, or never paid again).
+     * Only coaches given automatically with the add-on are ended: a coach an admin chose by hand is left alone.
+     * A paused or payment-failed add-on keeps its coach (the repeat rules pause rather than cancel). The history stays.
+     * Switch: coach.assignment.end_when_lapsed.
+     *
+     * @return int how many assignments were ended
+     */
+    public function endLapsed(): int
+    {
+        if (! config('coach.assignment.end_when_lapsed', true)) {
+            return 0;
+        }
+
+        $ended = 0;
+        $assignments = CoachingAssignment::active()->where('reason', 'like', 'Auto-assigned%')->get();
+
+        foreach ($assignments as $assignment) {
+            $keeps = Subscription::query()
+                ->where('user_id', $assignment->patient_id)
+                ->whereHas('plan', fn ($q) => $q->where('slug', config('coach.plan_slug')))
+                ->where(function ($q) {
+                    $q->whereIn('status', ['active', 'payment_failed', 'paused'])
+                        ->orWhere(fn ($c) => $c->where('status', 'cancelled')->where(function ($d) {
+                            $d->where('ends_at', '>', now())->orWhere('current_period_end', '>', now());
+                        }));
+                })->exists();
+
+            if (! $keeps) {
+                $assignment->update(['ended_at' => now(), 'ended_reason' => 'The coach add-on ended']);
+                $ended++;
+            }
+        }
+
+        return $ended;
+    }
 }

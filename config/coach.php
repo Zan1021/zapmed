@@ -45,6 +45,8 @@ return [
      */
     'assignment' => [
         'max_members' => (int) env('COACH_MAX_MEMBERS_PER_COACH', 0),
+        // Daily job coach:end-lapsed: end the coach of members whose add-on has lapsed (coaches an admin chose by hand are never ended).
+        'end_when_lapsed' => (bool) env('COACH_END_LAPSED', true),
     ],
 
     /* Daily targets (a starting point; Amy and the doctor set per-patient values later). */

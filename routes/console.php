@@ -11,6 +11,7 @@ Artisan::command('inspire', function () {
 Schedule::command('appointments:send-reminders')->everyFiveMinutes();
 Schedule::command('coach:send-reminders')->everyFiveMinutes()->withoutOverlapping();
 Schedule::command('coach:assign-pending')->hourly()->withoutOverlapping();
+Schedule::command('coach:end-lapsed')->dailyAt('02:30')->withoutOverlapping();
 Schedule::command('prescriptions:remind')->dailyAt('09:00');
 // Doctor follow-ups: prompt the patient to book a few days before it is due (messages OFF until DOCTOR_FOLLOWUP_NOTIFY).
 Schedule::command('followups:prompt')->dailyAt('09:00')->timezone('Africa/Johannesburg')->withoutOverlapping();

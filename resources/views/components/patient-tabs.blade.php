@@ -19,3 +19,4 @@
         @endif
     @endforeach
 </nav>
+@include('partials.coach-offer-banner')
