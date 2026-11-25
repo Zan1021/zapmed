@@ -6,6 +6,10 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="robots" content="noindex">
     <meta name="theme-color" content="#F4F0E7">
+    <link rel="manifest" href="/coach.webmanifest">
+    <link rel="apple-touch-icon" href="/images/icons/icon-192x192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Zapmed Coach">
     <title>{{ $title ?? 'My coach' }} - Zapmed</title>
     @include('partials.fonts')
     @vite(['resources/css/zapmed-coach.css', 'resources/js/app.js'])
@@ -24,5 +28,6 @@
 
     <div class="zc-toast" x-show="toast" x-cloak x-text="toast" role="status"></div>
     @livewireScripts
+    <script>if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {})); }</script>
 </body>
 </html>
