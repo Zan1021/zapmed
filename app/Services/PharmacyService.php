@@ -14,9 +14,10 @@ class PharmacyService
 
     public function __construct()
     {
-        $this->apiUrl = config('services.pharmacy.api_url', '');
-        $this->apiKey = config('services.pharmacy.api_key', '');
-        $this->enabled = config('services.pharmacy.enabled', false);
+        // An unset setting is null, not '' (the key exists in config/services.php with no value), so cast: a typed property refuses null.
+        $this->apiUrl = (string) config('services.pharmacy.api_url', '');
+        $this->apiKey = (string) config('services.pharmacy.api_key', '');
+        $this->enabled = (bool) config('services.pharmacy.enabled', false);
     }
 
     /**

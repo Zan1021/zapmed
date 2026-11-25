@@ -16,6 +16,7 @@ use App\Models\Subscription;
 use App\Models\SubscriptionCycle;
 use App\Models\User;
 use App\Services\PayFastService;
+use App\Services\PharmacyService;
 use App\Services\Subscriptions\PrescriptionRepeats;
 use App\Services\Subscriptions\RepeatChargeService;
 use App\Services\Subscriptions\SubscriptionLifecycle;
@@ -44,6 +45,8 @@ class PrescriptionRepeatsTest extends TestCase
         // Wednesday 25 Nov 2026, 09:31 in South Africa.
         $this->travelTo(CarbonImmutable::parse('2026-11-25 09:31', 'Africa/Johannesburg'));
         config(['subscriptions.repeat_orders.tokenise_first_payment' => true, 'subscriptions.charging.enabled' => true]);
+        // Exactly as on the servers: the pharmacy settings exist but are EMPTY (null), not an empty string.
+        config(['services.pharmacy.api_url' => null, 'services.pharmacy.api_key' => null, 'services.pharmacy.enabled' => null]);
 
         $this->patient = User::factory()->create(['role' => UserRole::Patient]);
         PatientProfile::create(['user_id' => $this->patient->id, 'onboarding_complete' => true]);
@@ -310,5 +313,14 @@ class PrescriptionRepeatsTest extends TestCase
             ->call('requestRefill', $this->rx->id)->assertSet('refillError', 'Your repeats for this prescription are automatic. You do not need to request a refill.');
 
         $this->assertSame(0, Payment::where('description', 'like', 'Refill%')->count());
+    }
+
+    public function test_the_payment_pages_and_the_pharmacy_cope_with_empty_pharmacy_settings(): void
+    {
+        $this->assertInstanceOf(PharmacyService::class, new PharmacyService());
+
+        $this->actingAs($this->patient)->get(route('payment.checkout', $this->payment->reference))->assertOk();
+        $this->firstPaymentNotice();
+        $this->assertSame('dispatched', $this->rx->fresh()->pharmacy_status, 'With no pharmacy set up the send is simulated, never an error.');
     }
 }

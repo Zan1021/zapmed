@@ -35,6 +35,7 @@ class OperationsCouponsTest extends TestCase
         parent::setUp();
         $this->travelTo(CarbonImmutable::parse('2026-11-25 11:00', 'Africa/Johannesburg'));
         config()->set('payfast.test_mode', true);
+        config(['services.pharmacy.api_url' => null, 'services.pharmacy.api_key' => null, 'services.pharmacy.enabled' => null]);   // as on the servers
         $this->ops = User::factory()->create(['role' => UserRole::Admin]);
         $this->patient = $this->patient();
         $this->other = $this->patient();

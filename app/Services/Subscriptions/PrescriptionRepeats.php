@@ -35,7 +35,6 @@ class PrescriptionRepeats
     public function __construct(
         private readonly SubscriptionLifecycle $lifecycle,
         private readonly LiveOrderBridge $bridge,
-        private readonly PharmacyService $pharmacy,
     ) {
     }
 
@@ -226,7 +225,8 @@ class PrescriptionRepeats
 
         if ($refill) {
             try {
-                $this->pharmacy->dispatch($refill);
+                // resolved only now: the payment page uses this class too and must never depend on the pharmacy being set up
+                app(PharmacyService::class)->dispatch($refill);
             } catch (\Throwable $e) {
                 Log::error('repeat order: sending the refill to the pharmacy failed', ['refill' => $refill->id, 'error' => $e->getMessage()]);
             }
