@@ -8,6 +8,8 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
+// A new release gets a fresh PHP code cache (OFF unless RELOAD_PHP_ON_RELEASE=true).
+Schedule::command('server:reload-php-on-release')->everyMinute()->withoutOverlapping();
 Schedule::command('appointments:send-reminders')->everyFiveMinutes();
 Schedule::command('coach:send-reminders')->everyFiveMinutes()->withoutOverlapping();
 Schedule::command('coach:assign-pending')->hourly()->withoutOverlapping();

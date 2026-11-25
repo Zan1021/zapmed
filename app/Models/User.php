@@ -226,6 +226,11 @@ class User extends Authenticatable implements MustVerifyEmail
                 return asset($this->avatar_path);
             }
 
+            // An uploaded photo whose file has gone missing (for example after a server move) shows the initials, never a broken image.
+            if (! \Illuminate\Support\Facades\Storage::disk('public')->exists($this->avatar_path)) {
+                return null;
+            }
+
             return asset('storage/' . $this->avatar_path);
         }
 

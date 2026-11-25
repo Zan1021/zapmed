@@ -141,4 +141,12 @@ return [
         'max_uses' => 20,
         'max_days' => 60,
     ],
+
+    'server' => [
+        // After a deploy the web server's code cache (opcache) is full of the OLD release's files and the site slows down. When this is
+        // on, the minute scheduler notices a new release and reloads PHP once. Needs permission to run the command below without a
+        // password (Forge gives the forge user this for service php8.x-fpm reload). OFF by default; ON in staging.
+        'reload_php_on_release' => (bool) env('RELOAD_PHP_ON_RELEASE', false),
+        'reload_command' => ['sudo', '-n', '/usr/sbin/service', 'php'.PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION.'-fpm', 'reload'],
+    ],
 ];
