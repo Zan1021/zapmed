@@ -96,6 +96,11 @@ class AssessmentService
         // Free-text "anything else for your doctor" is a CORE question flagged as the tail; keep it last.
         [$coreHead, $coreTail] = $this->splitFreeTextTail($core);
 
+        // A treatment that asks its own height and weight (weight loss) keeps its own; the shared one is skipped so the patient is never asked twice.
+        if ($specific->contains(fn ($q) => ($q['type'] ?? null) === 'measurements')) {
+            $coreHead = $coreHead->reject(fn ($q) => ($q['type'] ?? null) === 'measurements')->values();
+        }
+
         return $coreHead
             ->concat($specific)
             ->concat($coreTail)

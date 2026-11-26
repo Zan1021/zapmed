@@ -74,6 +74,30 @@ class QuestionBankEngineTest extends TestCase
         );
     }
 
+    public function test_shared_height_and_weight_question_shows_for_every_treatment(): void
+    {
+        $this->liveCore('CORE_MEASUREMENTS', 1, ['type' => 'measurements', 'text' => 'Your height and weight']);
+
+        $cat = $this->bank->createCategory('hair-loss', 'Hair Loss');
+        $this->bank->publishCategory($cat);
+        $this->bank->addQuestionToCategory($cat->refresh(), $this->liveCategoryQuestion('HL_DURATION'));
+
+        $this->assertSame(['CORE_MEASUREMENTS', 'HL_DURATION'], array_column($this->svc->flowFor('hair-loss'), 'id'));
+    }
+
+    public function test_shared_height_and_weight_is_skipped_when_the_treatment_asks_its_own(): void
+    {
+        $this->liveCore('CORE_MEASUREMENTS', 1, ['type' => 'measurements', 'text' => 'Your height and weight']);
+
+        $cat = $this->bank->createCategory('weight-loss', 'Weight Loss');
+        $this->bank->publishCategory($cat);
+        $own = $this->liveCategoryQuestion('CWL_MEASUREMENTS', ['type' => 'measurements']);
+        $this->bank->addQuestionToCategory($cat->refresh(), $own);
+
+        $ids = array_column($this->svc->flowFor('weight-loss'), 'id');
+        $this->assertSame(['CWL_MEASUREMENTS'], $ids, 'Weight loss keeps its own height and weight and is not asked twice.');
+    }
+
     public function test_flow_maps_to_legacy_shape_with_show_if(): void
     {
         $cat = $this->bank->createCategory('skincare', 'Skincare');
