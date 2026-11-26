@@ -2,9 +2,12 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [master, main, develop]
   pull_request:
-    branches: [main]
+    branches: [master, main]
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
 
 jobs:
   tests:
@@ -50,6 +53,54 @@ jobs:
       - name: Check for syntax errors
         run: find app config routes -name "*.php" -exec php -l {} \;
 
+  tests-postgres:
+    # Servers run PostgreSQL 16, local tests run SQLite. SQLite ignores foreign keys and
+    # is looser about types, so this job catches crashes that only happen on Postgres.
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: zapmed
+          POSTGRES_PASSWORD: secret
+          POSTGRES_DB: zapmed_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U zapmed"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo_pgsql, pgsql, redis
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Copy env
+        run: cp .env.example .env
+
+      - name: Generate key
+        run: php artisan key:generate
+
+      - name: Run tests on PostgreSQL
+        run: php artisan test
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: zapmed_test
+          DB_USERNAME: zapmed
+          DB_PASSWORD: secret
   frontend:
     runs-on: ubuntu-latest
 

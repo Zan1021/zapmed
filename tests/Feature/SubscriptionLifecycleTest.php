@@ -181,12 +181,13 @@ class SubscriptionLifecycleTest extends TestCase
     public function test_pause_and_resume_with_audit_trail(): void
     {
         $sub = $this->subscription('active');
+        $actorId = User::factory()->create(['role' => UserRole::Admin])->id;
 
-        $this->svc()->pause($sub, now()->addWeek(), 'patient travelling', 1);
+        $this->svc()->pause($sub, now()->addWeek(), 'patient travelling', $actorId);
         $this->assertSame('paused', $sub->fresh()->status);
         $this->assertSame(1, $sub->pauseEvents()->count());
 
-        $this->svc()->resume($sub->fresh(), 1);
+        $this->svc()->resume($sub->fresh(), $actorId);
         $this->assertSame('active', $sub->fresh()->status);
         $this->assertNotNull($sub->pauseEvents()->first()->resumed_at);
     }

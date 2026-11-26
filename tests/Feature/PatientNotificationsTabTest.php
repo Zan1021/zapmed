@@ -280,10 +280,10 @@ class PatientNotificationsTabTest extends TestCase
 
     public function test_the_screen_saves_the_choice_and_shows_the_inbox(): void
     {
-        app(BloodTestService::class)->request($this->doctor, $this->patient, ['fbc']);
+        $request = app(BloodTestService::class)->request($this->doctor, $this->patient, ['fbc']);
 
         Livewire::actingAs($this->patient)->test(Notifications::class)
-            ->assertSet('preferred', 'email')->assertSeeHtml('data-item="blood-test-1"')
+            ->assertSet('preferred', 'email')->assertSeeHtml('data-item="blood-test-' . $request->id . '"')
             ->set('preferred', 'whatsapp')->set('consent', false)->call('save')->assertHasErrors('consent')
             ->set('consent', true)->call('save')->assertHasNoErrors()->assertSeeHtml('data-saved');
 

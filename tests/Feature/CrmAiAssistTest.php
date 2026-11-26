@@ -137,7 +137,7 @@ class CrmAiAssistTest extends TestCase
         $lead = $this->leadFor($this->patient());
         $nudge = $this->ai()->draftNudge($lead);
 
-        $this->ai()->approveNudge($nudge, 1);
+        $this->ai()->approveNudge($nudge, User::factory()->create(['role' => UserRole::Admin])->id);
         $this->assertSame(NudgeStatus::Approved, $nudge->fresh()->status);
 
         $this->ai()->markNudgeSent($nudge->fresh());
