@@ -166,24 +166,58 @@ class ImportQuestionBankFromDocx extends Command
                 continue; // skip preamble before first heading
             }
 
-            // conditional follow-up
-            if (preg_match('/^\[IF\s+YES\]\s*(.+)$/i', $text, $m)) {
+            // conditional follow-up — [IF YES], [IF NO], [IF SELECTED], [IF SURGICAL REMOVAL], etc.
+            if (preg_match('/^\[IF\s+([A-Z ]+)\]\s*(.+)$/i', $text, $m)) {
                 $flush();
                 $current['questions'][] = [
-                    'text' => $this->clean(rtrim($m[1])),
+                    'text' => $this->clean(rtrim($m[2])),
                     'type' => 'text',
                     'options' => [],
-                    'if_yes' => true,
+                    'if_yes' => stripos($m[1], 'YES') !== false, // only [IF YES] wires the Yes-branch
                 ];
                 continue;
             }
 
-            // numbered option  [1] Label
+            // bracketed follow-up QUESTION — e.g. "[Do you have any allergies?]", "[Current weight? (kg)]".
+            // Standalone questions in the source, NOT options. Must NOT match numbered options like
+            // "[2] No - [Current weight? (kg)]" (those are handled by the [n] rule below).
+            if (! preg_match('/^\[\d+\]/', $text)
+                && preg_match('/^\[(.+)\]$/', trim($text), $m)
+                && str_contains($m[1], '?')) {
+                $flush();
+                $inner = $this->clean(rtrim($m[1]));
+                // a "(kg)"/"(cm)" hint => numeric measurement; otherwise a free-text question
+                $pendingQuestion = [
+                    'text' => $inner,
+                    'type' => preg_match('/\b(kg|cm|years?|age)\b/i', $inner) ? 'number' : 'text',
+                    'options' => [],
+                    'if_yes' => false,
+                    'numbered' => false,
+                ];
+                continue;
+            }
+
+            // numbered option  [1] Label   (strip any inline "- [follow-up]" tail → keep just the label)
             if (preg_match('/^\[(\d+)\]\s*(.+)$/', $text, $m)) {
                 if ($pendingQuestion !== null) {
-                    $pendingQuestion['options'][] = $this->clean($m[2]);
+                    $label = preg_replace('/\s*-\s*\[.*\]\s*$/', '', $m[2]); // drop "- [Please specify...]" tails
+                    $pendingQuestion['options'][] = $this->clean(rtrim($label, ": "));
                     $pendingQuestion['numbered'] = true;
                 }
+                continue;
+            }
+
+            // bracketed INSTRUCTION stem — e.g. "[Please select or list any known allergies]" — opens a
+            // new (multi-choice) question whose options are the bare lines that follow it.
+            if (preg_match('/^\[(.+)\]$/', trim($text), $m)) {
+                $flush();
+                $pendingQuestion = [
+                    'text' => $this->clean($m[1]),
+                    'type' => 'multi',
+                    'options' => [],
+                    'if_yes' => false,
+                    'numbered' => false,
+                ];
                 continue;
             }
 
@@ -201,9 +235,11 @@ class ImportQuestionBankFromDocx extends Command
                 continue;
             }
 
-            // otherwise: a bare option line belonging to the pending (multi-choice) question
+            // otherwise: a bare option line belonging to the pending (multi-choice) question.
+            // Strip any inline "- [Please specify...]" tail so the option label reads clean.
             if ($pendingQuestion !== null) {
-                $pendingQuestion['options'][] = $this->clean($text);
+                $label = preg_replace('/\s*-\s*\[.*\]\s*$/', '', $text);
+                $pendingQuestion['options'][] = $this->clean($label);
             }
         }
 
@@ -288,6 +324,10 @@ class ImportQuestionBankFromDocx extends Command
     private function clean(string $s): string
     {
         $s = str_replace(["\u{FFFD}", '�'], "'", $s); // replacement char → apostrophe (best effort)
+        // Strip leading conditional directives the source doc leaves on the label, e.g.
+        // "[IF SELECTED; THEN SELECT] ...", "[IF YES; SELECT] ...", "IF SELECTED: ...".
+        // The branch logic is handled separately; the directive must never show to patients.
+        $s = preg_replace('/^\s*\[?\s*IF\b[^\]:]*(?:\]|:)\s*/i', '', $s);
         return trim(preg_replace('/\s+/', ' ', $s));
     }
 
