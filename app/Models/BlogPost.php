@@ -60,7 +60,9 @@ class BlogPost extends Model
 
     public function getUrlAttribute(): string
     {
-        return url("/blog/{$this->slug}");
+        // Posts are served at the ROOT level to preserve the legacy WordPress
+        // URL structure (zapmed.co.za/{post-slug}/) and its SEO equity.
+        return url("/{$this->slug}");
     }
 
     public function getFeaturedImageUrlAttribute(): ?string
