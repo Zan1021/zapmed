@@ -154,12 +154,14 @@
         @endforelse
     </div>
 
-    {{-- Composer — bottom row of the full-height flex card (page mode), so it
-         stays visible while the thread scrolls above it. No fixed positioning;
-         the safe-area inset clears the mobile home-bar. --}}
+    {{-- Composer — sticky to the viewport bottom in page mode so staff/patient
+         can always reply while the thread scrolls above it. `sticky bottom-0`
+         works regardless of the parent height (the layout page scrolls as a
+         whole since the header is non-sticky). Safe-area inset clears the
+         mobile home-bar; a matching white bg avoids content bleeding under it. --}}
     <div @class([
         'shrink-0' => true,
-        'pb-[max(0.25rem,env(safe-area-inset-bottom))]' => $page,
+        'sticky bottom-0 -mx-4 px-4 pt-2 bg-white rounded-b-2xl pb-[max(0.5rem,env(safe-area-inset-bottom))]' => $page,
     ])>
     <form wire:submit.prevent="send" class="flex items-end gap-2">
         <textarea wire:model="body" rows="2" placeholder="Message your pharmacy…"

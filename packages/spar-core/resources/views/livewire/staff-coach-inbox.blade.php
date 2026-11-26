@@ -3,7 +3,7 @@
         <h1 class="text-xl font-semibold text-gray-900 flex items-center gap-2">
             Health Coach
             @if($this->unreadTotal > 0)
-                <span class="inline-flex items-center justify-center min-w-[22px] h-[22px] px-1.5 rounded-full
+                <span class="inline-flex items-center justify-center min-w-[22px] h-[22px] leading-none rounded-full
                              bg-red-600 text-white text-xs font-bold">{{ $this->unreadTotal }}</span>
             @endif
         </h1>
@@ -34,7 +34,7 @@
                                     {{ $name }}
                                 </span>
                                 @if($unread > 0)
-                                    <span class="shrink-0 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1
+                                    <span class="shrink-0 inline-flex items-center justify-center min-w-[18px] h-[18px] leading-none
                                                  rounded-full bg-red-600 text-white text-[10px] font-bold">{{ $unread }}</span>
                                 @endif
                             </span>
