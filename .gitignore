@@ -31,3 +31,7 @@ Thumbs.db
 *.bak.naz
 .env.predeploy*
 .env.*
+
+# Front-skin design snapshots (local safety backups, not source)
+/design-backups/
+backup-front-skin.ps1

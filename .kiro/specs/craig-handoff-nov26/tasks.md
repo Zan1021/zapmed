@@ -72,3 +72,6 @@ OPEN / NEEDS CAPTAIN ZAN
 - [ ] R450/month coach: still NOT charged anywhere (recurring billing = separate job).
 - [ ] 17 other treatments keep the old journey look? NO: they now use the same new look (shared component). Check one other treatment visually.
 - [ ] PayFast sandbox end-to-end on zapdev with R700.
+
+## DEPLOYED 23 Nov: commit 4622a5d live on zapdev. Remaining items are in the vault START-HERE tasklist (section 'TASKLIST UPDATE 2026-11-23') and the email to Craig.
+
