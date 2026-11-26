@@ -352,6 +352,17 @@ class BookingJourney extends Component
             return;
         }
         $this->resetErrorBag('review');
+
+        // A patient who is already signed in has an account and a verified phone: no details
+        // form, no code. Their assessment is saved to their account and they go straight to booking.
+        if (Auth::check() && Auth::user()->role === \App\Enums\UserRole::Patient) {
+            $this->verified = true;
+            $this->createOrAttachUserAndAssessment();
+            $this->stage = 'book';
+
+            return;
+        }
+
         $this->stage = 'details';
     }
 

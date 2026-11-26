@@ -189,6 +189,59 @@ class OnboardingJourneyTest extends TestCase
         $this->assertSame($tokenBefore, session()->token(), 'CSRF token must survive the login');
         $this->assertNotSame($idBefore, session()->getId(), 'session id must still rotate on login');
     }
+    /** A patient who is already signed in skips the details form and the SMS code, and books on their own account. */
+    public function test_signed_in_patient_skips_details_and_code_and_books_on_their_own_account(): void
+    {
+        $this->liveWeightLossCategory();
+        $date = Carbon::today()->addDays(2)->format('Y-m-d');
+        $this->bookableDoctor($date, '09:00');
+        $patient = User::factory()->create(['role' => UserRole::Patient, 'email_verified_at' => now()]);
+        $usersBefore = User::count();
+
+        $c = Livewire::actingAs($patient)->test(BookingJourney::class, ['slug' => 'weight-loss']);
+        $c->set('answers.WL_TAKEN', 'no')->call('nextQuestion')
+          ->set('answers.WL_WEIGHT', '80')->call('nextQuestion')
+          ->set('reviewTruth', true)->set('reviewSideEffects', true)->call('toDetails')
+          ->assertSet('stage', 'book')->assertSet('verified', true);
+
+        $this->assertSame($usersBefore, User::count(), 'no second account is created');
+        $this->assertDatabaseHas('assessments', ['user_id' => $patient->id, 'treatment_slug' => 'weight-loss']);
+
+        $c->set('selectedDate', $date)->call('selectTime', '09:00')->set('mode', 'video')
+          ->call('toPay')->assertSet('stage', 'pay')
+          ->set('prescribingConsent', true)->call('confirmAndPay')->assertRedirect();
+
+        $this->assertSame($patient->id, (int) Appointment::first()->patient_id);
+        $this->assertSame(70000, (int) Payment::first()->amount);
+    }
+
+    /** The older "Book Appointment" page hands treatments on the new journey over to it. */
+    public function test_old_book_page_sends_new_journey_treatments_to_start(): void
+    {
+        $patient = User::factory()->create(['role' => UserRole::Patient, 'email_verified_at' => now()]);
+
+        Livewire::actingAs($patient)->test(\App\Livewire\Patient\BookAppointment::class)
+            ->set('appointmentType', 'weight-loss')->set('selectedTreatment', 'weight-loss')
+            ->call('proceedToAssessment')
+            ->assertRedirect(route('onboarding.start', ['slug' => 'weight-loss']));
+
+        // a link like /book?category=...&treatment=... goes straight there too
+        Livewire::actingAs($patient)->withQueryParams(['category' => 'weight-loss', 'treatment' => 'weight-loss'])
+            ->test(\App\Livewire\Patient\BookAppointment::class)
+            ->assertRedirect(route('onboarding.start', ['slug' => 'weight-loss']));
+    }
+
+    /** A treatment that is NOT on the new journey keeps using the older page. */
+    public function test_old_book_page_still_serves_treatments_not_on_the_new_journey(): void
+    {
+        config()->set('onboarding.enabled_slugs', []);
+        $patient = User::factory()->create(['role' => UserRole::Patient, 'email_verified_at' => now()]);
+
+        Livewire::actingAs($patient)->test(\App\Livewire\Patient\BookAppointment::class)
+            ->set('appointmentType', 'weight-loss')->set('selectedTreatment', 'weight-loss')
+            ->call('proceedToAssessment')
+            ->assertNoRedirect()->assertSet('step', 2);
+    }
     public function test_client_cannot_tamper_the_fee(): void
     {
         $this->liveWeightLossCategory();

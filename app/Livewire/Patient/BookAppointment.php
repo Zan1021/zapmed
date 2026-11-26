@@ -54,6 +54,13 @@ class BookAppointment extends Component
 
             if ($treatment && isset(config('treatments')[$category]['treatments'][$treatment])) {
                 $this->selectedTreatment = $treatment;
+
+                // Treatments on the new booking journey never use this older page.
+                if ($this->onNewJourney($treatment)) {
+                    $this->redirectRoute('onboarding.start', ['slug' => $treatment]);
+
+                    return;
+                }
             }
         }
 
@@ -93,6 +100,14 @@ class BookAppointment extends Component
         return config("assessment-questions.{$slug}", []);
     }
 
+    /** Is this treatment run by the new charge-at-booking journey (/start/{slug})? */
+    private function onNewJourney(string $slug): bool
+    {
+        $enabled = config('onboarding.enabled_slugs', []);
+
+        return in_array('*', $enabled, true) || in_array($slug, $enabled, true);
+    }
+
     /** Whether this slug should be served from the bank (flagged + a live manifest exists). */
     private function usesQuestionBank(string $slug): bool
     {
@@ -114,6 +129,15 @@ class BookAppointment extends Component
             'appointmentType' => 'required',
             'selectedTreatment' => 'required',
         ]);
+
+        // Treatments on the new booking journey (assessment, booking and payment in one flow)
+        // are sent there. This older page cannot show some of their questions (medicines,
+        // measurements), so a patient could never get past the assessment here.
+        if ($this->onNewJourney($this->selectedTreatment)) {
+            $this->redirectRoute('onboarding.start', ['slug' => $this->selectedTreatment]);
+
+            return;
+        }
 
         // Pre-fill assessment answers from patient profile
         $this->prefillFromProfile();

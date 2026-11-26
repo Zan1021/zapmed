@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\UserRole;
 use App\Livewire\Patient\BookAppointment;
 use App\Models\User;
+use App\Services\Assessments\QuestionBankService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -24,6 +25,13 @@ use Tests\TestCase;
 class BookingAssessmentCheckboxTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // These cover the older booking page, which only serves treatments NOT on the new journey.
+        config()->set('onboarding.enabled_slugs', []);
+    }
 
     private function patient(): User
     {
@@ -111,4 +119,30 @@ class BookingAssessmentCheckboxTest extends TestCase
             ->assertHasNoErrors()
             ->assertSet('step', 3);
     }
-}
+
+    public function test_radio_option_with_an_apostrophe_does_not_break_the_page_script(): void
+    {
+        // "I'm not sure" used to be pasted raw inside a quoted script string, which is a script
+        // syntax error: those radios did nothing and the answer was never recorded.
+        config()->set('onboarding.enabled_slugs', []); // this older page only serves treatments not on the new journey
+        config()->set('questionbank.enabled_slugs', ['weight-loss']);
+        $bank = app(QuestionBankService::class);
+        $cat = $bank->createCategory('weight-loss', 'Weight Loss');
+        $q = $bank->createQuestion(['scope' => 'category', 'question_key' => 'WL_UNSURE'],
+            ['text' => 'Do you have allergies?', 'type' => 'single',
+             'options' => [['code' => 'yes', 'label' => 'Yes'], ['code' => 'unsure', 'label' => "I'm not sure"]], 'required' => true], null);
+        $bank->addQuestionToCategory($cat->refresh(), $q, null);
+        $bank->publish($q, $q->versions()->latest('version')->first(), 'test', null);
+        $bank->publishCategory($cat->refresh(), null);
+
+        $html = Livewire::actingAs($this->patient())
+            ->test(BookAppointment::class)
+            ->set('appointmentType', 'weight-loss')
+            ->set('selectedTreatment', 'weight-loss')
+            ->call('proceedToAssessment')
+            ->html();
+
+        $this->assertStringContainsString('WL_UNSURE', $html);
+        $this->assertStringNotContainsString("'I&#039;m not sure')", $html, 'apostrophe option pasted raw into a quoted script string');
+        $this->assertStringContainsString('I\u0027m not sure', $html);
+    }}

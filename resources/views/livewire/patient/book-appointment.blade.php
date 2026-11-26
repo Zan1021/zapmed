@@ -162,7 +162,7 @@
                                 @foreach($question['options'] as $option)
                                     <label class="inline-flex items-center cursor-pointer">
                                         <input type="radio" wire:model="assessmentAnswers.{{ $question['id'] }}" value="{{ $option }}"
-                                            x-on:change="updateAnswer('{{ $question['id'] }}', '{{ $option }}')"
+                                            x-on:change="updateAnswer('{{ $question['id'] }}', @js($option))"
                                             class="text-zapmed-600 focus:ring-zapmed-500 border-gray-300">
                                         <span class="ml-2 text-sm text-gray-700">{{ $option }}</span>
                                     </label>
