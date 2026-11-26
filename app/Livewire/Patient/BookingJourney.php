@@ -735,7 +735,7 @@ class BookingJourney extends Component
         }
         $loads = Appointment::whereIn('doctor_id', $available->pluck('user_id'))
             ->where('appointment_date', $this->selectedDate)
-            ->whereNotIn('status', ['cancelled'])
+            ->whereNotIn('status', Appointment::SLOT_FREE_STATUSES)
             ->selectRaw('doctor_id, count(*) c')->groupBy('doctor_id')->pluck('c', 'doctor_id');
         return $available->sortBy(fn ($p) => $loads->get($p->user_id, 0))->first()->user_id;
     }

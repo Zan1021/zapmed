@@ -17,7 +17,9 @@ class SendAppointmentReminders extends Command
 
     public function handle(): int
     {
-        $now = now();
+        // Appointment dates and times are South African local time, but the server clock is UTC:
+        // compare them against the local clock, or every reminder is 2 hours late (the 1-hour\n        // reminder would arrive an hour after the consultation started).
+        $now = now(config('doctor.time.timezone', 'Africa/Johannesburg'));
         $sent = 0;
 
         // ─── 24 HOUR REMINDERS (Email to patient + doctor) ───────────────

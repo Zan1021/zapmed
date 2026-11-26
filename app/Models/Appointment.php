@@ -11,6 +11,9 @@ use Illuminate\Support\Str;
 
 class Appointment extends Model
 {
+    /** Statuses that no longer hold a doctor's time slot (a lapsed unpaid booking frees it like a cancelled one). */
+    public const SLOT_FREE_STATUSES = ['cancelled', 'expired'];
+
     use HasFactory, SoftDeletes;
 
     protected $fillable = [

@@ -90,7 +90,7 @@ class DoctorProfile extends Model
         // availability and the doctor can be double-booked.
         $booked = Appointment::where('doctor_id', $this->user_id)
             ->whereDate('appointment_date', $date)
-            ->whereNotIn('status', ['cancelled'])
+            ->whereNotIn('status', Appointment::SLOT_FREE_STATUSES)
             ->get(['start_time', 'end_time']);
 
         // A booking blocks every 15-minute slot it overlaps (a 45-minute consultation holds three
@@ -184,12 +184,9 @@ class DoctorProfile extends Model
             })
             ->get()
             ->filter(function ($profile) use ($date, $time) {
-                // Exclude doctors already booked for this slot
-                return !Appointment::where('doctor_id', $profile->user_id)
-                    ->whereDate('appointment_date', $date)
-                    ->where('start_time', $time)
-                    ->whereNotIn('status', ['cancelled'])
-                    ->exists();
+                // Exclude doctors already booked for this slot, including a longer booking that
+                // started earlier and still covers it (same rule the slot list uses).
+                return in_array(substr($time, 0, 5), $profile->getAvailableSlotsForDate($date), true);
             });
     }
 

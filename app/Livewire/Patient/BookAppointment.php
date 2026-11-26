@@ -423,7 +423,7 @@ class BookAppointment extends Component
         // Load-balance: pick the doctor with fewest appointments that day
         $doctorLoads = Appointment::whereIn('doctor_id', $availableDoctors->pluck('user_id'))
             ->where('appointment_date', $this->selectedDate)
-            ->whereNotIn('status', ['cancelled'])
+            ->whereNotIn('status', Appointment::SLOT_FREE_STATUSES)
             ->selectRaw('doctor_id, count(*) as appointment_count')
             ->groupBy('doctor_id')
             ->pluck('appointment_count', 'doctor_id');

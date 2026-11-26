@@ -32,7 +32,11 @@ return [
 
         'local' => [
             'driver' => 'local',
-            'root' => storage_path('app/private'),
+            // Private files (patient records, blood-test results, doctor attachments and signatures).
+            // On Forge zero-downtime servers every release gets a fresh storage folder, so point this at a
+            // folder OUTSIDE the release (e.g. /home/forge/<site>/shared/storage/private) or the files are
+            // wiped on the next deploy. Unset = the normal local folder.
+            'root' => env('LOCAL_DISK_ROOT') ?: storage_path('app/private'),
             'serve' => true,
             'throw' => false,
             'report' => false,
