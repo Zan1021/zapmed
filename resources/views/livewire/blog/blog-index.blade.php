@@ -33,7 +33,7 @@
                 @forelse($posts as $post)
                 <article class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden group hover:shadow-lg transition-shadow">
                     <!-- Featured Image -->
-                    <a href="/blog/{{ $post->slug }}" class="block aspect-[16/10] overflow-hidden bg-gray-100">
+                    <a href="{{ $post->url }}" class="block aspect-[16/10] overflow-hidden bg-gray-100">
                         @if($post->featured_image_url)
                             <img src="{{ $post->featured_image_url }}" alt="{{ $post->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy">
                         @else
@@ -50,7 +50,7 @@
                             {{ $post->category->name }}
                         </span>
 
-                        <a href="/blog/{{ $post->slug }}" class="block">
+                        <a href="{{ $post->url }}" class="block">
                             <h2 class="text-lg font-bold text-gray-900 mb-2 group-hover:text-zapmed-600 transition-colors line-clamp-2">{{ $post->title }}</h2>
                         </a>
 

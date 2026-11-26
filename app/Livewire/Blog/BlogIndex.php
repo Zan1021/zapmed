@@ -14,6 +14,12 @@ class BlogIndex extends Component
     public ?string $category = null;
     public string $search = '';
 
+    public function mount(?string $category = null)
+    {
+        // Supports both /blog (no category) and /category/{slug} archive pages.
+        $this->category = $category;
+    }
+
     public function updatedSearch()
     {
         $this->resetPage();
@@ -43,7 +49,23 @@ class BlogIndex extends Component
 
         $categories = BlogCategory::withCount(['posts' => fn($q) => $q->published()])->orderBy('sort_order')->get();
 
+        $activeCategory = $this->category
+            ? $categories->firstWhere('slug', $this->category)
+            : null;
+
+        $pageTitle = $activeCategory
+            ? "{$activeCategory->name} Articles | Zapmed Blog"
+            : 'Health & Wellness Blog | Zapmed';
+
+        $metaDescription = $activeCategory && $activeCategory->description
+            ? $activeCategory->description
+            : 'Expert health and wellness articles from Zapmed — weight loss, sexual health, skincare, and more, written with licensed SA doctors.';
+
         return view('livewire.blog.blog-index', compact('posts', 'categories'))
-            ->layout('layouts.bare', ['title' => 'Health & Wellness Blog | Zapmed']);
+            ->layout('layouts.bare', [
+                'title' => $pageTitle,
+                'metaDescription' => $metaDescription,
+                'canonical' => $activeCategory ? url("/category/{$activeCategory->slug}") : url('/blog'),
+            ]);
     }
 }

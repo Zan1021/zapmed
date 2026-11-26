@@ -9,7 +9,7 @@
                 <span class="mx-2">/</span>
                 <a href="/blog" class="hover:text-zapmed-600">Blog</a>
                 <span class="mx-2">/</span>
-                <a href="/blog?category={{ $post->category->slug }}" class="hover:text-zapmed-600">{{ $post->category->name }}</a>
+                <a href="/category/{{ $post->category->slug }}" class="hover:text-zapmed-600">{{ $post->category->name }}</a>
                 <span class="mx-2">/</span>
                 <span class="text-gray-900">{{ Str::limit($post->title, 40) }}</span>
             </nav>
@@ -74,7 +74,7 @@
             <h2 class="text-2xl font-bold text-gray-900 mb-8">Related Articles</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 @foreach($relatedPosts as $related)
-                <a href="/blog/{{ $related->slug }}" class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow group">
+                <a href="{{ $related->url }}" class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow group">
                     <div class="aspect-[16/10] overflow-hidden bg-gray-100">
                         @if($related->featured_image_url)
                             <img src="{{ $related->featured_image_url }}" alt="{{ $related->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">

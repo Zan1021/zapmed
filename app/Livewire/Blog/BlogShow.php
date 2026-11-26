@@ -30,6 +30,12 @@ class BlogShow extends Component
             ->get();
 
         return view('livewire.blog.blog-show', compact('relatedPosts'))
-            ->layout('layouts.bare', ['title' => $this->post->meta_title_tag]);
+            ->layout('layouts.bare', [
+                'title' => $this->post->meta_title_tag,
+                'metaDescription' => $this->post->meta_description_tag,
+                'canonical' => $this->post->url,
+                'ogImage' => $this->post->og_image_url,
+                'ogType' => 'article',
+            ]);
     }
 }
