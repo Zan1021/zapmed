@@ -480,7 +480,13 @@ class BookingJourney extends Component
                 // route would bounce the brand-new patient to /verify-email before PayFast.
                 'email_verified_at' => now(),
             ]);
+            // Auth::login() rotates the session id AND the CSRF token. The page the patient is
+            // looking at still holds the old token, so the very next Livewire request (picking a
+            // slot) would die with a 419 "page expired". Keep the session-id rotation (protects
+            // against session fixation) but carry the page's token over.
+            $csrfToken = session()->token();
             Auth::login($user);
+            session()->put('_token', $csrfToken);
         }
 
         $this->flushConsentLog($user);

@@ -167,6 +167,28 @@ class OnboardingJourneyTest extends TestCase
         $this->assertSame('confirmed', $appt->status);
     }
 
+    /** Logging the new patient in part-way must not rotate the CSRF token the open page holds (else the next click is a 419). */
+    public function test_verifying_the_code_keeps_the_page_csrf_token_and_rotates_the_session_id(): void
+    {
+        $this->liveWeightLossCategory();
+
+        $c = Livewire::test(BookingJourney::class, ['slug' => 'weight-loss']);
+        $c->set('answers.WL_TAKEN', 'no')->call('nextQuestion')
+          ->set('answers.WL_WEIGHT', '80')->call('nextQuestion')
+          ->set('reviewTruth', true)->set('reviewSideEffects', true)->call('toDetails')
+          ->set('name', 'A B')->set('email', 'csrf@b.com')
+          ->set('cell', '82 000 0002')->set('idNumber', '8001015009087')
+          ->set('password', 'CorrectHorse99')->set('passwordConfirm', 'CorrectHorse99')
+          ->set('consentCare', true)->call('sendOtp');
+
+        $tokenBefore = session()->token();
+        $idBefore = session()->getId();
+
+        $c->set('otp', $this->captureOtp())->call('verifyOtp')->assertSet('verified', true);
+
+        $this->assertSame($tokenBefore, session()->token(), 'CSRF token must survive the login');
+        $this->assertNotSame($idBefore, session()->getId(), 'session id must still rotate on login');
+    }
     public function test_client_cannot_tamper_the_fee(): void
     {
         $this->liveWeightLossCategory();
